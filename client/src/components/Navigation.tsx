@@ -98,7 +98,7 @@ export default function Navigation() {
                 </Link>
               </>
             ) : (
-              <a href="/api/auth/login" data-testid="link-login">
+              <a href="/api/login" data-testid="link-login">
                 <Button variant="default" size="sm">
                   Sign In
                 </Button>
