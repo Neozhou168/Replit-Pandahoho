@@ -1,0 +1,263 @@
+// PandaHoHo - API Routes
+// ref: blueprint:javascript_log_in_with_replit
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import {
+  insertCitySchema,
+  insertVenueSchema,
+  insertTriplistSchema,
+  insertSurvivalGuideSchema,
+  insertGroupUpSchema,
+} from "@shared/schema";
+import { fromError } from "zod-validation-error";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Auth middleware setup
+  await setupAuth(app);
+
+  // ========== Auth Routes ==========
+  app.get("/api/auth/me", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // ========== City Routes ==========
+  app.get("/api/cities", async (_req, res) => {
+    try {
+      const cities = await storage.getCities();
+      res.json(cities);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+      res.status(500).json({ message: "Failed to fetch cities" });
+    }
+  });
+
+  app.get("/api/cities/:slug", async (req, res) => {
+    try {
+      const city = await storage.getCity(req.params.slug);
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+      res.json(city);
+    } catch (error) {
+      console.error("Error fetching city:", error);
+      res.status(500).json({ message: "Failed to fetch city" });
+    }
+  });
+
+  app.post("/api/cities", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertCitySchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const city = await storage.createCity(validation.data);
+      res.status(201).json(city);
+    } catch (error) {
+      console.error("Error creating city:", error);
+      res.status(500).json({ message: "Failed to create city" });
+    }
+  });
+
+  // ========== Venue Routes ==========
+  app.get("/api/venues", async (req, res) => {
+    try {
+      const triplistId = req.query.triplistId as string | undefined;
+      const venues = await storage.getVenues(triplistId ? { triplistId } : undefined);
+      res.json(venues);
+    } catch (error) {
+      console.error("Error fetching venues:", error);
+      res.status(500).json({ message: "Failed to fetch venues" });
+    }
+  });
+
+  app.get("/api/venues/:slug", async (req, res) => {
+    try {
+      const venue = await storage.getVenue(req.params.slug);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      res.json(venue);
+    } catch (error) {
+      console.error("Error fetching venue:", error);
+      res.status(500).json({ message: "Failed to fetch venue" });
+    }
+  });
+
+  app.post("/api/venues", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertVenueSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const venue = await storage.createVenue(validation.data);
+      res.status(201).json(venue);
+    } catch (error) {
+      console.error("Error creating venue:", error);
+      res.status(500).json({ message: "Failed to create venue" });
+    }
+  });
+
+  // ========== Triplist Routes ==========
+  app.get("/api/triplists", async (_req, res) => {
+    try {
+      const triplists = await storage.getTriplists();
+      res.json(triplists);
+    } catch (error) {
+      console.error("Error fetching triplists:", error);
+      res.status(500).json({ message: "Failed to fetch triplists" });
+    }
+  });
+
+  app.get("/api/triplists/:slug", async (req, res) => {
+    try {
+      const triplist = await storage.getTriplist(req.params.slug);
+      if (!triplist) {
+        return res.status(404).json({ message: "Triplist not found" });
+      }
+      res.json(triplist);
+    } catch (error) {
+      console.error("Error fetching triplist:", error);
+      res.status(500).json({ message: "Failed to fetch triplist" });
+    }
+  });
+
+  app.post("/api/triplists", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertTriplistSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const triplist = await storage.createTriplist(validation.data);
+      res.status(201).json(triplist);
+    } catch (error) {
+      console.error("Error creating triplist:", error);
+      res.status(500).json({ message: "Failed to create triplist" });
+    }
+  });
+
+  // ========== Survival Guide Routes ==========
+  app.get("/api/guides", async (_req, res) => {
+    try {
+      const guides = await storage.getSurvivalGuides();
+      res.json(guides);
+    } catch (error) {
+      console.error("Error fetching guides:", error);
+      res.status(500).json({ message: "Failed to fetch guides" });
+    }
+  });
+
+  app.get("/api/guides/:slug", async (req, res) => {
+    try {
+      const guide = await storage.getSurvivalGuide(req.params.slug);
+      if (!guide) {
+        return res.status(404).json({ message: "Guide not found" });
+      }
+      res.json(guide);
+    } catch (error) {
+      console.error("Error fetching guide:", error);
+      res.status(500).json({ message: "Failed to fetch guide" });
+    }
+  });
+
+  app.post("/api/guides", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertSurvivalGuideSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const guide = await storage.createSurvivalGuide(validation.data);
+      res.status(201).json(guide);
+    } catch (error) {
+      console.error("Error creating guide:", error);
+      res.status(500).json({ message: "Failed to create guide" });
+    }
+  });
+
+  // ========== Group-Up Routes ==========
+  app.get("/api/group-ups", async (req, res) => {
+    try {
+      const triplistId = req.query.triplistId as string | undefined;
+      const groupUps = await storage.getGroupUps(
+        triplistId ? { triplistId } : undefined
+      );
+      res.json(groupUps);
+    } catch (error) {
+      console.error("Error fetching group-ups:", error);
+      res.status(500).json({ message: "Failed to fetch group-ups" });
+    }
+  });
+
+  app.post("/api/group-ups", isAuthenticated, async (req: any, res) => {
+    try {
+      const validation = insertGroupUpSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const userId = req.user.claims.sub;
+      const groupUp = await storage.createGroupUp({
+        ...validation.data,
+        userId,
+      });
+      res.status(201).json(groupUp);
+    } catch (error) {
+      console.error("Error creating group-up:", error);
+      res.status(500).json({ message: "Failed to create group-up" });
+    }
+  });
+
+  // ========== Carousel Routes ==========
+  app.get("/api/carousel", async (_req, res) => {
+    try {
+      const items = await storage.getCarouselItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching carousel items:", error);
+      res.status(500).json({ message: "Failed to fetch carousel items" });
+    }
+  });
+
+  app.post("/api/carousel", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const item = await storage.createCarouselItem({
+        ...req.body,
+        isActive: true,
+      });
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating carousel item:", error);
+      res.status(500).json({ message: "Failed to create carousel item" });
+    }
+  });
+
+  app.delete("/api/carousel/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteCarouselItem(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting carousel item:", error);
+      res.status(500).json({ message: "Failed to delete carousel item" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
