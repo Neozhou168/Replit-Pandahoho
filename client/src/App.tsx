@@ -28,6 +28,7 @@ function Router() {
       <Route path="/guides" component={GuidesPage} />
       <Route path="/guides/:slug" component={GuideDetailPage} />
       <Route path="/membership" component={MembershipPage} />
+      <Route path="/admin" component={AdminLayout} />
       <Route path="/admin/:rest*" component={AdminLayout} />
       <Route component={NotFound} />
     </Switch>
