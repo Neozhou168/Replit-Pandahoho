@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { insertGroupUpSchema } from "@shared/schema";
-import type { InsertGroupUp, Venue } from "@shared/schema";
+import type { InsertGroupUp, Venue, User } from "@shared/schema";
 import { z } from "zod";
 import {
   Dialog,
@@ -52,8 +52,13 @@ export default function GroupUpModal({
   const { toast } = useToast();
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null);
 
+  const { data: user } = useQuery<User>({
+    queryKey: ["/api/auth/me"],
+  });
+
   const { data: venues = [] } = useQuery<Venue[]>({
-    queryKey: ["/api/venues", { triplistId }],
+    queryKey: [`/api/venues?triplistId=${triplistId}`],
+    enabled: !!triplistId,
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -92,8 +97,18 @@ export default function GroupUpModal({
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to create a group-up.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const data: InsertGroupUp = {
       ...values,
+      userId: user.id,
       startTime: new Date(values.startTime),
     };
     createGroupUp.mutate(data);

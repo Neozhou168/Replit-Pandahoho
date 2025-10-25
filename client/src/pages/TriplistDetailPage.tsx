@@ -18,7 +18,7 @@ export default function TriplistDetailPage() {
   });
 
   const { data: venues = [] } = useQuery<Venue[]>({
-    queryKey: ["/api/venues", { triplistId: triplist?.id }],
+    queryKey: [`/api/venues?triplistId=${triplist?.id}`],
     enabled: !!triplist?.id,
   });
 
