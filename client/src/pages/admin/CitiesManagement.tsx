@@ -128,10 +128,11 @@ export default function CitiesManagement() {
   const handleBulkImport = async (data: InsertCity[]) => {
     try {
       const response = await apiRequest("/api/cities/bulk", "POST", data);
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
       toast({
         title: "Success",
-        description: `${response.count} cities imported successfully!`,
+        description: `${result.count} cities imported successfully!`,
       });
     } catch (error) {
       throw error;

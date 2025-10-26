@@ -167,10 +167,11 @@ export default function GuidesManagement() {
   const handleBulkImport = async (data: InsertSurvivalGuide[]) => {
     try {
       const response = await apiRequest("/api/guides/bulk", "POST", data);
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
       toast({
         title: "Success",
-        description: `${response.count} survival guides imported successfully!`,
+        description: `${result.count} survival guides imported successfully!`,
       });
     } catch (error) {
       throw error;
@@ -404,6 +405,7 @@ export default function GuidesManagement() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
       {isLoading ? (
         <div className="grid gap-6">

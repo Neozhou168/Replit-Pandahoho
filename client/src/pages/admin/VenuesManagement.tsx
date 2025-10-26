@@ -182,10 +182,11 @@ export default function VenuesManagement() {
   const handleBulkImport = async (data: InsertVenue[]) => {
     try {
       const response = await apiRequest("/api/venues/bulk", "POST", data);
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
       toast({
         title: "Success",
-        description: `${response.count} venues imported successfully!`,
+        description: `${result.count} venues imported successfully!`,
       });
     } catch (error) {
       throw error;
@@ -215,7 +216,7 @@ export default function VenuesManagement() {
               imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
               cityId: "city-id-here",
               category: "Historical Site",
-              highlights: "Imperial Architecture,Kunming Lake,Garden Design",
+              highlights: ["Imperial Architecture", "Kunming Lake", "Garden Design"],
               proTips: "Visit early morning to avoid crowds",
               googleMapsUrl: "https://maps.google.com/...",
               isActive: true,
@@ -462,8 +463,9 @@ export default function VenuesManagement() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
-      {isLoading ? (
+    {isLoading ? (
         <div className="grid gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />
