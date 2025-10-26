@@ -38,6 +38,7 @@ export interface IStorage {
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City | undefined>;
   deleteCity(id: string): Promise<void>;
+  bulkCreateCities(cities: InsertCity[]): Promise<City[]>;
 
   // Venue operations
   getVenues(filters?: { triplistId?: string }): Promise<Venue[]>;
@@ -45,6 +46,7 @@ export interface IStorage {
   createVenue(venue: InsertVenue): Promise<Venue>;
   updateVenue(id: string, venue: Partial<InsertVenue>): Promise<Venue | undefined>;
   deleteVenue(id: string): Promise<void>;
+  bulkCreateVenues(venues: InsertVenue[]): Promise<Venue[]>;
 
   // Triplist operations
   getTriplists(): Promise<Triplist[]>;
@@ -53,6 +55,7 @@ export interface IStorage {
   updateTriplist(id: string, triplist: Partial<InsertTriplist>): Promise<Triplist | undefined>;
   deleteTriplist(id: string): Promise<void>;
   addVenueToTriplist(triplistId: string, venueId: string, order?: number): Promise<void>;
+  bulkCreateTriplists(triplists: InsertTriplist[]): Promise<Triplist[]>;
 
   // Survival Guide operations
   getSurvivalGuides(): Promise<SurvivalGuide[]>;
@@ -60,6 +63,7 @@ export interface IStorage {
   createSurvivalGuide(guide: InsertSurvivalGuide): Promise<SurvivalGuide>;
   updateSurvivalGuide(id: string, guide: Partial<InsertSurvivalGuide>): Promise<SurvivalGuide | undefined>;
   deleteSurvivalGuide(id: string): Promise<void>;
+  bulkCreateSurvivalGuides(guides: InsertSurvivalGuide[]): Promise<SurvivalGuide[]>;
 
   // Group-Up operations
   getGroupUps(filters?: { triplistId?: string }): Promise<GroupUp[]>;
@@ -69,6 +73,7 @@ export interface IStorage {
   getCarouselItems(): Promise<CarouselItem[]>;
   createCarouselItem(item: Omit<CarouselItem, "id" | "createdAt">): Promise<CarouselItem>;
   deleteCarouselItem(id: string): Promise<void>;
+  bulkCreateCarouselItems(items: Omit<CarouselItem, "id" | "createdAt">[]): Promise<CarouselItem[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -121,6 +126,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(cities).where(eq(cities.id, id));
   }
 
+  async bulkCreateCities(citiesData: InsertCity[]): Promise<City[]> {
+    if (citiesData.length === 0) return [];
+    return db.insert(cities).values(citiesData).returning();
+  }
+
   // ========== Venue Operations ==========
   async getVenues(filters?: { triplistId?: string }): Promise<Venue[]> {
     if (filters?.triplistId) {
@@ -158,6 +168,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(venues).where(eq(venues.id, id));
   }
 
+  async bulkCreateVenues(venuesData: InsertVenue[]): Promise<Venue[]> {
+    if (venuesData.length === 0) return [];
+    return db.insert(venues).values(venuesData).returning();
+  }
+
   // ========== Triplist Operations ==========
   async getTriplists(): Promise<Triplist[]> {
     return db.select().from(triplists).orderBy(desc(triplists.createdAt));
@@ -187,6 +202,11 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTriplist(id: string): Promise<void> {
     await db.delete(triplists).where(eq(triplists.id, id));
+  }
+
+  async bulkCreateTriplists(triplistsData: InsertTriplist[]): Promise<Triplist[]> {
+    if (triplistsData.length === 0) return [];
+    return db.insert(triplists).values(triplistsData).returning();
   }
 
   async addVenueToTriplist(
@@ -232,6 +252,11 @@ export class DatabaseStorage implements IStorage {
     await db.delete(survivalGuides).where(eq(survivalGuides.id, id));
   }
 
+  async bulkCreateSurvivalGuides(guidesData: InsertSurvivalGuide[]): Promise<SurvivalGuide[]> {
+    if (guidesData.length === 0) return [];
+    return db.insert(survivalGuides).values(guidesData).returning();
+  }
+
   // ========== Group-Up Operations ==========
   async getGroupUps(filters?: { triplistId?: string }): Promise<GroupUp[]> {
     if (filters?.triplistId) {
@@ -267,6 +292,11 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCarouselItem(id: string): Promise<void> {
     await db.delete(carouselItems).where(eq(carouselItems.id, id));
+  }
+
+  async bulkCreateCarouselItems(itemsData: Omit<CarouselItem, "id" | "createdAt">[]): Promise<CarouselItem[]> {
+    if (itemsData.length === 0) return [];
+    return db.insert(carouselItems).values(itemsData).returning();
   }
 }
 

@@ -196,6 +196,11 @@ export const carouselItems = pgTable("carousel_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const insertCarouselItemSchema = createInsertSchema(carouselItems).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertCarouselItem = z.infer<typeof insertCarouselItemSchema>;
 export type CarouselItem = typeof carouselItems.$inferSelect;
 
 // ============================================================================

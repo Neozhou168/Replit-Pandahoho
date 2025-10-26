@@ -10,6 +10,7 @@ import {
   insertTriplistSchema,
   insertSurvivalGuideSchema,
   insertGroupUpSchema,
+  insertCarouselItemSchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
@@ -98,6 +99,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/cities/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertCitySchema.array().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const cities = await storage.bulkCreateCities(validation.data);
+      res.status(201).json({ count: cities.length, cities });
+    } catch (error) {
+      console.error("Error bulk creating cities:", error);
+      res.status(500).json({ message: "Failed to bulk create cities" });
+    }
+  });
+
   // ========== Venue Routes ==========
   app.get("/api/venues", async (req, res) => {
     try {
@@ -165,6 +182,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting venue:", error);
       res.status(500).json({ message: "Failed to delete venue" });
+    }
+  });
+
+  app.post("/api/venues/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertVenueSchema.array().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const venues = await storage.bulkCreateVenues(validation.data);
+      res.status(201).json({ count: venues.length, venues });
+    } catch (error) {
+      console.error("Error bulk creating venues:", error);
+      res.status(500).json({ message: "Failed to bulk create venues" });
     }
   });
 
@@ -237,6 +270,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/triplists/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertTriplistSchema.array().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const triplists = await storage.bulkCreateTriplists(validation.data);
+      res.status(201).json({ count: triplists.length, triplists });
+    } catch (error) {
+      console.error("Error bulk creating triplists:", error);
+      res.status(500).json({ message: "Failed to bulk create triplists" });
+    }
+  });
+
   // ========== Survival Guide Routes ==========
   app.get("/api/guides", async (_req, res) => {
     try {
@@ -306,6 +355,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/guides/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertSurvivalGuideSchema.array().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const guides = await storage.bulkCreateSurvivalGuides(validation.data);
+      res.status(201).json({ count: guides.length, guides });
+    } catch (error) {
+      console.error("Error bulk creating guides:", error);
+      res.status(500).json({ message: "Failed to bulk create guides" });
+    }
+  });
+
   // ========== Group-Up Routes ==========
   app.get("/api/group-ups", async (req, res) => {
     try {
@@ -371,6 +436,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting carousel item:", error);
       res.status(500).json({ message: "Failed to delete carousel item" });
+    }
+  });
+
+  app.post("/api/carousel/bulk", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertCarouselItemSchema.array().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const items = await storage.bulkCreateCarouselItems(validation.data);
+      res.status(201).json({ count: items.length, items });
+    } catch (error) {
+      console.error("Error bulk creating carousel items:", error);
+      res.status(500).json({ message: "Failed to bulk create carousel items" });
     }
   });
 
