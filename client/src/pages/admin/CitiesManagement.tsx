@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CSVImport } from "@/components/CSVImport";
 
 export default function CitiesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -124,6 +125,19 @@ export default function CitiesManagement() {
     },
   });
 
+  const handleBulkImport = async (data: InsertCity[]) => {
+    try {
+      const response = await apiRequest("/api/cities/bulk", "POST", data);
+      queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
+      toast({
+        title: "Success",
+        description: `${response.count} cities imported successfully!`,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const onSubmit = (values: InsertCity) => {
     if (editCity) {
       updateCity.mutate({ id: editCity.id, data: values });
@@ -169,16 +183,48 @@ export default function CitiesManagement() {
           </p>
         </div>
 
-        <Dialog open={createOpen || editCity !== null} onOpenChange={(open) => {
-          if (!open) handleCloseDialog();
-          else setCreateOpen(true);
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-city">
-              <Plus className="w-4 h-4 mr-2" />
-              Add City
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <CSVImport
+            onImport={handleBulkImport}
+            templateData={{
+              name: "Beijing",
+              slug: "beijing",
+              tagline: "China's historic capital city",
+              imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
+              triplistCount: 12,
+              isActive: true,
+            }}
+            templateFilename="cities-template.csv"
+            requiredColumns={["name", "slug", "tagline", "imageUrl"]}
+            validateRow={(row) => {
+              const errors: string[] = [];
+              if (!row.name || row.name.trim() === "") errors.push("Name is required");
+              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
+              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              return { valid: errors.length === 0, errors };
+            }}
+            transformRow={(row) => ({
+              name: row.name,
+              slug: row.slug,
+              tagline: row.tagline || "",
+              imageUrl: row.imageUrl,
+              triplistCount: parseInt(row.triplistCount) || 0,
+              isActive: row.isActive === "true" || row.isActive === true,
+            })}
+            title="Import Cities"
+            description="Upload a CSV file to bulk import cities"
+          />
+
+          <Dialog open={createOpen || editCity !== null} onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setCreateOpen(true);
+          }}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-city">
+                <Plus className="w-4 h-4 mr-2" />
+                Add City
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl" data-testid="modal-city">
             <DialogHeader>
               <DialogTitle>
@@ -293,6 +339,7 @@ export default function CitiesManagement() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

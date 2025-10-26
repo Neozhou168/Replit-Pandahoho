@@ -23,9 +23,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { CarouselItem } from "@shared/schema";
+import type { CarouselItem, InsertCarouselItem } from "@shared/schema";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CSVImport } from "@/components/CSVImport";
 
 const carouselSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -104,6 +105,19 @@ export default function CarouselManagement() {
     createItem.mutate(values);
   };
 
+  const handleBulkImport = async (data: InsertCarouselItem[]) => {
+    try {
+      const response: any = await apiRequest("/api/carousel/bulk", "POST", data);
+      queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
+      toast({
+        title: "Success",
+        description: `${response.count} carousel slides imported successfully!`,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -116,13 +130,48 @@ export default function CarouselManagement() {
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-carousel">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Slide
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <CSVImport
+            onImport={handleBulkImport}
+            templateData={{
+              title: "Discover Hidden Gems",
+              subtitle: "Explore curated travel experiences across China",
+              imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
+              ctaText: "Explore Now",
+              ctaLink: "/triplists",
+              order: 1,
+              isActive: true,
+            }}
+            templateFilename="carousel-template.csv"
+            requiredColumns={["title", "subtitle", "imageUrl", "order"]}
+            validateRow={(row) => {
+              const errors: string[] = [];
+              if (!row.title || row.title.trim() === "") errors.push("Title is required");
+              if (!row.subtitle || row.subtitle.trim() === "") errors.push("Subtitle is required");
+              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              if (!row.order || isNaN(Number(row.order))) errors.push("Order must be a number");
+              return { valid: errors.length === 0, errors };
+            }}
+            transformRow={(row) => ({
+              title: row.title,
+              subtitle: row.subtitle,
+              imageUrl: row.imageUrl,
+              ctaText: row.ctaText || undefined,
+              ctaLink: row.ctaLink || undefined,
+              order: parseInt(row.order, 10),
+              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
+            })}
+            title="Import Carousel Slides CSV"
+            description="Upload a CSV file to bulk import carousel slides"
+          />
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-carousel">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Slide
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Create Carousel Slide</DialogTitle>
@@ -242,6 +291,7 @@ export default function CarouselManagement() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {isLoading ? (

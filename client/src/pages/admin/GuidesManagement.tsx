@@ -36,6 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CSVImport } from "@/components/CSVImport";
 
 export default function GuidesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -163,6 +164,19 @@ export default function GuidesManagement() {
     form.reset();
   };
 
+  const handleBulkImport = async (data: InsertSurvivalGuide[]) => {
+    try {
+      const response = await apiRequest("/api/guides/bulk", "POST", data);
+      queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
+      toast({
+        title: "Success",
+        description: `${response.count} survival guides imported successfully!`,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -175,16 +189,56 @@ export default function GuidesManagement() {
           </p>
         </div>
 
-        <Dialog open={createOpen || editGuide !== null} onOpenChange={(open) => {
-          if (!open) handleCloseDialog();
-          else setCreateOpen(true);
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-guide">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Guide
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <CSVImport
+            onImport={handleBulkImport}
+            templateData={{
+              title: "How to Use WeChat Pay",
+              slug: "how-to-use-wechat-pay",
+              description: "Complete guide to setting up and using WeChat Pay in China",
+              content: "Step-by-step instructions for international travelers to set up WeChat Pay...",
+              imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d",
+              videoUrl: "https://www.youtube.com/embed/example",
+              hasVideo: true,
+              category: "China",
+              isActive: true,
+            }}
+            templateFilename="guides-template.csv"
+            requiredColumns={["title", "slug", "description", "content", "imageUrl"]}
+            validateRow={(row) => {
+              const errors: string[] = [];
+              if (!row.title || row.title.trim() === "") errors.push("Title is required");
+              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
+              if (!row.description || row.description.trim() === "") errors.push("Description is required");
+              if (!row.content || row.content.trim() === "") errors.push("Content is required");
+              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              return { valid: errors.length === 0, errors };
+            }}
+            transformRow={(row) => ({
+              title: row.title,
+              slug: row.slug,
+              description: row.description,
+              content: row.content,
+              imageUrl: row.imageUrl,
+              videoUrl: row.videoUrl || undefined,
+              hasVideo: !!(row.videoUrl && row.videoUrl.trim()),
+              category: row.category || "China",
+              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
+            })}
+            title="Import Survival Guides CSV"
+            description="Upload a CSV file to bulk import survival guides"
+          />
+
+          <Dialog open={createOpen || editGuide !== null} onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setCreateOpen(true);
+          }}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-guide">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Guide
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-guide">
             <DialogHeader>
               <DialogTitle>

@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CSVImport } from "@/components/CSVImport";
 
 export default function TriplistsManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -176,6 +177,19 @@ export default function TriplistsManagement() {
     form.reset();
   };
 
+  const handleBulkImport = async (data: InsertTriplist[]) => {
+    try {
+      const response = await apiRequest("/api/triplists/bulk", "POST", data);
+      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
+      toast({
+        title: "Success",
+        description: `${response.count} triplists imported successfully!`,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -188,16 +202,58 @@ export default function TriplistsManagement() {
           </p>
         </div>
 
-        <Dialog open={createOpen || editTriplist !== null} onOpenChange={(open) => {
-          if (!open) handleCloseDialog();
-          else setCreateOpen(true);
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-triplist">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Triplist
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <CSVImport
+            onImport={handleBulkImport}
+            templateData={{
+              title: "Beijing's Best Hiking Trails",
+              slug: "beijing-best-hiking-trails",
+              description: "Explore scenic mountain paths around Beijing",
+              location: "Beijing, China",
+              imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              cityId: "city-id-here",
+              category: "Hiking",
+              season: "Spring & Autumn",
+              googleMapsEmbedUrl: "https://www.google.com/maps/embed?...",
+              isActive: true,
+            }}
+            templateFilename="triplists-template.csv"
+            requiredColumns={["title", "slug", "description", "location", "imageUrl"]}
+            validateRow={(row) => {
+              const errors: string[] = [];
+              if (!row.title || row.title.trim() === "") errors.push("Title is required");
+              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
+              if (!row.description || row.description.trim() === "") errors.push("Description is required");
+              if (!row.location || row.location.trim() === "") errors.push("Location is required");
+              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              return { valid: errors.length === 0, errors };
+            }}
+            transformRow={(row) => ({
+              title: row.title,
+              slug: row.slug,
+              description: row.description,
+              location: row.location,
+              imageUrl: row.imageUrl,
+              cityId: row.cityId || undefined,
+              category: row.category || undefined,
+              season: row.season || undefined,
+              googleMapsEmbedUrl: row.googleMapsEmbedUrl || undefined,
+              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
+            })}
+            title="Import Triplists CSV"
+            description="Upload a CSV file to bulk import triplists"
+          />
+
+          <Dialog open={createOpen || editTriplist !== null} onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setCreateOpen(true);
+          }}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-triplist">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Triplist
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl" data-testid="modal-triplist">
             <DialogHeader>
               <DialogTitle>
@@ -380,6 +436,7 @@ export default function TriplistsManagement() {
           </DialogContent>
         </Dialog>
       </div>
+    </div>
 
       {isLoading ? (
         <div className="grid gap-6">

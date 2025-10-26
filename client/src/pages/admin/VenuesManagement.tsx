@@ -43,6 +43,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { CSVImport } from "@/components/CSVImport";
 
 export default function VenuesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -178,6 +179,19 @@ export default function VenuesManagement() {
     form.reset();
   };
 
+  const handleBulkImport = async (data: InsertVenue[]) => {
+    try {
+      const response = await apiRequest("/api/venues/bulk", "POST", data);
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      toast({
+        title: "Success",
+        description: `${response.count} venues imported successfully!`,
+      });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -190,16 +204,60 @@ export default function VenuesManagement() {
           </p>
         </div>
 
-        <Dialog open={createOpen || editVenue !== null} onOpenChange={(open) => {
-          if (!open) handleCloseDialog();
-          else setCreateOpen(true);
-        }}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-venue">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Venue
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-3">
+          <CSVImport
+            onImport={handleBulkImport}
+            templateData={{
+              name: "Summer Palace",
+              slug: "summer-palace",
+              description: "Imperial garden with stunning lake views and pavilions",
+              location: "Beijing, China",
+              imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
+              cityId: "city-id-here",
+              category: "Historical Site",
+              highlights: "Imperial Architecture,Kunming Lake,Garden Design",
+              proTips: "Visit early morning to avoid crowds",
+              googleMapsUrl: "https://maps.google.com/...",
+              isActive: true,
+            }}
+            templateFilename="venues-template.csv"
+            requiredColumns={["name", "slug", "description", "location", "imageUrl"]}
+            validateRow={(row) => {
+              const errors: string[] = [];
+              if (!row.name || row.name.trim() === "") errors.push("Name is required");
+              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
+              if (!row.description || row.description.trim() === "") errors.push("Description is required");
+              if (!row.location || row.location.trim() === "") errors.push("Location is required");
+              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              return { valid: errors.length === 0, errors };
+            }}
+            transformRow={(row) => ({
+              name: row.name,
+              slug: row.slug,
+              description: row.description,
+              location: row.location,
+              imageUrl: row.imageUrl,
+              cityId: row.cityId || undefined,
+              category: row.category || undefined,
+              highlights: row.highlights ? row.highlights.split(",").map((h: string) => h.trim()).filter((h: string) => h) : undefined,
+              proTips: row.proTips || undefined,
+              googleMapsUrl: row.googleMapsUrl || undefined,
+              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
+            })}
+            title="Import Venues CSV"
+            description="Upload a CSV file to bulk import venues. Use comma-separated values for highlights."
+          />
+
+          <Dialog open={createOpen || editVenue !== null} onOpenChange={(open) => {
+            if (!open) handleCloseDialog();
+            else setCreateOpen(true);
+          }}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-venue">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Venue
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-venue">
             <DialogHeader>
               <DialogTitle>
