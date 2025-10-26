@@ -14,6 +14,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -23,12 +33,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function GuidesManagement() {
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editGuide, setEditGuide] = useState<SurvivalGuide | null>(null);
+  const [deleteGuide, setDeleteGuide] = useState<SurvivalGuide | null>(null);
   const { toast } = useToast();
 
   const { data: guides = [], isLoading } = useQuery<SurvivalGuide[]>({
@@ -60,7 +72,7 @@ export default function GuidesManagement() {
         title: "Success",
         description: "Survival guide created successfully!",
       });
-      setOpen(false);
+      setCreateOpen(false);
       form.reset();
     },
     onError: () => {
@@ -72,8 +84,55 @@ export default function GuidesManagement() {
     },
   });
 
+  const updateGuide = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InsertSurvivalGuide }) => {
+      return apiRequest(`/api/guides/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
+      toast({
+        title: "Success",
+        description: "Survival guide updated successfully!",
+      });
+      setEditGuide(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update survival guide.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteGuideMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/guides/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
+      toast({
+        title: "Success",
+        description: "Survival guide deleted successfully!",
+      });
+      setDeleteGuide(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete survival guide.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertSurvivalGuide) => {
-    createGuide.mutate(values);
+    if (editGuide) {
+      updateGuide.mutate({ id: editGuide.id, data: values });
+    } else {
+      createGuide.mutate(values);
+    }
   };
 
   const generateSlug = (title: string) => {
@@ -81,6 +140,27 @@ export default function GuidesManagement() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
+  };
+
+  const handleEdit = (guide: SurvivalGuide) => {
+    setEditGuide(guide);
+    form.reset({
+      title: guide.title,
+      slug: guide.slug,
+      description: guide.description,
+      content: guide.content,
+      imageUrl: guide.imageUrl,
+      videoUrl: guide.videoUrl || "",
+      hasVideo: guide.hasVideo,
+      category: guide.category || "China",
+      isActive: guide.isActive,
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setCreateOpen(false);
+    setEditGuide(null);
+    form.reset();
   };
 
   return (
@@ -95,16 +175,21 @@ export default function GuidesManagement() {
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={createOpen || editGuide !== null} onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setCreateOpen(true);
+        }}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-guide">
               <Plus className="w-4 h-4 mr-2" />
               Add Guide
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-guide">
             <DialogHeader>
-              <DialogTitle>Create New Survival Guide</DialogTitle>
+              <DialogTitle>
+                {editGuide ? "Edit Survival Guide" : "Create New Survival Guide"}
+              </DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -120,7 +205,9 @@ export default function GuidesManagement() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            form.setValue("slug", generateSlug(e.target.value));
+                            if (!editGuide) {
+                              form.setValue("slug", generateSlug(e.target.value));
+                            }
                           }}
                           data-testid="input-guide-title"
                         />
@@ -241,13 +328,21 @@ export default function GuidesManagement() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setOpen(false)}
+                    onClick={handleCloseDialog}
                     data-testid="button-cancel"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createGuide.isPending} data-testid="button-submit">
-                    {createGuide.isPending ? "Creating..." : "Create Guide"}
+                  <Button
+                    type="submit"
+                    disabled={createGuide.isPending || updateGuide.isPending}
+                    data-testid="button-submit"
+                  >
+                    {createGuide.isPending || updateGuide.isPending
+                      ? "Saving..."
+                      : editGuide
+                      ? "Update Guide"
+                      : "Create Guide"}
                   </Button>
                 </div>
               </form>
@@ -287,11 +382,50 @@ export default function GuidesManagement() {
                     </span>
                   )}
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(guide)}
+                    data-testid={`button-edit-guide-${guide.id}`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteGuide(guide)}
+                    data-testid={`button-delete-guide-${guide.id}`}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={deleteGuide !== null} onOpenChange={(open) => !open && setDeleteGuide(null)}>
+        <AlertDialogContent data-testid="dialog-delete-guide">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Survival Guide</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteGuide?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteGuide && deleteGuideMutation.mutate(deleteGuide.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

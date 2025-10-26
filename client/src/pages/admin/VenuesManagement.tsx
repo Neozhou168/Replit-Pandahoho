@@ -14,6 +14,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -30,12 +40,14 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function VenuesManagement() {
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editVenue, setEditVenue] = useState<Venue | null>(null);
+  const [deleteVenue, setDeleteVenue] = useState<Venue | null>(null);
   const { toast } = useToast();
 
   const { data: venues = [], isLoading } = useQuery<Venue[]>({
@@ -73,7 +85,7 @@ export default function VenuesManagement() {
         title: "Success",
         description: "Venue created successfully!",
       });
-      setOpen(false);
+      setCreateOpen(false);
       form.reset();
     },
     onError: () => {
@@ -85,8 +97,55 @@ export default function VenuesManagement() {
     },
   });
 
+  const updateVenue = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InsertVenue }) => {
+      return apiRequest(`/api/venues/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      toast({
+        title: "Success",
+        description: "Venue updated successfully!",
+      });
+      setEditVenue(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update venue.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteVenueMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/venues/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      toast({
+        title: "Success",
+        description: "Venue deleted successfully!",
+      });
+      setDeleteVenue(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete venue.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertVenue) => {
-    createVenue.mutate(values);
+    if (editVenue) {
+      updateVenue.mutate({ id: editVenue.id, data: values });
+    } else {
+      createVenue.mutate(values);
+    }
   };
 
   const generateSlug = (name: string) => {
@@ -94,6 +153,29 @@ export default function VenuesManagement() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
+  };
+
+  const handleEdit = (venue: Venue) => {
+    setEditVenue(venue);
+    form.reset({
+      name: venue.name,
+      slug: venue.slug,
+      cityId: venue.cityId,
+      category: venue.category || "",
+      description: venue.description,
+      imageUrl: venue.imageUrl,
+      location: venue.location,
+      highlights: venue.highlights || [],
+      proTips: venue.proTips || "",
+      googleMapsUrl: venue.googleMapsUrl || "",
+      isActive: venue.isActive,
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setCreateOpen(false);
+    setEditVenue(null);
+    form.reset();
   };
 
   return (
@@ -108,16 +190,21 @@ export default function VenuesManagement() {
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={createOpen || editVenue !== null} onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setCreateOpen(true);
+        }}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-venue">
               <Plus className="w-4 h-4 mr-2" />
               Add Venue
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-venue">
             <DialogHeader>
-              <DialogTitle>Create New Venue</DialogTitle>
+              <DialogTitle>
+                {editVenue ? "Edit Venue" : "Create New Venue"}
+              </DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -133,7 +220,9 @@ export default function VenuesManagement() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            form.setValue("slug", generateSlug(e.target.value));
+                            if (!editVenue) {
+                              form.setValue("slug", generateSlug(e.target.value));
+                            }
                           }}
                           data-testid="input-venue-name"
                         />
@@ -163,7 +252,10 @@ export default function VenuesManagement() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>City</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || undefined}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-venue-city">
                             <SelectValue placeholder="Select a city" />
@@ -290,13 +382,21 @@ export default function VenuesManagement() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setOpen(false)}
+                    onClick={handleCloseDialog}
                     data-testid="button-cancel"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createVenue.isPending} data-testid="button-submit">
-                    {createVenue.isPending ? "Creating..." : "Create Venue"}
+                  <Button
+                    type="submit"
+                    disabled={createVenue.isPending || updateVenue.isPending}
+                    data-testid="button-submit"
+                  >
+                    {createVenue.isPending || updateVenue.isPending
+                      ? "Saving..."
+                      : editVenue
+                      ? "Update Venue"
+                      : "Create Venue"}
                   </Button>
                 </div>
               </form>
@@ -321,12 +421,55 @@ export default function VenuesManagement() {
         <div className="grid gap-6">
           {venues.map((venue) => (
             <Card key={venue.id} className="overflow-hidden p-6" data-testid={`card-venue-${venue.id}`}>
-              <h3 className="text-xl font-semibold mb-2">{venue.name}</h3>
-              <p className="text-sm text-muted-foreground">{venue.location}</p>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold mb-2">{venue.name}</h3>
+                  <p className="text-sm text-muted-foreground">{venue.location}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(venue)}
+                    data-testid={`button-edit-venue-${venue.id}`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteVenue(venue)}
+                    data-testid={`button-delete-venue-${venue.id}`}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={deleteVenue !== null} onOpenChange={(open) => !open && setDeleteVenue(null)}>
+        <AlertDialogContent data-testid="dialog-delete-venue">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Venue</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteVenue?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteVenue && deleteVenueMutation.mutate(deleteVenue.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

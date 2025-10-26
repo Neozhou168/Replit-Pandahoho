@@ -14,6 +14,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -30,12 +40,14 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function TriplistsManagement() {
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editTriplist, setEditTriplist] = useState<Triplist | null>(null);
+  const [deleteTriplist, setDeleteTriplist] = useState<Triplist | null>(null);
   const { toast } = useToast();
 
   const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
@@ -72,7 +84,7 @@ export default function TriplistsManagement() {
         title: "Success",
         description: "Triplist created successfully!",
       });
-      setOpen(false);
+      setCreateOpen(false);
       form.reset();
     },
     onError: () => {
@@ -84,8 +96,55 @@ export default function TriplistsManagement() {
     },
   });
 
+  const updateTriplist = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InsertTriplist }) => {
+      return apiRequest(`/api/triplists/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
+      toast({
+        title: "Success",
+        description: "Triplist updated successfully!",
+      });
+      setEditTriplist(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update triplist.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTriplistMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/triplists/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
+      toast({
+        title: "Success",
+        description: "Triplist deleted successfully!",
+      });
+      setDeleteTriplist(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete triplist.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertTriplist) => {
-    createTriplist.mutate(values);
+    if (editTriplist) {
+      updateTriplist.mutate({ id: editTriplist.id, data: values });
+    } else {
+      createTriplist.mutate(values);
+    }
   };
 
   const generateSlug = (title: string) => {
@@ -93,6 +152,28 @@ export default function TriplistsManagement() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
+  };
+
+  const handleEdit = (triplist: Triplist) => {
+    setEditTriplist(triplist);
+    form.reset({
+      title: triplist.title,
+      slug: triplist.slug,
+      cityId: triplist.cityId,
+      category: triplist.category || "",
+      season: triplist.season || "",
+      description: triplist.description,
+      location: triplist.location,
+      imageUrl: triplist.imageUrl,
+      googleMapsEmbedUrl: triplist.googleMapsEmbedUrl || "",
+      isActive: triplist.isActive,
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setCreateOpen(false);
+    setEditTriplist(null);
+    form.reset();
   };
 
   return (
@@ -107,16 +188,21 @@ export default function TriplistsManagement() {
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={createOpen || editTriplist !== null} onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setCreateOpen(true);
+        }}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-triplist">
               <Plus className="w-4 h-4 mr-2" />
               Add Triplist
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" data-testid="modal-triplist">
             <DialogHeader>
-              <DialogTitle>Create New Triplist</DialogTitle>
+              <DialogTitle>
+                {editTriplist ? "Edit Triplist" : "Create New Triplist"}
+              </DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
@@ -133,7 +219,9 @@ export default function TriplistsManagement() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            form.setValue("slug", generateSlug(e.target.value));
+                            if (!editTriplist) {
+                              form.setValue("slug", generateSlug(e.target.value));
+                            }
                           }}
                           data-testid="input-title"
                         />
@@ -151,7 +239,7 @@ export default function TriplistsManagement() {
                       <FormLabel>City</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value ?? undefined}
+                        value={field.value ?? undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-city">
@@ -270,17 +358,21 @@ export default function TriplistsManagement() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setOpen(false)}
+                    onClick={handleCloseDialog}
                     data-testid="button-cancel"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createTriplist.isPending}
+                    disabled={createTriplist.isPending || updateTriplist.isPending}
                     data-testid="button-submit"
                   >
-                    {createTriplist.isPending ? "Creating..." : "Create Triplist"}
+                    {createTriplist.isPending || updateTriplist.isPending
+                      ? "Saving..."
+                      : editTriplist
+                      ? "Update Triplist"
+                      : "Create Triplist"}
                   </Button>
                 </div>
               </form>
@@ -324,11 +416,50 @@ export default function TriplistsManagement() {
                     {triplist.description}
                   </p>
                 </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(triplist)}
+                    data-testid={`button-edit-triplist-${triplist.id}`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteTriplist(triplist)}
+                    data-testid={`button-delete-triplist-${triplist.id}`}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={deleteTriplist !== null} onOpenChange={(open) => !open && setDeleteTriplist(null)}>
+        <AlertDialogContent data-testid="dialog-delete-triplist">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Triplist</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteTriplist?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTriplist && deleteTriplistMutation.mutate(deleteTriplist.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
