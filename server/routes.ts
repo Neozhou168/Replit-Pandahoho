@@ -69,6 +69,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/cities/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertCitySchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const city = await storage.updateCity(req.params.id, validation.data);
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+      res.json(city);
+    } catch (error) {
+      console.error("Error updating city:", error);
+      res.status(500).json({ message: "Failed to update city" });
+    }
+  });
+
+  app.delete("/api/cities/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteCity(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting city:", error);
+      res.status(500).json({ message: "Failed to delete city" });
+    }
+  });
+
   // ========== Venue Routes ==========
   app.get("/api/venues", async (req, res) => {
     try {
@@ -107,6 +136,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating venue:", error);
       res.status(500).json({ message: "Failed to create venue" });
+    }
+  });
+
+  app.put("/api/venues/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertVenueSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const venue = await storage.updateVenue(req.params.id, validation.data);
+      if (!venue) {
+        return res.status(404).json({ message: "Venue not found" });
+      }
+      res.json(venue);
+    } catch (error) {
+      console.error("Error updating venue:", error);
+      res.status(500).json({ message: "Failed to update venue" });
+    }
+  });
+
+  app.delete("/api/venues/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteVenue(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting venue:", error);
+      res.status(500).json({ message: "Failed to delete venue" });
     }
   });
 
@@ -150,6 +208,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/triplists/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertTriplistSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const triplist = await storage.updateTriplist(req.params.id, validation.data);
+      if (!triplist) {
+        return res.status(404).json({ message: "Triplist not found" });
+      }
+      res.json(triplist);
+    } catch (error) {
+      console.error("Error updating triplist:", error);
+      res.status(500).json({ message: "Failed to update triplist" });
+    }
+  });
+
+  app.delete("/api/triplists/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteTriplist(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting triplist:", error);
+      res.status(500).json({ message: "Failed to delete triplist" });
+    }
+  });
+
   // ========== Survival Guide Routes ==========
   app.get("/api/guides", async (_req, res) => {
     try {
@@ -187,6 +274,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating guide:", error);
       res.status(500).json({ message: "Failed to create guide" });
+    }
+  });
+
+  app.put("/api/guides/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertSurvivalGuideSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const guide = await storage.updateSurvivalGuide(req.params.id, validation.data);
+      if (!guide) {
+        return res.status(404).json({ message: "Guide not found" });
+      }
+      res.json(guide);
+    } catch (error) {
+      console.error("Error updating guide:", error);
+      res.status(500).json({ message: "Failed to update guide" });
+    }
+  });
+
+  app.delete("/api/guides/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSurvivalGuide(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting guide:", error);
+      res.status(500).json({ message: "Failed to delete guide" });
     }
   });
 

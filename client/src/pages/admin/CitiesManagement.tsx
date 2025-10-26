@@ -14,6 +14,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -23,12 +33,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function CitiesManagement() {
-  const [open, setOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editCity, setEditCity] = useState<City | null>(null);
+  const [deleteCity, setDeleteCity] = useState<City | null>(null);
   const { toast } = useToast();
 
   const { data: cities = [], isLoading } = useQuery<City[]>({
@@ -57,7 +69,7 @@ export default function CitiesManagement() {
         title: "Success",
         description: "City created successfully!",
       });
-      setOpen(false);
+      setCreateOpen(false);
       form.reset();
     },
     onError: () => {
@@ -69,8 +81,55 @@ export default function CitiesManagement() {
     },
   });
 
+  const updateCity = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InsertCity }) => {
+      return apiRequest(`/api/cities/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
+      toast({
+        title: "Success",
+        description: "City updated successfully!",
+      });
+      setEditCity(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update city. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteCityMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/cities/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
+      toast({
+        title: "Success",
+        description: "City deleted successfully!",
+      });
+      setDeleteCity(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete city. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertCity) => {
-    createCity.mutate(values);
+    if (editCity) {
+      updateCity.mutate({ id: editCity.id, data: values });
+    } else {
+      createCity.mutate(values);
+    }
   };
 
   const generateSlug = (name: string) => {
@@ -78,6 +137,24 @@ export default function CitiesManagement() {
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^\w-]+/g, "");
+  };
+
+  const handleEdit = (city: City) => {
+    setEditCity(city);
+    form.reset({
+      name: city.name,
+      slug: city.slug,
+      tagline: city.tagline || "",
+      imageUrl: city.imageUrl,
+      triplistCount: city.triplistCount,
+      isActive: city.isActive,
+    });
+  };
+
+  const handleCloseDialog = () => {
+    setCreateOpen(false);
+    setEditCity(null);
+    form.reset();
   };
 
   return (
@@ -92,16 +169,21 @@ export default function CitiesManagement() {
           </p>
         </div>
 
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={createOpen || editCity !== null} onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+          else setCreateOpen(true);
+        }}>
           <DialogTrigger asChild>
             <Button data-testid="button-create-city">
               <Plus className="w-4 h-4 mr-2" />
               Add City
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl" data-testid="modal-create-city">
+          <DialogContent className="max-w-2xl" data-testid="modal-city">
             <DialogHeader>
-              <DialogTitle>Create New City</DialogTitle>
+              <DialogTitle>
+                {editCity ? "Edit City" : "Create New City"}
+              </DialogTitle>
             </DialogHeader>
 
             <Form {...form}>
@@ -118,7 +200,9 @@ export default function CitiesManagement() {
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
-                            form.setValue("slug", generateSlug(e.target.value));
+                            if (!editCity) {
+                              form.setValue("slug", generateSlug(e.target.value));
+                            }
                           }}
                           data-testid="input-city-name"
                         />
@@ -187,17 +271,21 @@ export default function CitiesManagement() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setOpen(false)}
+                    onClick={handleCloseDialog}
                     data-testid="button-cancel"
                   >
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    disabled={createCity.isPending}
+                    disabled={createCity.isPending || updateCity.isPending}
                     data-testid="button-submit-city"
                   >
-                    {createCity.isPending ? "Creating..." : "Create City"}
+                    {createCity.isPending || updateCity.isPending
+                      ? "Saving..."
+                      : editCity
+                      ? "Update City"
+                      : "Create City"}
                   </Button>
                 </div>
               </form>
@@ -240,19 +328,51 @@ export default function CitiesManagement() {
                   <span className="text-sm text-muted-foreground">
                     {city.triplistCount} triplists
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    data-testid={`button-edit-city-${city.id}`}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(city)}
+                      data-testid={`button-edit-city-${city.id}`}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDeleteCity(city)}
+                      data-testid={`button-delete-city-${city.id}`}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      <AlertDialog open={deleteCity !== null} onOpenChange={(open) => !open && setDeleteCity(null)}>
+        <AlertDialogContent data-testid="dialog-delete-city">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete City</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteCity?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteCity && deleteCityMutation.mutate(deleteCity.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

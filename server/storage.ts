@@ -37,22 +37,29 @@ export interface IStorage {
   getCity(slug: string): Promise<City | undefined>;
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City | undefined>;
+  deleteCity(id: string): Promise<void>;
 
   // Venue operations
   getVenues(filters?: { triplistId?: string }): Promise<Venue[]>;
   getVenue(slug: string): Promise<Venue | undefined>;
   createVenue(venue: InsertVenue): Promise<Venue>;
+  updateVenue(id: string, venue: Partial<InsertVenue>): Promise<Venue | undefined>;
+  deleteVenue(id: string): Promise<void>;
 
   // Triplist operations
   getTriplists(): Promise<Triplist[]>;
   getTriplist(slug: string): Promise<Triplist | undefined>;
   createTriplist(triplist: InsertTriplist): Promise<Triplist>;
+  updateTriplist(id: string, triplist: Partial<InsertTriplist>): Promise<Triplist | undefined>;
+  deleteTriplist(id: string): Promise<void>;
   addVenueToTriplist(triplistId: string, venueId: string, order?: number): Promise<void>;
 
   // Survival Guide operations
   getSurvivalGuides(): Promise<SurvivalGuide[]>;
   getSurvivalGuide(slug: string): Promise<SurvivalGuide | undefined>;
   createSurvivalGuide(guide: InsertSurvivalGuide): Promise<SurvivalGuide>;
+  updateSurvivalGuide(id: string, guide: Partial<InsertSurvivalGuide>): Promise<SurvivalGuide | undefined>;
+  deleteSurvivalGuide(id: string): Promise<void>;
 
   // Group-Up operations
   getGroupUps(filters?: { triplistId?: string }): Promise<GroupUp[]>;
@@ -110,6 +117,10 @@ export class DatabaseStorage implements IStorage {
     return city;
   }
 
+  async deleteCity(id: string): Promise<void> {
+    await db.delete(cities).where(eq(cities.id, id));
+  }
+
   // ========== Venue Operations ==========
   async getVenues(filters?: { triplistId?: string }): Promise<Venue[]> {
     if (filters?.triplistId) {
@@ -134,6 +145,19 @@ export class DatabaseStorage implements IStorage {
     return venue;
   }
 
+  async updateVenue(id: string, venueData: Partial<InsertVenue>): Promise<Venue | undefined> {
+    const [venue] = await db
+      .update(venues)
+      .set(venueData)
+      .where(eq(venues.id, id))
+      .returning();
+    return venue;
+  }
+
+  async deleteVenue(id: string): Promise<void> {
+    await db.delete(venues).where(eq(venues.id, id));
+  }
+
   // ========== Triplist Operations ==========
   async getTriplists(): Promise<Triplist[]> {
     return db.select().from(triplists).orderBy(desc(triplists.createdAt));
@@ -150,6 +174,19 @@ export class DatabaseStorage implements IStorage {
   async createTriplist(triplistData: InsertTriplist): Promise<Triplist> {
     const [triplist] = await db.insert(triplists).values(triplistData).returning();
     return triplist;
+  }
+
+  async updateTriplist(id: string, triplistData: Partial<InsertTriplist>): Promise<Triplist | undefined> {
+    const [triplist] = await db
+      .update(triplists)
+      .set(triplistData)
+      .where(eq(triplists.id, id))
+      .returning();
+    return triplist;
+  }
+
+  async deleteTriplist(id: string): Promise<void> {
+    await db.delete(triplists).where(eq(triplists.id, id));
   }
 
   async addVenueToTriplist(
@@ -180,6 +217,19 @@ export class DatabaseStorage implements IStorage {
   async createSurvivalGuide(guideData: InsertSurvivalGuide): Promise<SurvivalGuide> {
     const [guide] = await db.insert(survivalGuides).values(guideData).returning();
     return guide;
+  }
+
+  async updateSurvivalGuide(id: string, guideData: Partial<InsertSurvivalGuide>): Promise<SurvivalGuide | undefined> {
+    const [guide] = await db
+      .update(survivalGuides)
+      .set(guideData)
+      .where(eq(survivalGuides.id, id))
+      .returning();
+    return guide;
+  }
+
+  async deleteSurvivalGuide(id: string): Promise<void> {
+    await db.delete(survivalGuides).where(eq(survivalGuides.id, id));
   }
 
   // ========== Group-Up Operations ==========
