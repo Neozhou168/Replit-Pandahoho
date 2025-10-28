@@ -102,12 +102,16 @@ export const triplists = pgTable("triplists", {
   title: varchar("title", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 200 }).notNull(),
   cityId: varchar("city_id").references(() => cities.id),
-  category: varchar("category", { length: 50 }), // Hiking, Attractions, etc
-  season: varchar("season", { length: 50 }), // Spring & Autumn, All seasons, etc
+  country: varchar("country", { length: 50 }).default("China"),
+  category: varchar("category", { length: 50 }), // Hiking, Attractions, etc (Travel Type)
+  season: varchar("season", { length: 50 }), // Spring & Autumn, All seasons, etc (Best Season to Travel)
   description: text("description").notNull(),
   location: varchar("location", { length: 100 }).notNull(),
   imageUrl: text("image_url").notNull(),
+  videoUrl: text("video_url"),
   googleMapsEmbedUrl: text("google_maps_embed_url"),
+  googleMapsDirectUrl: text("google_maps_direct_url"),
+  relatedVenueIds: text("related_venue_ids"), // Comma-separated venue IDs
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -5,13 +5,23 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
 
 ## Recent Changes
 **October 28, 2025**
-- Enhanced venue admin modal with comprehensive field set matching reference design
-- Added new venue fields: videoUrl, country, googleMapsEmbedUrl, googleMapsDirectUrl
-- Reorganized venue form with improved layout (Type/Country/City in 3-column grid)
-- Added Venue ID display with copy button in edit mode
-- Updated field labels: "Title" (with emoji support), "Cover Image URL", "Tips"
-- Improved placeholder text with emoji formatting examples
-- Updated CSV import template for venues with all new fields
+- Enhanced venue and triplist admin modals with comprehensive field sets matching reference design
+- **Venue Updates:**
+  - Added new fields: videoUrl, country, googleMapsEmbedUrl, googleMapsDirectUrl
+  - Reorganized form with 3-column grid (Type/Country/City)
+  - Added Venue ID display with copy button in edit mode
+  - Updated labels: "Title" (emoji support), "Cover Image URL", "Tips"
+  - Improved placeholder text with emoji formatting examples
+- **Triplist Updates:**
+  - Added new fields: country, videoUrl, googleMapsDirectUrl, relatedVenueIds
+  - Reorganized form with 2-column grids for better UX
+  - Added Triplist ID display with copy button in edit mode
+  - Updated labels: "Title *", "Country", "Travel Type", "Best Season to Travel"
+  - Added helpful instructions for Google Maps Embed/Direct URLs
+  - Added recommendation note for Cover Image URL (1200×800px 3:2 ratio)
+  - Added Related Venues field for comma-separated venue IDs
+- Updated CSV import templates for both venues and triplists with all new fields
+- Database schema synced with new columns
 
 **October 25, 2025**
 - Complete platform implementation with all core features

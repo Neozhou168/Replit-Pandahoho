@@ -65,12 +65,16 @@ export default function TriplistsManagement() {
       title: "",
       slug: "",
       cityId: "",
+      country: "China",
       category: "",
       season: "",
       description: "",
       location: "",
       imageUrl: "",
+      videoUrl: "",
       googleMapsEmbedUrl: "",
+      googleMapsDirectUrl: "",
+      relatedVenueIds: "",
       isActive: true,
     },
   });
@@ -161,12 +165,16 @@ export default function TriplistsManagement() {
       title: triplist.title,
       slug: triplist.slug,
       cityId: triplist.cityId,
+      country: triplist.country || "China",
       category: triplist.category || "",
       season: triplist.season || "",
       description: triplist.description,
       location: triplist.location,
       imageUrl: triplist.imageUrl,
+      videoUrl: triplist.videoUrl || "",
       googleMapsEmbedUrl: triplist.googleMapsEmbedUrl || "",
+      googleMapsDirectUrl: triplist.googleMapsDirectUrl || "",
+      relatedVenueIds: triplist.relatedVenueIds || "",
       isActive: triplist.isActive,
     });
   };
@@ -207,15 +215,19 @@ export default function TriplistsManagement() {
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
-              title: "Beijing's Best Hiking Trails",
-              slug: "beijing-best-hiking-trails",
-              description: "Explore scenic mountain paths around Beijing",
+              title: "Explore the Great Wall",
+              slug: "explore-the-great-wall",
+              description: "A Journey Across Beijing's Ancient Mountain Fortresses, from the famous Badaling and scenic Mutianyu, to the wild beauty of Jinshanling and Simatai...",
               location: "Beijing, China",
-              imageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+              imageUrl: "https://res.cloudinary.com/...",
+              videoUrl: "",
               cityId: "city-id-here",
+              country: "China",
               category: "Hiking",
               season: "Spring & Autumn",
-              googleMapsEmbedUrl: "https://www.google.com/maps/embed?...",
+              googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=...",
+              googleMapsDirectUrl: "https://maps.google.com/...",
+              relatedVenueIds: "venue-id-1,venue-id-2,venue-id-3",
               isActive: true,
             }}
             templateFilename="triplists-template.csv"
@@ -235,10 +247,14 @@ export default function TriplistsManagement() {
               description: row.description,
               location: row.location,
               imageUrl: row.imageUrl,
+              videoUrl: row.videoUrl || undefined,
               cityId: row.cityId || undefined,
+              country: row.country || "China",
               category: row.category || undefined,
               season: row.season || undefined,
               googleMapsEmbedUrl: row.googleMapsEmbedUrl || undefined,
+              googleMapsDirectUrl: row.googleMapsDirectUrl || undefined,
+              relatedVenueIds: row.relatedVenueIds || undefined,
               isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
             })}
             title="Import Triplists CSV"
@@ -255,7 +271,7 @@ export default function TriplistsManagement() {
                 Add Triplist
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-2xl" data-testid="modal-triplist">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="modal-triplist">
             <DialogHeader>
               <DialogTitle>
                 {editTriplist ? "Edit Triplist" : "Create New Triplist"}
@@ -263,72 +279,45 @@ export default function TriplistsManagement() {
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Beijing's Best Hiking Trails"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(e);
-                            if (!editTriplist) {
-                              form.setValue("slug", generateSlug(e.target.value));
-                            }
-                          }}
-                          data-testid="input-title"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cityId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-city">
-                            <SelectValue placeholder="Select a city" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {editTriplist && (
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Triplist ID</div>
+                      <div className="font-mono text-sm">{editTriplist.id}</div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => navigator.clipboard.writeText(editTriplist.id)}
+                      data-testid="button-copy-triplist-id"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </Button>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>Title *</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Hiking"
+                            placeholder="Explore the Great Wall"
                             {...field}
-                            value={field.value ?? ""}
-                            data-testid="input-category"
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (!editTriplist) {
+                                form.setValue("slug", generateSlug(e.target.value));
+                              }
+                            }}
+                            data-testid="input-title"
                           />
                         </FormControl>
                         <FormMessage />
@@ -338,18 +327,134 @@ export default function TriplistsManagement() {
 
                   <FormField
                     control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || "China"}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-country">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="China">China</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="cityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-city">
+                              <SelectValue placeholder="Select a city" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {cities.map((city) => (
+                              <SelectItem key={city.id} value={city.id}>
+                                {city.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Travel Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-travel-type">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Hiking">Hiking</SelectItem>
+                            <SelectItem value="Attractions">Attractions</SelectItem>
+                            <SelectItem value="Food & Drink">Food & Drink</SelectItem>
+                            <SelectItem value="Cultural">Cultural</SelectItem>
+                            <SelectItem value="Nature">Nature</SelectItem>
+                            <SelectItem value="Shopping">Shopping</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
                     name="season"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Season</FormLabel>
+                        <FormLabel>Best Season to Travel</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-season">
+                              <SelectValue placeholder="Select season" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Spring & Autumn">Spring & Autumn</SelectItem>
+                            <SelectItem value="All Seasons">All Seasons</SelectItem>
+                            <SelectItem value="Spring">Spring</SelectItem>
+                            <SelectItem value="Summer">Summer</SelectItem>
+                            <SelectItem value="Autumn">Autumn</SelectItem>
+                            <SelectItem value="Winter">Winter</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="imageUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cover Image URL</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Spring & Autumn"
+                            placeholder="https://res.cloudinary.com/..."
                             {...field}
-                            value={field.value ?? ""}
-                            data-testid="input-season"
+                            data-testid="input-image-url"
                           />
                         </FormControl>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          💡 Recommended: 1200×800px (3:2 ratio) or larger for best quality across all devices
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -358,17 +463,64 @@ export default function TriplistsManagement() {
 
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="videoUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>Video URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., Beijing, China"
+                          placeholder="YouTube or direct video URL"
                           {...field}
-                          data-testid="input-location"
+                          value={field.value || ""}
+                          data-testid="input-video-url"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="googleMapsEmbedUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Google Maps Embed URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://www.google.com/maps/d/u/0/embed?mid=..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-maps-embed-url"
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <span className="font-medium">How to get this:</span> Go to Google Maps → Find your location → Share → Embed a map → Copy HTML → Extract the src URL from the iframe tag<br />
+                        <span className="font-medium">Example:</span> https://www.google.com/maps/embed?pb=!1m18!1m12...
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="googleMapsDirectUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Google Maps Direct URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://www.google.com/maps/d/u/0/edit?mid=..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-maps-direct-url"
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        <span className="font-medium">How to get this:</span> Go to Google Maps → Find your location → Share → Send a link → Copy link<br />
+                        <span className="font-medium">Example:</span> https://goo.gl/maps/ABC123 or https://maps.google.com/...
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -379,11 +531,11 @@ export default function TriplistsManagement() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Description *</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Describe the triplist..."
-                          rows={3}
+                          placeholder="A Journey Across Beijing's Ancient Mountain Fortresses, from the famous Badaling and scenic Mutianyu, to the wild beauty of Jinshanling and Simatai..."
+                          rows={6}
                           {...field}
                           data-testid="input-description"
                         />
@@ -395,17 +547,21 @@ export default function TriplistsManagement() {
 
                 <FormField
                   control={form.control}
-                  name="imageUrl"
+                  name="relatedVenueIds"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Related Venues</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://..."
+                          placeholder="68fb2b139430589cdbdd4133, 68fb29d3222a8634aef54601, 68fb28858fc3203a56f40ed9..."
                           {...field}
-                          data-testid="input-image-url"
+                          value={field.value || ""}
+                          data-testid="input-related-venues"
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Enter venue IDs separated by commas. You can find venue IDs in the Venues admin panel.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
