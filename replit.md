@@ -4,7 +4,27 @@
 Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel discovery platform focused on Chinese cities. Built on Replit with PostgreSQL, object storage, Stripe integration, and Replit Auth.
 
 ## Recent Changes
-**October 28, 2025**
+**October 28, 2025 - Content Settings & Dynamic Dropdowns**
+- **Content Settings Feature:**
+  - Created new admin page for managing dropdown options used throughout the platform
+  - Added three content settings tables: `content_countries`, `content_travel_types`, `content_seasons`
+  - Implemented CRUD operations with isActive flags and displayOrder for ordered entities
+  - Built ContentSettings admin UI with 3-section grid layout (Countries, Travel Types, Seasons)
+  - Added status badges (Active/Inactive) and comprehensive data tables
+  - Integrated Content Settings link in admin sidebar with Settings icon
+  - Seeded initial data: China, 5 travel types (Hiking, Attractions, Food & Drink, Cultural, Nature), 4 seasons
+- **Dynamic Dropdowns:**
+  - Updated Venues and Triplists admin modals to fetch dropdown options from API endpoints
+  - Country/Type/Season selects now pull from `content_*` tables instead of hardcoded values
+  - Dropdowns automatically filter to show only active options
+  - Admins can now manage dropdown options without code changes
+- **CSV Import Format Update:**
+  - Updated Triplists CSV import to match user's format: ID, Title, Country, City, Type, Best Season, Cover Image URL, Video URL, Google Maps Embed URL, Google Maps Direct URL, Description, Related Venues, Created Date
+  - Implemented city name to cityId mapping during CSV import
+  - Auto-generates slug from title during import
+  - Location field constructed from City and Country values
+
+**October 28, 2025 - Enhanced Admin Forms**
 - Enhanced venue and triplist admin modals with comprehensive field sets matching reference design
 - **Venue Updates:**
   - Added new fields: videoUrl, country, googleMapsEmbedUrl, googleMapsDirectUrl
@@ -20,7 +40,6 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
   - Added helpful instructions for Google Maps Embed/Direct URLs
   - Added recommendation note for Cover Image URL (1200×800px 3:2 ratio)
   - Added Related Venues field for comma-separated venue IDs
-- Updated CSV import templates for both venues and triplists with all new fields
 - Database schema synced with new columns
 
 **October 25, 2025**
@@ -52,7 +71,7 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
 **Tables:**
 - `sessions` - Replit Auth session storage
 - `users` - User accounts with admin flag
-- `cities` - 8 initial Chinese cities
+- `cities` - 8 initial Chinese cities with countryId reference
 - `venues` - Specific locations within cities
 - `triplists` - Curated venue collections
 - `triplist_venues` - Many-to-many junction table
@@ -60,6 +79,9 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
 - `group_ups` - User-created meetups
 - `favorites` - User saved content
 - `carousel_items` - Homepage hero slides
+- `content_countries` - Manageable country options with isActive flag
+- `content_travel_types` - Manageable travel type options with isActive and displayOrder
+- `content_seasons` - Manageable season options with isActive and displayOrder
 
 ## User Preferences
 
@@ -72,9 +94,12 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
 
 ### Content Management
 - Admin dashboard accessible only to users with `isAdmin: true`
-- CMS for cities, triplists, venues, survival guides, carousel
+- CMS for cities, triplists, venues, survival guides, carousel, content settings
+- CSV bulk upload functionality for efficient data management
+- Dynamic dropdown options managed via Content Settings (no hardcoded values)
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
+- City name to ID mapping during CSV imports
 
 ## Project Structure
 
@@ -127,9 +152,15 @@ shared/
 ### Admin Features
 ✅ Admin dashboard with metrics
 ✅ Cities management (CRUD)
-✅ Carousel management (add/delete slides)
+✅ Triplists management (CRUD with CSV bulk import)
+✅ Venues management (CRUD with CSV bulk import)
+✅ Survival Guides management (CRUD with CSV bulk import)
+✅ Carousel management (add/delete slides with CSV bulk import)
+✅ Content Settings (manage Countries, Travel Types, Seasons with CRUD)
+✅ Dynamic dropdown options sourced from content settings
 ✅ Sidebar navigation with protected routes
 ✅ Admin-only access control
+✅ CSV bulk upload with validation and preview for all content types
 
 ### Technical Features
 ✅ Replit Auth integration
@@ -160,9 +191,19 @@ shared/
 - Admin access requires `isAdmin: true` in users table
 - Object storage configured at `DEFAULT_OBJECT_STORAGE_BUCKET_ID`
 
+## CSV Import Format
+
+### Triplists CSV Format
+Columns: ID (optional), Title, Country, City, Type, Best Season, Cover Image URL, Video URL, Google Maps Embed URL, Google Maps Direct URL, Description, Related Venues, Created Date (optional)
+
+**Notes:**
+- City names are automatically matched to existing cities in the database
+- Slug is auto-generated from Title
+- Location field is constructed from City and Country
+- Related Venues should be comma-separated venue IDs
+
 ## Next Steps / Future Enhancements
-- Complete admin pages for triplists, venues, guides management
-- Integrate object storage for image uploads in admin
+- Integrate object storage for image uploads in admin UI
 - Add user profile page with favorites
 - Implement search functionality across content
 - Add Stripe payment integration for membership
@@ -170,3 +211,4 @@ shared/
 - Add map integration for venue discovery
 - Implement group-up RSVP system
 - Add social features (comments, reviews)
+- Add more content settings categories as needed (e.g., price ranges, difficulty levels)
