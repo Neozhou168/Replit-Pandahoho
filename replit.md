@@ -4,6 +4,18 @@
 Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel discovery platform focused on Chinese cities. Built on Replit with PostgreSQL, object storage, Stripe integration, and Replit Auth.
 
 ## Recent Changes
+**October 28, 2025 - Triplist Detail Page Enhancements**
+- **Map Location Section:**
+  - Updated heading from "Map View" to "Map Location" with location pin icon
+  - Added "Open in Google Maps" link using googleMapsDirectUrl field
+  - Positioned map section between description and related venues
+  - Added border to map embed for better visual hierarchy
+- **Related Venues Section:**
+  - Updated heading from "Venues in this Triplist" to "Related Venues"
+  - Enhanced empty state with card design: "No Related Content Yet" message
+  - Improved messaging: "Related routes and venues will appear here once they're linked to this triplist"
+  - Section now appears after map for better content flow
+
 **October 28, 2025 - CSV Import Format Updates**
 - **Venues CSV Format:**
   - Updated to match user's CSV file format with columns: ID, Title, Cover Image URL, Video URL, Type, Country, City, Description, Tips, Google Maps Embed URL, Google Maps Direct URL, Created Date

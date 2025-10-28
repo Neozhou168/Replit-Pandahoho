@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Users } from "lucide-react";
+import { ArrowLeft, MapPin, Users, ExternalLink } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
 
@@ -107,15 +107,55 @@ export default function TriplistDetailPage() {
               </p>
             </div>
 
+            {triplist.googleMapsEmbedUrl && (
+              <div className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2" data-testid="section-title-map">
+                    <MapPin className="w-6 h-6 text-primary" />
+                    Map Location
+                  </h2>
+                  {triplist.googleMapsDirectUrl && (
+                    <a
+                      href={triplist.googleMapsDirectUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm text-primary hover:underline"
+                      data-testid="link-open-maps"
+                    >
+                      <span>Open in Google Maps</span>
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <div className="aspect-video rounded-xl overflow-hidden border">
+                  <iframe
+                    src={triplist.googleMapsEmbedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    data-testid="map-embed"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="mb-12">
               <h2 className="text-2xl font-semibold mb-6" data-testid="section-title-venues">
-                Venues in this Triplist
+                Related Venues
               </h2>
               
               {venues.length === 0 ? (
-                <p className="text-muted-foreground" data-testid="text-no-venues">
-                  No venues added yet
-                </p>
+                <Card className="p-12 text-center">
+                  <h3 className="font-semibold mb-2" data-testid="text-no-venues-title">
+                    No Related Content Yet
+                  </h3>
+                  <p className="text-sm text-muted-foreground" data-testid="text-no-venues">
+                    Related routes and venues will appear here once they're linked to this triplist.
+                  </p>
+                </Card>
               ) : (
                 <div className="grid gap-6">
                   {venues.map((venue) => (
@@ -152,26 +192,6 @@ export default function TriplistDetailPage() {
                 </div>
               )}
             </div>
-
-            {triplist.googleMapsEmbedUrl && (
-              <div className="mb-12">
-                <h2 className="text-2xl font-semibold mb-6" data-testid="section-title-map">
-                  Map View
-                </h2>
-                <div className="aspect-video rounded-xl overflow-hidden">
-                  <iframe
-                    src={triplist.googleMapsEmbedUrl}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    data-testid="map-embed"
-                  />
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="lg:col-span-1">
