@@ -15,6 +15,10 @@ Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel disco
   - Enhanced empty state with card design: "No Related Content Yet" message
   - Improved messaging: "Related routes and venues will appear here once they're linked to this triplist"
   - Section now appears after map for better content flow
+  - Added two action buttons per venue card: "View Venue" (navigates to detail page) and "Google Maps" (opens external maps link)
+  - Implemented accessible button pattern using `Button asChild` to avoid nested interactive elements
+  - Added "VENUE" label above venue name for better categorization
+  - Maintained venue location, description, and image in card layout
 
 **October 28, 2025 - CSV Import Format Updates**
 - **Venues CSV Format:**
