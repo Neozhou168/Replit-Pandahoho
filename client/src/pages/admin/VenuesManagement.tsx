@@ -66,12 +66,16 @@ export default function VenuesManagement() {
       slug: "",
       cityId: "",
       category: "",
+      country: "China",
       description: "",
       imageUrl: "",
+      videoUrl: "",
       location: "",
       highlights: [],
       proTips: "",
       googleMapsUrl: "",
+      googleMapsEmbedUrl: "",
+      googleMapsDirectUrl: "",
       isActive: true,
     },
   });
@@ -163,12 +167,16 @@ export default function VenuesManagement() {
       slug: venue.slug,
       cityId: venue.cityId,
       category: venue.category || "",
+      country: venue.country || "China",
       description: venue.description,
       imageUrl: venue.imageUrl,
+      videoUrl: venue.videoUrl || "",
       location: venue.location,
       highlights: venue.highlights || [],
       proTips: venue.proTips || "",
       googleMapsUrl: venue.googleMapsUrl || "",
+      googleMapsEmbedUrl: venue.googleMapsEmbedUrl || "",
+      googleMapsDirectUrl: venue.googleMapsDirectUrl || "",
       isActive: venue.isActive,
     });
   };
@@ -209,16 +217,20 @@ export default function VenuesManagement() {
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
-              name: "Summer Palace",
-              slug: "summer-palace",
-              description: "Imperial garden with stunning lake views and pavilions",
+              name: "🏛️ Huanghuacheng Lakeside Great Wall | 黄花城水长城",
+              slug: "huanghuacheng-great-wall",
+              description: "The Huanghuacheng Lakeside Great Wall where ancient stone walls meet tranquil blue water.\n💰 Average Spend\n🏛️ RMB 60–100\n💵 USD 8–14",
               location: "Beijing, China",
-              imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
+              imageUrl: "https://res.cloudinary.com/...",
+              videoUrl: "",
               cityId: "city-id-here",
-              category: "Historical Site",
+              category: "Hiking",
+              country: "China",
               highlights: ["Imperial Architecture", "Kunming Lake", "Garden Design"],
-              proTips: "Visit early morning to avoid crowds",
-              googleMapsUrl: "https://maps.google.com/...",
+              proTips: "🚗 Transportation: About 2 hours from Beijing\n🏕️ Experience: Take a boat ride to see the wall reflected in the lake",
+              googleMapsUrl: "",
+              googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=...",
+              googleMapsDirectUrl: "https://maps.app.goo.gl/...",
               isActive: true,
             }}
             templateFilename="venues-template.csv"
@@ -238,11 +250,15 @@ export default function VenuesManagement() {
               description: row.description,
               location: row.location,
               imageUrl: row.imageUrl,
+              videoUrl: row.videoUrl || undefined,
               cityId: row.cityId || undefined,
               category: row.category || undefined,
+              country: row.country || "China",
               highlights: row.highlights ? row.highlights.split(",").map((h: string) => h.trim()).filter((h: string) => h) : undefined,
               proTips: row.proTips || undefined,
               googleMapsUrl: row.googleMapsUrl || undefined,
+              googleMapsEmbedUrl: row.googleMapsEmbedUrl || undefined,
+              googleMapsDirectUrl: row.googleMapsDirectUrl || undefined,
               isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
             })}
             title="Import Venues CSV"
@@ -267,15 +283,35 @@ export default function VenuesManagement() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {editVenue && (
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <div>
+                      <div className="text-sm font-medium text-muted-foreground">Venue ID</div>
+                      <div className="font-mono text-sm">{editVenue.id}</div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => navigator.clipboard.writeText(editVenue.id)}
+                      data-testid="button-copy-venue-id"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </Button>
+                  </div>
+                )}
+
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Venue Name</FormLabel>
+                      <FormLabel>Title *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Summer Palace"
+                          placeholder="🏛️ Huanghuacheng Lakeside Great Wall | 黄花城水长城"
                           {...field}
                           onChange={(e) => {
                             field.onChange(e);
@@ -293,102 +329,13 @@ export default function VenuesManagement() {
 
                 <FormField
                   control={form.control}
-                  name="slug"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Slug (URL)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="summer-palace" {...field} data-testid="input-venue-slug" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cityId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>City</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-venue-city">
-                            <SelectValue placeholder="Select a city" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {cities.map((city) => (
-                            <SelectItem key={city.id} value={city.id}>
-                              {city.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Historical Site" {...field} value={field.value || ""} data-testid="input-venue-category" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Beijing, China" {...field} data-testid="input-venue-location" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Enter venue description..."
-                          {...field}
-                          rows={4}
-                          data-testid="textarea-venue-description"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Image URL</FormLabel>
+                      <FormLabel>Cover Image URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://example.com/image.jpg"
+                          placeholder="https://res.cloudinary.com/..."
                           {...field}
                           data-testid="input-venue-image-url"
                         />
@@ -400,16 +347,124 @@ export default function VenuesManagement() {
 
                 <FormField
                   control={form.control}
-                  name="googleMapsUrl"
-                  render={({ field}) => (
+                  name="videoUrl"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Google Maps URL (Optional)</FormLabel>
+                      <FormLabel>Video URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://maps.google.com/..."
+                          placeholder="https://www.youtube.com/embed/..."
                           {...field}
                           value={field.value || ""}
-                          data-testid="input-venue-maps-url"
+                          data-testid="input-venue-video-url"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-venue-type">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Hiking">Hiking</SelectItem>
+                            <SelectItem value="Historical Site">Historical Site</SelectItem>
+                            <SelectItem value="Nature">Nature</SelectItem>
+                            <SelectItem value="Cultural">Cultural</SelectItem>
+                            <SelectItem value="Food & Drink">Food & Drink</SelectItem>
+                            <SelectItem value="Shopping">Shopping</SelectItem>
+                            <SelectItem value="Entertainment">Entertainment</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Country</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || "China"}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-venue-country">
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="China">China</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="cityId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || undefined}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-venue-city">
+                              <SelectValue placeholder="Select city" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {cities.map((city) => (
+                              <SelectItem key={city.id} value={city.id}>
+                                {city.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {cities.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Found {cities.length} cities for China
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Include emojis for formatting:&#10;💰 Average Spend&#10;🏛️ RMB 60–100&#10;💵 USD 8–14"
+                          {...field}
+                          rows={8}
+                          data-testid="textarea-venue-description"
                         />
                       </FormControl>
                       <FormMessage />
@@ -422,14 +477,52 @@ export default function VenuesManagement() {
                   name="proTips"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Pro Tips (Optional)</FormLabel>
+                      <FormLabel>Tips</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Best time to visit, tips for tourists..."
+                          placeholder="Include emojis:&#10;🚗 Transportation: About 2 hours from Beijing&#10;🏕️ Experience: Take a boat ride to see the wall"
                           {...field}
                           value={field.value || ""}
-                          rows={3}
-                          data-testid="textarea-venue-pro-tips"
+                          rows={5}
+                          data-testid="textarea-venue-tips"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="googleMapsEmbedUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Google Maps Embed URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://www.google.com/maps/embed?pb=..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-venue-maps-embed-url"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="googleMapsDirectUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Google Maps Direct URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://maps.app.goo.gl/..."
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-venue-maps-direct-url"
                         />
                       </FormControl>
                       <FormMessage />

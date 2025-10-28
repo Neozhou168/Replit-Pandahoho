@@ -4,6 +4,15 @@
 Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel discovery platform focused on Chinese cities. Built on Replit with PostgreSQL, object storage, Stripe integration, and Replit Auth.
 
 ## Recent Changes
+**October 28, 2025**
+- Enhanced venue admin modal with comprehensive field set matching reference design
+- Added new venue fields: videoUrl, country, googleMapsEmbedUrl, googleMapsDirectUrl
+- Reorganized venue form with improved layout (Type/Country/City in 3-column grid)
+- Added Venue ID display with copy button in edit mode
+- Updated field labels: "Title" (with emoji support), "Cover Image URL", "Tips"
+- Improved placeholder text with emoji formatting examples
+- Updated CSV import template for venues with all new fields
+
 **October 25, 2025**
 - Complete platform implementation with all core features
 - Designed and built entire frontend with visual-first approach

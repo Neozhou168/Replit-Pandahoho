@@ -75,12 +75,16 @@ export const venues = pgTable("venues", {
   slug: varchar("slug", { length: 200 }).notNull(),
   cityId: varchar("city_id").references(() => cities.id),
   category: varchar("category", { length: 50 }),
+  country: varchar("country", { length: 50 }).default("China"),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
+  videoUrl: text("video_url"),
   location: text("location").notNull(), // e.g. "Beijing, China"
   highlights: jsonb("highlights").$type<string[]>(), // Array of highlight badges
-  proTips: text("pro_tips"), // Formatted text with emoji
-  googleMapsUrl: text("google_maps_url"),
+  proTips: text("pro_tips"), // Formatted text with emoji (Tips section)
+  googleMapsEmbedUrl: text("google_maps_embed_url"),
+  googleMapsDirectUrl: text("google_maps_direct_url"),
+  googleMapsUrl: text("google_maps_url"), // Legacy field, keep for compatibility
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
