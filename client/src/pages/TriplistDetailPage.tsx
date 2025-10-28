@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Users, ExternalLink } from "lucide-react";
+import { ArrowLeft, MapPin, Users, ExternalLink, Eye } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
 
@@ -159,35 +159,62 @@ export default function TriplistDetailPage() {
               ) : (
                 <div className="grid gap-6">
                   {venues.map((venue) => (
-                    <Link
-                      key={venue.id}
-                      href={`/venues/${venue.slug}`}
-                      data-testid={`link-venue-${venue.id}`}
-                    >
-                      <Card className="overflow-hidden hover-elevate active-elevate-2 cursor-pointer">
-                        <div className="flex flex-col md:flex-row gap-6 p-6">
-                          <div className="w-full md:w-48 aspect-[4/3] rounded-lg overflow-hidden flex-shrink-0">
-                            <img
-                              src={venue.imageUrl}
-                              alt={venue.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-semibold mb-2" data-testid={`text-venue-name-${venue.id}`}>
-                              {venue.name}
-                            </h3>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                              <MapPin className="w-4 h-4" />
-                              <span data-testid={`text-venue-location-${venue.id}`}>{venue.location}</span>
-                            </div>
-                            <p className="text-muted-foreground line-clamp-2" data-testid={`text-venue-description-${venue.id}`}>
-                              {venue.description}
-                            </p>
-                          </div>
+                    <Card key={venue.id} className="overflow-hidden">
+                      <div className="flex flex-col md:flex-row gap-6 p-6">
+                        <div className="w-full md:w-48 aspect-[4/3] rounded-lg overflow-hidden flex-shrink-0">
+                          <img
+                            src={venue.imageUrl}
+                            alt={venue.name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      </Card>
-                    </Link>
+                        <div className="flex-1">
+                          <div className="flex items-start gap-2 mb-2">
+                            <MapPin className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
+                            <span className="text-xs text-muted-foreground uppercase tracking-wide">VENUE</span>
+                          </div>
+                          <h3 className="text-xl font-semibold mb-2" data-testid={`text-venue-name-${venue.id}`}>
+                            {venue.name}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                            <span data-testid={`text-venue-location-${venue.id}`}>{venue.location}</span>
+                          </div>
+                          <p className="text-muted-foreground line-clamp-2 text-sm" data-testid={`text-venue-description-${venue.id}`}>
+                            {venue.description}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-2 md:ml-auto">
+                          <Button 
+                            variant="default" 
+                            className="w-full md:w-40 gap-2"
+                            data-testid={`button-view-venue-${venue.id}`}
+                            asChild
+                          >
+                            <Link href={`/venues/${venue.slug}`}>
+                              <Eye className="w-4 h-4" />
+                              View Venue
+                            </Link>
+                          </Button>
+                          {venue.googleMapsDirectUrl && (
+                            <Button 
+                              variant="outline" 
+                              className="w-full md:w-40 gap-2"
+                              data-testid={`button-google-maps-${venue.id}`}
+                              asChild
+                            >
+                              <a
+                                href={venue.googleMapsDirectUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <MapPin className="w-4 h-4" />
+                                Google Maps
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
                   ))}
                 </div>
               )}
