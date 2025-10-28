@@ -11,6 +11,9 @@ import {
   insertSurvivalGuideSchema,
   insertGroupUpSchema,
   insertCarouselItemSchema,
+  insertContentCountrySchema,
+  insertContentTravelTypeSchema,
+  insertContentSeasonSchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
@@ -452,6 +455,204 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error bulk creating carousel items:", error);
       res.status(500).json({ message: "Failed to bulk create carousel items" });
+    }
+  });
+
+  // ========== Content Settings - Countries ==========
+  app.get("/api/content/countries", async (_req, res) => {
+    try {
+      const countries = await storage.getContentCountries();
+      res.json(countries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      res.status(500).json({ message: "Failed to fetch countries" });
+    }
+  });
+
+  app.post("/api/content/countries", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentCountrySchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const country = await storage.createContentCountry(validation.data);
+      res.status(201).json(country);
+    } catch (error) {
+      console.error("Error creating country:", error);
+      res.status(500).json({ message: "Failed to create country" });
+    }
+  });
+
+  app.put("/api/content/countries/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentCountrySchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const country = await storage.updateContentCountry(req.params.id, validation.data);
+      if (!country) {
+        return res.status(404).json({ message: "Country not found" });
+      }
+      res.json(country);
+    } catch (error) {
+      console.error("Error updating country:", error);
+      res.status(500).json({ message: "Failed to update country" });
+    }
+  });
+
+  app.delete("/api/content/countries/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentCountry(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting country:", error);
+      res.status(500).json({ message: "Failed to delete country" });
+    }
+  });
+
+  // ========== Content Settings - Travel Types ==========
+  app.get("/api/content/travel-types", async (_req, res) => {
+    try {
+      const travelTypes = await storage.getContentTravelTypes();
+      res.json(travelTypes);
+    } catch (error) {
+      console.error("Error fetching travel types:", error);
+      res.status(500).json({ message: "Failed to fetch travel types" });
+    }
+  });
+
+  app.post("/api/content/travel-types", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentTravelTypeSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const travelType = await storage.createContentTravelType(validation.data);
+      res.status(201).json(travelType);
+    } catch (error) {
+      console.error("Error creating travel type:", error);
+      res.status(500).json({ message: "Failed to create travel type" });
+    }
+  });
+
+  app.put("/api/content/travel-types/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentTravelTypeSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const travelType = await storage.updateContentTravelType(req.params.id, validation.data);
+      if (!travelType) {
+        return res.status(404).json({ message: "Travel type not found" });
+      }
+      res.json(travelType);
+    } catch (error) {
+      console.error("Error updating travel type:", error);
+      res.status(500).json({ message: "Failed to update travel type" });
+    }
+  });
+
+  app.delete("/api/content/travel-types/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentTravelType(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting travel type:", error);
+      res.status(500).json({ message: "Failed to delete travel type" });
+    }
+  });
+
+  app.put("/api/content/travel-types/:id/order", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { displayOrder } = req.body;
+      if (typeof displayOrder !== "number") {
+        return res.status(400).json({ message: "displayOrder must be a number" });
+      }
+
+      await storage.updateContentTravelTypeOrder(req.params.id, displayOrder);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error updating travel type order:", error);
+      res.status(500).json({ message: "Failed to update travel type order" });
+    }
+  });
+
+  // ========== Content Settings - Seasons ==========
+  app.get("/api/content/seasons", async (_req, res) => {
+    try {
+      const seasons = await storage.getContentSeasons();
+      res.json(seasons);
+    } catch (error) {
+      console.error("Error fetching seasons:", error);
+      res.status(500).json({ message: "Failed to fetch seasons" });
+    }
+  });
+
+  app.post("/api/content/seasons", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentSeasonSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const season = await storage.createContentSeason(validation.data);
+      res.status(201).json(season);
+    } catch (error) {
+      console.error("Error creating season:", error);
+      res.status(500).json({ message: "Failed to create season" });
+    }
+  });
+
+  app.put("/api/content/seasons/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentSeasonSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const season = await storage.updateContentSeason(req.params.id, validation.data);
+      if (!season) {
+        return res.status(404).json({ message: "Season not found" });
+      }
+      res.json(season);
+    } catch (error) {
+      console.error("Error updating season:", error);
+      res.status(500).json({ message: "Failed to update season" });
+    }
+  });
+
+  app.delete("/api/content/seasons/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentSeason(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting season:", error);
+      res.status(500).json({ message: "Failed to delete season" });
+    }
+  });
+
+  app.put("/api/content/seasons/:id/order", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { displayOrder } = req.body;
+      if (typeof displayOrder !== "number") {
+        return res.status(400).json({ message: "displayOrder must be a number" });
+      }
+
+      await storage.updateContentSeasonOrder(req.params.id, displayOrder);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error updating season order:", error);
+      res.status(500).json({ message: "Failed to update season order" });
     }
   });
 
