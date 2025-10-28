@@ -49,6 +49,55 @@ export type User = typeof users.$inferSelect;
 // CORE CONTENT TABLES
 // ============================================================================
 
+// Content Settings - Countries
+export const content_countries = pgTable("content_countries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContentCountrySchema = createInsertSchema(content_countries).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContentCountry = z.infer<typeof insertContentCountrySchema>;
+export type ContentCountry = typeof content_countries.$inferSelect;
+
+// Content Settings - Travel Types
+export const content_travel_types = pgTable("content_travel_types", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContentTravelTypeSchema = createInsertSchema(content_travel_types).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContentTravelType = z.infer<typeof insertContentTravelTypeSchema>;
+export type ContentTravelType = typeof content_travel_types.$inferSelect;
+
+// Content Settings - Seasons
+export const content_seasons = pgTable("content_seasons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContentSeasonSchema = createInsertSchema(content_seasons).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertContentSeason = z.infer<typeof insertContentSeasonSchema>;
+export type ContentSeason = typeof content_seasons.$inferSelect;
+
 // Cities - Main destinations
 export const cities = pgTable("cities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -57,6 +106,7 @@ export const cities = pgTable("cities", {
   tagline: text("tagline").notNull(),
   imageUrl: text("image_url").notNull(),
   triplistCount: integer("triplist_count").default(0),
+  countryId: varchar("country_id").references(() => content_countries.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

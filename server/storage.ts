@@ -10,6 +10,9 @@ import {
   groupUps,
   favorites,
   carouselItems,
+  content_countries,
+  content_travel_types,
+  content_seasons,
   type User,
   type UpsertUser,
   type City,
@@ -23,6 +26,12 @@ import {
   type GroupUp,
   type InsertGroupUp,
   type CarouselItem,
+  type ContentCountry,
+  type InsertContentCountry,
+  type ContentTravelType,
+  type InsertContentTravelType,
+  type ContentSeason,
+  type InsertContentSeason,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -74,6 +83,26 @@ export interface IStorage {
   createCarouselItem(item: Omit<CarouselItem, "id" | "createdAt">): Promise<CarouselItem>;
   deleteCarouselItem(id: string): Promise<void>;
   bulkCreateCarouselItems(items: Omit<CarouselItem, "id" | "createdAt">[]): Promise<CarouselItem[]>;
+
+  // Content Settings - Countries
+  getContentCountries(): Promise<ContentCountry[]>;
+  createContentCountry(country: InsertContentCountry): Promise<ContentCountry>;
+  updateContentCountry(id: string, country: Partial<InsertContentCountry>): Promise<ContentCountry | undefined>;
+  deleteContentCountry(id: string): Promise<void>;
+
+  // Content Settings - Travel Types
+  getContentTravelTypes(): Promise<ContentTravelType[]>;
+  createContentTravelType(travelType: InsertContentTravelType): Promise<ContentTravelType>;
+  updateContentTravelType(id: string, travelType: Partial<InsertContentTravelType>): Promise<ContentTravelType | undefined>;
+  deleteContentTravelType(id: string): Promise<void>;
+  updateContentTravelTypeOrder(id: string, newOrder: number): Promise<void>;
+
+  // Content Settings - Seasons
+  getContentSeasons(): Promise<ContentSeason[]>;
+  createContentSeason(season: InsertContentSeason): Promise<ContentSeason>;
+  updateContentSeason(id: string, season: Partial<InsertContentSeason>): Promise<ContentSeason | undefined>;
+  deleteContentSeason(id: string): Promise<void>;
+  updateContentSeasonOrder(id: string, newOrder: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -297,6 +326,89 @@ export class DatabaseStorage implements IStorage {
   async bulkCreateCarouselItems(itemsData: Omit<CarouselItem, "id" | "createdAt">[]): Promise<CarouselItem[]> {
     if (itemsData.length === 0) return [];
     return db.insert(carouselItems).values(itemsData).returning();
+  }
+
+  // ========== Content Settings - Countries ==========
+  async getContentCountries(): Promise<ContentCountry[]> {
+    return db.select().from(content_countries).orderBy(content_countries.name);
+  }
+
+  async createContentCountry(countryData: InsertContentCountry): Promise<ContentCountry> {
+    const [country] = await db.insert(content_countries).values(countryData).returning();
+    return country;
+  }
+
+  async updateContentCountry(id: string, countryData: Partial<InsertContentCountry>): Promise<ContentCountry | undefined> {
+    const [country] = await db
+      .update(content_countries)
+      .set(countryData)
+      .where(eq(content_countries.id, id))
+      .returning();
+    return country;
+  }
+
+  async deleteContentCountry(id: string): Promise<void> {
+    await db.delete(content_countries).where(eq(content_countries.id, id));
+  }
+
+  // ========== Content Settings - Travel Types ==========
+  async getContentTravelTypes(): Promise<ContentTravelType[]> {
+    return db.select().from(content_travel_types).orderBy(content_travel_types.displayOrder);
+  }
+
+  async createContentTravelType(travelTypeData: InsertContentTravelType): Promise<ContentTravelType> {
+    const [travelType] = await db.insert(content_travel_types).values(travelTypeData).returning();
+    return travelType;
+  }
+
+  async updateContentTravelType(id: string, travelTypeData: Partial<InsertContentTravelType>): Promise<ContentTravelType | undefined> {
+    const [travelType] = await db
+      .update(content_travel_types)
+      .set(travelTypeData)
+      .where(eq(content_travel_types.id, id))
+      .returning();
+    return travelType;
+  }
+
+  async deleteContentTravelType(id: string): Promise<void> {
+    await db.delete(content_travel_types).where(eq(content_travel_types.id, id));
+  }
+
+  async updateContentTravelTypeOrder(id: string, newOrder: number): Promise<void> {
+    await db
+      .update(content_travel_types)
+      .set({ displayOrder: newOrder })
+      .where(eq(content_travel_types.id, id));
+  }
+
+  // ========== Content Settings - Seasons ==========
+  async getContentSeasons(): Promise<ContentSeason[]> {
+    return db.select().from(content_seasons).orderBy(content_seasons.displayOrder);
+  }
+
+  async createContentSeason(seasonData: InsertContentSeason): Promise<ContentSeason> {
+    const [season] = await db.insert(content_seasons).values(seasonData).returning();
+    return season;
+  }
+
+  async updateContentSeason(id: string, seasonData: Partial<InsertContentSeason>): Promise<ContentSeason | undefined> {
+    const [season] = await db
+      .update(content_seasons)
+      .set(seasonData)
+      .where(eq(content_seasons.id, id))
+      .returning();
+    return season;
+  }
+
+  async deleteContentSeason(id: string): Promise<void> {
+    await db.delete(content_seasons).where(eq(content_seasons.id, id));
+  }
+
+  async updateContentSeasonOrder(id: string, newOrder: number): Promise<void> {
+    await db
+      .update(content_seasons)
+      .set({ displayOrder: newOrder })
+      .where(eq(content_seasons.id, id));
   }
 }
 

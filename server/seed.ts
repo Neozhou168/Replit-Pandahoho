@@ -5,6 +5,141 @@ import { storage } from "./storage";
 async function seed() {
   console.log("🌱 Seeding database...");
 
+  // Create content settings - Countries
+  console.log("Creating countries...");
+  const china = await storage.createContentCountry({
+    name: "China",
+    isActive: true,
+  });
+
+  const usa = await storage.createContentCountry({
+    name: "USA",
+    isActive: true,
+  });
+
+  // Create content settings - Travel Types
+  console.log("Creating travel types...");
+  await storage.createContentTravelType({
+    name: "Attractions",
+    description: "",
+    displayOrder: 1,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Eating",
+    description: "Restaurants, cafes, and food experiences",
+    displayOrder: 2,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Hiking",
+    description: "Outdoor walking and hiking activities",
+    displayOrder: 2,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Entertainment",
+    description: "",
+    displayOrder: 4,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Art",
+    description: "",
+    displayOrder: 4,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Shopping",
+    description: "",
+    displayOrder: 5,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Cultural",
+    description: "",
+    displayOrder: 6,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Nature",
+    description: "",
+    displayOrder: 7,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Food & Drink",
+    description: "",
+    displayOrder: 8,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Spa & Wellness",
+    description: "",
+    displayOrder: 9,
+    isActive: true,
+  });
+
+  await storage.createContentTravelType({
+    name: "Recovery",
+    description: "",
+    displayOrder: 10,
+    isActive: true,
+  });
+
+  // Create content settings - Seasons
+  console.log("Creating seasons...");
+  await storage.createContentSeason({
+    name: "All seasons",
+    description: "",
+    displayOrder: 0,
+    isActive: true,
+  });
+
+  await storage.createContentSeason({
+    name: "Spring",
+    description: "",
+    displayOrder: 1,
+    isActive: true,
+  });
+
+  await storage.createContentSeason({
+    name: "Summer",
+    description: "",
+    displayOrder: 2,
+    isActive: true,
+  });
+
+  await storage.createContentSeason({
+    name: "Autumn",
+    description: "",
+    displayOrder: 3,
+    isActive: true,
+  });
+
+  await storage.createContentSeason({
+    name: "Winter",
+    description: "",
+    displayOrder: 4,
+    isActive: true,
+  });
+
+  await storage.createContentSeason({
+    name: "Spring & Autumn",
+    description: "",
+    displayOrder: 6,
+    isActive: true,
+  });
+
   // Create carousel slides
   console.log("Creating carousel slides...");
   await storage.createCarouselItem({
@@ -45,6 +180,7 @@ async function seed() {
     tagline: "Ancient capital meets modern metropolis",
     imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -54,6 +190,7 @@ async function seed() {
     tagline: "Where East meets West in perfect harmony",
     imageUrl: "https://images.unsplash.com/photo-1537906408027-c7d7ba957829?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -63,6 +200,7 @@ async function seed() {
     tagline: "Land of pandas and spicy cuisine",
     imageUrl: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -72,6 +210,7 @@ async function seed() {
     tagline: "Home of the Terracotta Warriors",
     imageUrl: "https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -81,6 +220,7 @@ async function seed() {
     tagline: "Heaven on Earth with West Lake views",
     imageUrl: "https://images.unsplash.com/photo-1566996478543-2a1b5d56f6aa?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -90,6 +230,7 @@ async function seed() {
     tagline: "Southern gateway with incredible Cantonese food",
     imageUrl: "https://images.unsplash.com/photo-1580589999376-b0fb45fbf333?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -99,6 +240,7 @@ async function seed() {
     tagline: "Mountain city with legendary hotpot",
     imageUrl: "https://images.unsplash.com/photo-1496016943515-7d33598c11e6?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
@@ -108,6 +250,7 @@ async function seed() {
     tagline: "China's innovation hub and tech capital",
     imageUrl: "https://images.unsplash.com/photo-1589895363804-1f42159f2e79?w=800&h=600&fit=crop",
     triplistCount: 0,
+    countryId: china.id,
     isActive: true,
   });
 
