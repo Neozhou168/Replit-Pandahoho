@@ -19,6 +19,7 @@ import {
   Users,
   Image,
   ArrowLeft,
+  Settings,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import AdminDashboard from "./AdminDashboard";
@@ -28,6 +29,7 @@ import TriplistsManagement from "./TriplstsManagement";
 import VenuesManagement from "./VenuesManagement";
 import GuidesManagement from "./GuidesManagement";
 import GroupUpsManagement from "./GroupUpsManagement";
+import ContentSettings from "./ContentSettings";
 import type { User } from "@shared/schema";
 
 function AdminSidebar() {
@@ -68,6 +70,11 @@ function AdminSidebar() {
       title: "Carousel",
       url: "/admin/carousel",
       icon: Image,
+    },
+    {
+      title: "Content Settings",
+      url: "/admin/content-settings",
+      icon: Settings,
     },
   ];
 
@@ -143,6 +150,7 @@ export default function AdminLayout() {
               <Route path="/admin/venues" component={VenuesManagement} />
               <Route path="/admin/guides" component={GuidesManagement} />
               <Route path="/admin/group-ups" component={GroupUpsManagement} />
+              <Route path="/admin/content-settings" component={ContentSettings} />
             </Switch>
           </main>
         </div>
