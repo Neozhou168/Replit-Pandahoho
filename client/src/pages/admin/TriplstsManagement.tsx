@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTriplistSchema } from "@shared/schema";
-import type { InsertTriplist, Triplist, City } from "@shared/schema";
+import type { InsertTriplist, Triplist, City, ContentCountry, ContentTravelType, ContentSeason } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -57,6 +57,18 @@ export default function TriplistsManagement() {
 
   const { data: cities = [] } = useQuery<City[]>({
     queryKey: ["/api/cities"],
+  });
+
+  const { data: countries = [] } = useQuery<ContentCountry[]>({
+    queryKey: ["/api/content/countries"],
+  });
+
+  const { data: travelTypes = [] } = useQuery<ContentTravelType[]>({
+    queryKey: ["/api/content/travel-types"],
+  });
+
+  const { data: seasons = [] } = useQuery<ContentSeason[]>({
+    queryKey: ["/api/content/seasons"],
   });
 
   const form = useForm<InsertTriplist>({
@@ -333,7 +345,7 @@ export default function TriplistsManagement() {
                         <FormLabel>Country</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value || "China"}
+                          value={field.value || undefined}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-country">
@@ -341,7 +353,13 @@ export default function TriplistsManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="China">China</SelectItem>
+                            {countries
+                              .filter((country) => country.isActive)
+                              .map((country) => (
+                                <SelectItem key={country.id} value={country.name}>
+                                  {country.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -395,12 +413,13 @@ export default function TriplistsManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Hiking">Hiking</SelectItem>
-                            <SelectItem value="Attractions">Attractions</SelectItem>
-                            <SelectItem value="Food & Drink">Food & Drink</SelectItem>
-                            <SelectItem value="Cultural">Cultural</SelectItem>
-                            <SelectItem value="Nature">Nature</SelectItem>
-                            <SelectItem value="Shopping">Shopping</SelectItem>
+                            {travelTypes
+                              .filter((type) => type.isActive)
+                              .map((type) => (
+                                <SelectItem key={type.id} value={type.name}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -426,12 +445,13 @@ export default function TriplistsManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Spring & Autumn">Spring & Autumn</SelectItem>
-                            <SelectItem value="All Seasons">All Seasons</SelectItem>
-                            <SelectItem value="Spring">Spring</SelectItem>
-                            <SelectItem value="Summer">Summer</SelectItem>
-                            <SelectItem value="Autumn">Autumn</SelectItem>
-                            <SelectItem value="Winter">Winter</SelectItem>
+                            {seasons
+                              .filter((season) => season.isActive)
+                              .map((season) => (
+                                <SelectItem key={season.id} value={season.name}>
+                                  {season.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

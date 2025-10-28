@@ -44,6 +44,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
+import type { ContentCountry } from "@shared/schema";
 
 export default function VenuesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -57,6 +58,10 @@ export default function VenuesManagement() {
 
   const { data: cities = [] } = useQuery<City[]>({
     queryKey: ["/api/cities"],
+  });
+
+  const { data: countries = [] } = useQuery<ContentCountry[]>({
+    queryKey: ["/api/content/countries"],
   });
 
   const form = useForm<InsertVenue>({
@@ -403,7 +408,7 @@ export default function VenuesManagement() {
                         <FormLabel>Country</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value || "China"}
+                          value={field.value || undefined}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-venue-country">
@@ -411,7 +416,13 @@ export default function VenuesManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="China">China</SelectItem>
+                            {countries
+                              .filter((country) => country.isActive)
+                              .map((country) => (
+                                <SelectItem key={country.id} value={country.name}>
+                                  {country.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
