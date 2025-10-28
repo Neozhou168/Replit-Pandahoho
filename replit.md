@@ -4,6 +4,17 @@
 Complete replica of PandaHoHo (www.pandahoho.com) - a comprehensive travel discovery platform focused on Chinese cities. Built on Replit with PostgreSQL, object storage, Stripe integration, and Replit Auth.
 
 ## Recent Changes
+**October 28, 2025 - CSV Import Format Updates**
+- **Venues CSV Format:**
+  - Updated to match user's CSV file format with columns: ID, Title, Cover Image URL, Video URL, Type, Country, City, Description, Tips, Google Maps Embed URL, Google Maps Direct URL, Created Date
+  - Added ID column support for updating existing venues (if ID provided) or creating new ones (if empty)
+  - Implemented city name to cityId mapping during CSV import
+  - Auto-generates slug from Title during import
+  - Location field constructed from City and Country values
+  - Tips column maps to proTips field in database
+- **Triplists CSV Import:**
+  - Fixed ID column to properly support update operations when ID is provided in CSV
+
 **October 28, 2025 - Content Settings & Dynamic Dropdowns**
 - **Content Settings Feature:**
   - Created new admin page for managing dropdown options used throughout the platform
@@ -202,6 +213,16 @@ Columns: ID (optional), Title, Country, City, Type, Best Season, Cover Image URL
 - Slug is auto-generated from Title
 - Location field is constructed from City and Country
 - Related Venues should be comma-separated venue IDs
+
+### Venues CSV Format
+Columns: ID (optional), Title, Cover Image URL, Video URL, Type, Country, City, Description, Tips, Google Maps Embed URL, Google Maps Direct URL, Created Date (optional)
+
+**Notes:**
+- **ID column**: If provided, will update the existing venue with that ID. If empty or omitted, creates a new venue.
+- City names are automatically matched to existing cities in the database
+- Slug is auto-generated from Title
+- Location field is constructed from City and Country
+- Tips are mapped to the proTips field in the database
 
 ## Next Steps / Future Enhancements
 - Integrate object storage for image uploads in admin UI

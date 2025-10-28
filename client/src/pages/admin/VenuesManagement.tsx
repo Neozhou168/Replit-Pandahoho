@@ -222,52 +222,54 @@ export default function VenuesManagement() {
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
-              name: "🏛️ Huanghuacheng Lakeside Great Wall | 黄花城水长城",
-              slug: "huanghuacheng-great-wall",
-              description: "The Huanghuacheng Lakeside Great Wall where ancient stone walls meet tranquil blue water.\n💰 Average Spend\n🏛️ RMB 60–100\n💵 USD 8–14",
-              location: "Beijing, China",
-              imageUrl: "https://res.cloudinary.com/...",
-              videoUrl: "",
-              cityId: "city-id-here",
-              category: "Hiking",
-              country: "China",
-              highlights: ["Imperial Architecture", "Kunming Lake", "Garden Design"],
-              proTips: "🚗 Transportation: About 2 hours from Beijing\n🏕️ Experience: Take a boat ride to see the wall reflected in the lake",
-              googleMapsUrl: "",
-              googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=...",
-              googleMapsDirectUrl: "https://maps.app.goo.gl/...",
-              isActive: true,
-            }}
+              ID: "",
+              Title: "🏞️ Huanghuacheng Lakeside Great Wall｜黄花城水长城",
+              "Cover Image URL": "https://res.cloudinary.com/dekytgf4z/image/upload/v1761291015/image.jpg",
+              "Video URL": "",
+              Type: "Hiking",
+              Country: "China",
+              City: "Beijing",
+              Description: "The Huanghuacheng Lakeside Great Wall is one of the most unique and picturesque sections of the Great Wall — where ancient stone walls meet tranquil blue water.\n💰 Average Spend\n💴 RMB 60–100\n💵 USD 8–14",
+              Tips: "🚗 Transportation: About 2 hours from Beijing; best reached by car or private transfer.\n⛵ Experience: Take a boat ride to see the wall reflected in the lake — especially beautiful at sunset.\n🌸 Best time: Spring for blooming flowers or autumn for golden hillsides.",
+              "Google Maps Embed URL": "https://www.google.com/maps/embed?pb=...",
+              "Google Maps Direct URL": "https://maps.app.goo.gl/...",
+              "Created Date": "",
+            } as any}
             templateFilename="venues-template.csv"
-            requiredColumns={["name", "slug", "description", "location", "imageUrl"]}
+            requiredColumns={["Title", "City", "Cover Image URL", "Description"]}
             validateRow={(row) => {
               const errors: string[] = [];
-              if (!row.name || row.name.trim() === "") errors.push("Name is required");
-              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
-              if (!row.description || row.description.trim() === "") errors.push("Description is required");
-              if (!row.location || row.location.trim() === "") errors.push("Location is required");
-              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              if (!row.Title || row.Title.trim() === "") errors.push("Title is required");
+              if (!row.City || row.City.trim() === "") errors.push("City is required");
+              if (!row["Cover Image URL"] || row["Cover Image URL"].trim() === "") errors.push("Cover Image URL is required");
+              if (!row.Description || row.Description.trim() === "") errors.push("Description is required");
               return { valid: errors.length === 0, errors };
             }}
-            transformRow={(row) => ({
-              name: row.name,
-              slug: row.slug,
-              description: row.description,
-              location: row.location,
-              imageUrl: row.imageUrl,
-              videoUrl: row.videoUrl || undefined,
-              cityId: row.cityId || undefined,
-              category: row.category || undefined,
-              country: row.country || "China",
-              highlights: row.highlights ? row.highlights.split(",").map((h: string) => h.trim()).filter((h: string) => h) : undefined,
-              proTips: row.proTips || undefined,
-              googleMapsUrl: row.googleMapsUrl || undefined,
-              googleMapsEmbedUrl: row.googleMapsEmbedUrl || undefined,
-              googleMapsDirectUrl: row.googleMapsDirectUrl || undefined,
-              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
-            })}
+            transformRow={(row) => {
+              const cityName = row.City?.trim();
+              const city = cities.find(c => c.name.toLowerCase() === cityName?.toLowerCase());
+              const slug = row.Title ? generateSlug(row.Title) : "";
+              const location = cityName && row.Country ? `${cityName}, ${row.Country}` : cityName || "";
+              
+              return {
+                id: row.ID || undefined,
+                name: row.Title,
+                slug: slug,
+                description: row.Description,
+                location: location,
+                imageUrl: row["Cover Image URL"],
+                videoUrl: row["Video URL"] || undefined,
+                cityId: city?.id || undefined,
+                category: row.Type || undefined,
+                country: row.Country || "China",
+                proTips: row.Tips || undefined,
+                googleMapsEmbedUrl: row["Google Maps Embed URL"] || undefined,
+                googleMapsDirectUrl: row["Google Maps Direct URL"] || undefined,
+                isActive: true,
+              };
+            }}
             title="Import Venues CSV"
-            description="Upload a CSV file to bulk import venues. Use comma-separated values for highlights."
+            description="Upload a CSV file to bulk import venues. City names will be matched to existing cities."
           />
 
           <Dialog open={createOpen || editVenue !== null} onOpenChange={(open) => {
