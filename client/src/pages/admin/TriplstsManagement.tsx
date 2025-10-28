@@ -258,6 +258,7 @@ export default function TriplistsManagement() {
               const slug = row.Title ? generateSlug(row.Title) : "";
               
               return {
+                id: row.ID || undefined,
                 title: row.Title,
                 slug: slug,
                 description: row.Description,

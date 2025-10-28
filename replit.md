@@ -197,6 +197,7 @@ shared/
 Columns: ID (optional), Title, Country, City, Type, Best Season, Cover Image URL, Video URL, Google Maps Embed URL, Google Maps Direct URL, Description, Related Venues, Created Date (optional)
 
 **Notes:**
+- **ID column**: If provided, will update the existing triplist with that ID. If empty or omitted, creates a new triplist.
 - City names are automatically matched to existing cities in the database
 - Slug is auto-generated from Title
 - Location field is constructed from City and Country
