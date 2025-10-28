@@ -227,50 +227,55 @@ export default function TriplistsManagement() {
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
-              title: "Explore the Great Wall",
-              slug: "explore-the-great-wall",
-              description: "A Journey Across Beijing's Ancient Mountain Fortresses, from the famous Badaling and scenic Mutianyu, to the wild beauty of Jinshanling and Simatai...",
-              location: "Beijing, China",
-              imageUrl: "https://res.cloudinary.com/...",
-              videoUrl: "",
-              cityId: "city-id-here",
-              country: "China",
-              category: "Hiking",
-              season: "Spring & Autumn",
-              googleMapsEmbedUrl: "https://www.google.com/maps/embed?pb=...",
-              googleMapsDirectUrl: "https://maps.google.com/...",
-              relatedVenueIds: "venue-id-1,venue-id-2,venue-id-3",
-              isActive: true,
-            }}
+              ID: "",
+              Title: "Explore the Great Wall",
+              Country: "China",
+              City: "Beijing",
+              Type: "Hiking",
+              "Best Season": "Spring & Autumn",
+              "Cover Image URL": "https://res.cloudinary.com/dekytgf4z/image/upload/v1761289894/image.png",
+              "Video URL": "",
+              "Google Maps Embed URL": "https://www.google.com/maps/d/u/0/embed?mid=1CbLubZqs3slm6Lp3-IPU2bL8NdMxpgw&ehbc=2E312F&noprof=1",
+              "Google Maps Direct URL": "https://www.google.com/maps/d/u/0/edit?mid=1CbLubZqs3slm6Lp3-IPU2bL8NdMxpgw&usp=sharing",
+              Description: "A Journey Across Beijing's Ancient Mountain Fortresses, from the famous Badaling and scenic Mutianyu, to the wild beauty of Jinshanling and Simatai...",
+              "Related Venues": "",
+              "Created Date": "",
+            } as any}
             templateFilename="triplists-template.csv"
-            requiredColumns={["title", "slug", "description", "location", "imageUrl"]}
+            requiredColumns={["Title", "Country", "City", "Cover Image URL", "Description"]}
             validateRow={(row) => {
               const errors: string[] = [];
-              if (!row.title || row.title.trim() === "") errors.push("Title is required");
-              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
-              if (!row.description || row.description.trim() === "") errors.push("Description is required");
-              if (!row.location || row.location.trim() === "") errors.push("Location is required");
-              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              if (!row.Title || row.Title.trim() === "") errors.push("Title is required");
+              if (!row.Country || row.Country.trim() === "") errors.push("Country is required");
+              if (!row.City || row.City.trim() === "") errors.push("City is required");
+              if (!row["Cover Image URL"] || row["Cover Image URL"].trim() === "") errors.push("Cover Image URL is required");
+              if (!row.Description || row.Description.trim() === "") errors.push("Description is required");
               return { valid: errors.length === 0, errors };
             }}
-            transformRow={(row) => ({
-              title: row.title,
-              slug: row.slug,
-              description: row.description,
-              location: row.location,
-              imageUrl: row.imageUrl,
-              videoUrl: row.videoUrl || undefined,
-              cityId: row.cityId || undefined,
-              country: row.country || "China",
-              category: row.category || undefined,
-              season: row.season || undefined,
-              googleMapsEmbedUrl: row.googleMapsEmbedUrl || undefined,
-              googleMapsDirectUrl: row.googleMapsDirectUrl || undefined,
-              relatedVenueIds: row.relatedVenueIds || undefined,
-              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
-            })}
+            transformRow={(row) => {
+              const cityName = row.City?.trim();
+              const city = cities.find(c => c.name.toLowerCase() === cityName?.toLowerCase());
+              const slug = row.Title ? generateSlug(row.Title) : "";
+              
+              return {
+                title: row.Title,
+                slug: slug,
+                description: row.Description,
+                location: cityName && row.Country ? `${cityName}, ${row.Country}` : cityName || "",
+                imageUrl: row["Cover Image URL"],
+                videoUrl: row["Video URL"] || undefined,
+                cityId: city?.id || undefined,
+                country: row.Country || "China",
+                category: row.Type || undefined,
+                season: row["Best Season"] || undefined,
+                googleMapsEmbedUrl: row["Google Maps Embed URL"] || undefined,
+                googleMapsDirectUrl: row["Google Maps Direct URL"] || undefined,
+                relatedVenueIds: row["Related Venues"] || undefined,
+                isActive: true,
+              };
+            }}
             title="Import Triplists CSV"
-            description="Upload a CSV file to bulk import triplists"
+            description="Upload a CSV file to bulk import triplists. City names will be matched to existing cities."
           />
 
           <Dialog open={createOpen || editTriplist !== null} onOpenChange={(open) => {
