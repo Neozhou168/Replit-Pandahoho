@@ -6,12 +6,15 @@ import {
   insertContentCountrySchema,
   insertContentTravelTypeSchema,
   insertContentSeasonSchema,
+  insertContentCitySchema,
   type InsertContentCountry,
   type ContentCountry,
   type InsertContentTravelType,
   type ContentTravelType,
   type InsertContentSeason,
   type ContentSeason,
+  type InsertContentCity,
+  type ContentCity,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -44,6 +47,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Pencil, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -60,6 +70,7 @@ export default function ContentSettings() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CountriesSection />
+        <CitiesSection />
         <TravelTypesSection />
         <SeasonsSection />
       </div>
@@ -294,6 +305,306 @@ function CountriesSection() {
             <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteCountry && deleteCountryMutation.mutate(deleteCountry.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
+  );
+}
+
+function CitiesSection() {
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editCity, setEditCity] = useState<ContentCity | null>(null);
+  const [deleteCity, setDeleteCity] = useState<ContentCity | null>(null);
+  const { toast } = useToast();
+
+  const { data: cities = [] } = useQuery<ContentCity[]>({
+    queryKey: ["/api/content/cities"],
+  });
+
+  const { data: countries = [] } = useQuery<ContentCountry[]>({
+    queryKey: ["/api/content/countries"],
+  });
+
+  const form = useForm<InsertContentCity>({
+    resolver: zodResolver(insertContentCitySchema),
+    defaultValues: {
+      name: "",
+      countryId: undefined,
+      isActive: true,
+    },
+  });
+
+  const createCity = useMutation({
+    mutationFn: async (data: InsertContentCity) => {
+      return apiRequest("/api/content/cities", "POST", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
+      toast({ title: "Success", description: "City created!" });
+      setCreateOpen(false);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create city",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateCity = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: InsertContentCity }) => {
+      return apiRequest(`/api/content/cities/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
+      toast({ title: "Success", description: "City updated!" });
+      setEditCity(null);
+      form.reset();
+    },
+  });
+
+  const deleteCityMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return apiRequest(`/api/content/cities/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
+      toast({ title: "Success", description: "City deleted!" });
+      setDeleteCity(null);
+    },
+  });
+
+  const getCountryName = (countryId: string | null | undefined) => {
+    if (!countryId) return "—";
+    return countries.find(c => c.id === countryId)?.name || "—";
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between gap-2">
+        <CardTitle>Cities ({cities.length})</CardTitle>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" data-testid="button-add-city">
+              <Plus className="h-4 w-4 mr-1" />
+              Add City
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add City</DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => createCity.mutate(data))} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="e.g., Beijing" data-testid="input-city-name" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="countryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-city-country">
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {countries.filter(c => c.isActive).map((country) => (
+                            <SelectItem key={country.id} value={country.id}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="space-y-0.5">
+                        <FormLabel>Active</FormLabel>
+                        <FormDescription>Show in dropdowns</FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value ?? false}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-city-active"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button type="button" variant="outline" onClick={() => setCreateOpen(false)} data-testid="button-cancel">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createCity.isPending} data-testid="button-submit">
+                    {createCity.isPending ? "Creating..." : "Create"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {cities.map((city) => (
+            <div key={city.id} className="flex items-center justify-between p-3 border rounded-lg" data-testid={`city-item-${city.id}`}>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{city.name}</span>
+                  <Badge variant={city.isActive ? "default" : "secondary"} data-testid={`badge-city-status-${city.id}`}>
+                    {city.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">{getCountryName(city.countryId)}</p>
+              </div>
+              <div className="flex gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditCity(city);
+                    form.reset(city);
+                  }}
+                  data-testid={`button-edit-city-${city.id}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setDeleteCity(city)}
+                  data-testid={`button-delete-city-${city.id}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+          {cities.length === 0 && (
+            <p className="text-muted-foreground text-center py-6">No cities configured</p>
+          )}
+        </div>
+      </CardContent>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editCity} onOpenChange={(open) => !open && setEditCity(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit City</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((data) => editCity && updateCity.mutate({ id: editCity.id, data }))} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name *</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., Beijing" data-testid="input-edit-city-name" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="countryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Country</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-edit-city-country">
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {countries.filter(c => c.isActive).map((country) => (
+                          <SelectItem key={country.id} value={country.id}>
+                            {country.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between rounded-lg border p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Active</FormLabel>
+                      <FormDescription>Show in dropdowns</FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                        data-testid="switch-edit-city-active"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setEditCity(null)} data-testid="button-cancel-edit">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateCity.isPending} data-testid="button-submit-edit">
+                  {updateCity.isPending ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={!!deleteCity} onOpenChange={(open) => !open && setDeleteCity(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete City</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteCity?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteCity && deleteCityMutation.mutate(deleteCity.id)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               data-testid="button-confirm-delete"
             >
