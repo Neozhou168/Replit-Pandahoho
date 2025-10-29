@@ -192,7 +192,6 @@ export default function CitiesManagement() {
               slug: "beijing",
               tagline: "China's historic capital city",
               imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
-              triplistCount: 12,
               isActive: true,
             }}
             templateFilename="cities-template.csv"
@@ -209,7 +208,7 @@ export default function CitiesManagement() {
               slug: row.slug,
               tagline: row.tagline || "",
               imageUrl: row.imageUrl,
-              triplistCount: parseInt(row.triplistCount) || 0,
+              triplistCount: 0,
               isActive: row.isActive === "true" || row.isActive === true,
             })}
             title="Import Cities"
