@@ -305,7 +305,12 @@ export class DatabaseStorage implements IStorage {
         .filter(id => id.length > 0);
       
       for (let i = 0; i < venueIds.length; i++) {
-        await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+        try {
+          await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+        } catch (error) {
+          // Log the error but continue with other venues
+          console.warn(`Failed to add venue ${venueIds[i]} to triplist ${triplist.id}:`, error);
+        }
       }
     }
     
@@ -332,7 +337,12 @@ export class DatabaseStorage implements IStorage {
           .filter(vid => vid.length > 0);
         
         for (let i = 0; i < venueIds.length; i++) {
-          await this.addVenueToTriplist(id, venueIds[i], i);
+          try {
+            await this.addVenueToTriplist(id, venueIds[i], i);
+          } catch (error) {
+            // Log the error but continue with other venues
+            console.warn(`Failed to add venue ${venueIds[i]} to triplist ${id}:`, error);
+          }
         }
       }
     }
@@ -476,11 +486,42 @@ export class DatabaseStorage implements IStorage {
     venueId: string,
     order: number = 0
   ): Promise<void> {
-    await db.insert(triplistVenues).values({
-      triplistId,
-      venueId,
-      order,
-    });
+    // Check if venue exists before adding
+    const [venue] = await db.select().from(venues).where(eq(venues.id, venueId));
+    if (!venue) {
+      throw new Error(`Venue with ID ${venueId} does not exist`);
+    }
+    
+    // Check if this relationship already exists
+    const [existing] = await db
+      .select()
+      .from(triplistVenues)
+      .where(
+        and(
+          eq(triplistVenues.triplistId, triplistId),
+          eq(triplistVenues.venueId, venueId)
+        )
+      );
+    
+    if (existing) {
+      // Update the order if it already exists
+      await db
+        .update(triplistVenues)
+        .set({ order })
+        .where(
+          and(
+            eq(triplistVenues.triplistId, triplistId),
+            eq(triplistVenues.venueId, venueId)
+          )
+        );
+    } else {
+      // Insert new relationship
+      await db.insert(triplistVenues).values({
+        triplistId,
+        venueId,
+        order,
+      });
+    }
   }
 
   async syncTriplistVenues(): Promise<{ synced: number; errors: string[] }> {
@@ -500,8 +541,20 @@ export class DatabaseStorage implements IStorage {
             .map(id => id.trim())
             .filter(id => id.length > 0);
           
+          let successCount = 0;
+          const venueErrors: string[] = [];
+          
           for (let i = 0; i < venueIds.length; i++) {
-            await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+            try {
+              await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+              successCount++;
+            } catch (error) {
+              venueErrors.push(`Venue ${venueIds[i]}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+          }
+          
+          if (venueErrors.length > 0) {
+            errors.push(`Triplist "${triplist.title}" - ${successCount}/${venueIds.length} venues synced. Errors: ${venueErrors.join('; ')}`);
           }
           
           syncedCount++;
