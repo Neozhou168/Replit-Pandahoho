@@ -128,8 +128,9 @@ export const cities = pgTable("cities", {
 });
 
 export const insertCitySchema = createInsertSchema(cities).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type City = typeof cities.$inferSelect;
@@ -156,8 +157,9 @@ export const venues = pgTable("venues", {
 });
 
 export const insertVenueSchema = createInsertSchema(venues).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type InsertVenue = z.infer<typeof insertVenueSchema>;
 export type Venue = typeof venues.$inferSelect;
@@ -183,8 +185,9 @@ export const triplists = pgTable("triplists", {
 });
 
 export const insertTriplistSchema = createInsertSchema(triplists).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type InsertTriplist = z.infer<typeof insertTriplistSchema>;
 export type Triplist = typeof triplists.$inferSelect;
@@ -218,8 +221,9 @@ export const survivalGuides = pgTable("survival_guides", {
 });
 
 export const insertSurvivalGuideSchema = createInsertSchema(survivalGuides).omit({
-  id: true,
   createdAt: true,
+}).extend({
+  id: z.string().optional(),
 });
 export type InsertSurvivalGuide = z.infer<typeof insertSurvivalGuideSchema>;
 export type SurvivalGuide = typeof survivalGuides.$inferSelect;
