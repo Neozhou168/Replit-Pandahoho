@@ -47,6 +47,18 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
   - Venues list and map sections below main content
 - **Files Modified**: `client/src/components/TriplistCard.tsx`, `client/src/pages/TriplistDetailPage.tsx`
 
+**October 29, 2025 - Triplist-Venue Linking System**
+- **Issue**: Venues uploaded via CSV were not appearing on Triplist Detail pages
+- **Root Cause**: The `relatedVenueIds` field in triplists was not being used to populate the `triplist_venues` junction table
+- **Solution Implemented**:
+  - Updated `createTriplist` and `updateTriplist` to automatically parse `relatedVenueIds` (comma-separated) and populate the junction table
+  - Updated `bulkCreateTriplists` to handle venue linking during CSV imports
+  - Created `syncTriplistVenues()` method to sync existing triplists with their related venues
+  - Added `/api/triplists/sync-venues` API endpoint for manual syncing
+  - Added "Sync Venues" button in admin Triplists Management page
+- **How to Use**: Click "Sync Venues" in admin Triplists page to populate venue links for existing triplists
+- **Files Modified**: `server/storage.ts`, `server/routes.ts`, `client/src/pages/admin/TriplstsManagement.tsx`
+
 ## User Preferences
 ### Design Philosophy
 - **Visual-First**: High-quality imagery with gradient overlays

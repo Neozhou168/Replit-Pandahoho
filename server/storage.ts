@@ -68,6 +68,7 @@ export interface IStorage {
   deleteTriplist(id: string): Promise<void>;
   addVenueToTriplist(triplistId: string, venueId: string, order?: number): Promise<void>;
   bulkCreateTriplists(triplists: InsertTriplist[]): Promise<Triplist[]>;
+  syncTriplistVenues(): Promise<{ synced: number; errors: string[] }>;
 
   // Survival Guide operations
   getSurvivalGuides(): Promise<SurvivalGuide[]>;
@@ -226,6 +227,19 @@ export class DatabaseStorage implements IStorage {
 
   async createTriplist(triplistData: InsertTriplist): Promise<Triplist> {
     const [triplist] = await db.insert(triplists).values(triplistData).returning();
+    
+    // If relatedVenueIds is provided, populate the junction table
+    if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+      const venueIds = triplistData.relatedVenueIds
+        .split(',')
+        .map(id => id.trim())
+        .filter(id => id.length > 0);
+      
+      for (let i = 0; i < venueIds.length; i++) {
+        await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+      }
+    }
+    
     return triplist;
   }
 
@@ -235,6 +249,25 @@ export class DatabaseStorage implements IStorage {
       .set(triplistData)
       .where(eq(triplists.id, id))
       .returning();
+    
+    // If relatedVenueIds is being updated, re-sync the junction table
+    if (triplistData.relatedVenueIds !== undefined) {
+      // First, clear existing venue links for this triplist
+      await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, id));
+      
+      // Then add new links if provided
+      if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+        const venueIds = triplistData.relatedVenueIds
+          .split(',')
+          .map(vid => vid.trim())
+          .filter(vid => vid.length > 0);
+        
+        for (let i = 0; i < venueIds.length; i++) {
+          await this.addVenueToTriplist(id, venueIds[i], i);
+        }
+      }
+    }
+    
     return triplist;
   }
 
@@ -244,7 +277,24 @@ export class DatabaseStorage implements IStorage {
 
   async bulkCreateTriplists(triplistsData: InsertTriplist[]): Promise<Triplist[]> {
     if (triplistsData.length === 0) return [];
-    return db.insert(triplists).values(triplistsData).returning();
+    const createdTriplists = await db.insert(triplists).values(triplistsData).returning();
+    
+    // For each created triplist, populate the junction table if relatedVenueIds is provided
+    for (const triplist of createdTriplists) {
+      const triplistData = triplistsData.find(t => t.title === triplist.title);
+      if (triplistData?.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+        const venueIds = triplistData.relatedVenueIds
+          .split(',')
+          .map(id => id.trim())
+          .filter(id => id.length > 0);
+        
+        for (let i = 0; i < venueIds.length; i++) {
+          await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+        }
+      }
+    }
+    
+    return createdTriplists;
   }
 
   async addVenueToTriplist(
@@ -257,6 +307,37 @@ export class DatabaseStorage implements IStorage {
       venueId,
       order,
     });
+  }
+
+  async syncTriplistVenues(): Promise<{ synced: number; errors: string[] }> {
+    const allTriplists = await db.select().from(triplists);
+    let syncedCount = 0;
+    const errors: string[] = [];
+
+    for (const triplist of allTriplists) {
+      if (triplist.relatedVenueIds && triplist.relatedVenueIds.trim()) {
+        try {
+          // Clear existing links for this triplist
+          await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, triplist.id));
+          
+          // Add new links from relatedVenueIds
+          const venueIds = triplist.relatedVenueIds
+            .split(',')
+            .map(id => id.trim())
+            .filter(id => id.length > 0);
+          
+          for (let i = 0; i < venueIds.length; i++) {
+            await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+          }
+          
+          syncedCount++;
+        } catch (error) {
+          errors.push(`Failed to sync triplist "${triplist.title}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      }
+    }
+
+    return { synced: syncedCount, errors };
   }
 
   // ========== Survival Guide Operations ==========

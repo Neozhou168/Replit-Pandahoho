@@ -290,6 +290,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/triplists/sync-venues", isAuthenticated, isAdmin, async (_req, res) => {
+    try {
+      const result = await storage.syncTriplistVenues();
+      res.json(result);
+    } catch (error) {
+      console.error("Error syncing triplist venues:", error);
+      res.status(500).json({ message: "Failed to sync triplist venues" });
+    }
+  });
+
   // ========== Survival Guide Routes ==========
   app.get("/api/guides", async (_req, res) => {
     try {

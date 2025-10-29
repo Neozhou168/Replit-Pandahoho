@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -156,6 +156,34 @@ export default function TriplistsManagement() {
     },
   });
 
+  const syncVenues = useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/triplists/sync-venues", {});
+    },
+    onSuccess: (data: { synced: number; errors: string[] }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
+      if (data.errors.length > 0) {
+        toast({
+          title: "Sync Completed with Errors",
+          description: `Synced ${data.synced} triplists. ${data.errors.length} errors occurred.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Successfully synced ${data.synced} triplists with their venues!`,
+        });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to sync triplist venues.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertTriplist) => {
     if (editTriplist) {
       updateTriplist.mutate({ id: editTriplist.id, data: values });
@@ -224,6 +252,16 @@ export default function TriplistsManagement() {
         </div>
 
         <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => syncVenues.mutate()}
+            disabled={syncVenues.isPending}
+            data-testid="button-sync-venues"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${syncVenues.isPending ? 'animate-spin' : ''}`} />
+            Sync Venues
+          </Button>
+
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
