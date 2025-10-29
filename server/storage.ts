@@ -209,7 +209,76 @@ export class DatabaseStorage implements IStorage {
 
   async bulkCreateVenues(venuesData: InsertVenue[]): Promise<Venue[]> {
     if (venuesData.length === 0) return [];
-    return db.insert(venues).values(venuesData).returning();
+    
+    // Upsert logic: match by name to avoid duplicates
+    const allExistingVenues = await db.select().from(venues);
+    const existingByName = new Map(
+      allExistingVenues.map(v => [v.name.toLowerCase(), v])
+    );
+    const existingById = new Map(allExistingVenues.map(v => [v.id, v]));
+    
+    const results: Venue[] = [];
+    
+    for (const venueData of venuesData) {
+      const csvId = venueData.id;
+      const existingByThisName = existingByName.get(venueData.name.toLowerCase());
+      const existingByThisId = csvId ? existingById.get(csvId) : undefined;
+      
+      if (existingByThisId) {
+        // CSV ID exists in DB - just update with CSV data (excluding id)
+        const { id, ...updateData } = venueData;
+        const [updated] = await db
+          .update(venues)
+          .set(updateData)
+          .where(eq(venues.id, csvId!))
+          .returning();
+        results.push(updated);
+      } else if (existingByThisName && csvId && existingByThisName.id !== csvId) {
+        // Name matches but different ID - need to replace with new ID
+        await db.transaction(async (tx) => {
+          // Step 1: Temporarily rename old record's slug to avoid conflict
+          await tx
+            .update(venues)
+            .set({ slug: `${existingByThisName.slug}_old_${Date.now()}` })
+            .where(eq(venues.id, existingByThisName.id));
+          
+          // Step 2: Insert new record with CSV ID
+          await tx.insert(venues).values(venueData);
+          
+          // Step 3: Update all FK references from old ID to new ID
+          await tx
+            .update(triplistVenues)
+            .set({ venueId: csvId })
+            .where(eq(triplistVenues.venueId, existingByThisName.id));
+          
+          await tx
+            .update(groupUps)
+            .set({ venueId: csvId })
+            .where(eq(groupUps.venueId, existingByThisName.id));
+          
+          // Step 4: Delete old record
+          await tx.delete(venues).where(eq(venues.id, existingByThisName.id));
+        });
+        
+        const [newVenue] = await db.select().from(venues).where(eq(venues.id, csvId));
+        results.push(newVenue);
+      } else if (existingByThisName) {
+        // Name matches, no ID conflict - just update (excluding id)
+        const { id, ...updateData } = venueData;
+        const [updated] = await db
+          .update(venues)
+          .set(updateData)
+          .where(eq(venues.id, existingByThisName.id))
+          .returning();
+        results.push(updated);
+      } else {
+        // New venue - insert
+        const [venue] = await db.insert(venues).values(venueData).returning();
+        results.push(venue);
+      }
+    }
+    
+    return results;
   }
 
   // ========== Triplist Operations ==========
@@ -277,24 +346,129 @@ export class DatabaseStorage implements IStorage {
 
   async bulkCreateTriplists(triplistsData: InsertTriplist[]): Promise<Triplist[]> {
     if (triplistsData.length === 0) return [];
-    const createdTriplists = await db.insert(triplists).values(triplistsData).returning();
     
-    // For each created triplist, populate the junction table if relatedVenueIds is provided
-    for (const triplist of createdTriplists) {
-      const triplistData = triplistsData.find(t => t.title === triplist.title);
-      if (triplistData?.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
-        const venueIds = triplistData.relatedVenueIds
-          .split(/[,;]/)
-          .map(id => id.trim())
-          .filter(id => id.length > 0);
+    // Upsert logic: match by title to avoid duplicates
+    const allExistingTriplists = await db.select().from(triplists);
+    const existingByTitle = new Map(
+      allExistingTriplists.map(t => [t.title.toLowerCase(), t])
+    );
+    const existingById = new Map(allExistingTriplists.map(t => [t.id, t]));
+    
+    const results: Triplist[] = [];
+    
+    for (const triplistData of triplistsData) {
+      const csvId = triplistData.id;
+      const existingByThisTitle = existingByTitle.get(triplistData.title.toLowerCase());
+      const existingByThisId = csvId ? existingById.get(csvId) : undefined;
+      
+      if (existingByThisId) {
+        // CSV ID exists in DB - update with CSV data (excluding id)
+        const { id, ...updateData } = triplistData;
+        const [triplist] = await db
+          .update(triplists)
+          .set(updateData)
+          .where(eq(triplists.id, csvId!))
+          .returning();
         
-        for (let i = 0; i < venueIds.length; i++) {
-          await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+        // Re-sync junction table
+        if (triplistData.relatedVenueIds !== undefined) {
+          await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, csvId!));
+          if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+            const venueIds = triplistData.relatedVenueIds
+              .split(/[,;]/)
+              .map(id => id.trim())
+              .filter(id => id.length > 0);
+            for (let i = 0; i < venueIds.length; i++) {
+              await this.addVenueToTriplist(csvId!, venueIds[i], i);
+            }
+          }
         }
+        
+        results.push(triplist);
+      } else if (existingByThisTitle && csvId && existingByThisTitle.id !== csvId) {
+        // Title matches but different ID - need to replace with new ID
+        await db.transaction(async (tx) => {
+          // Step 1: Temporarily rename old record's slug to avoid conflict
+          await tx
+            .update(triplists)
+            .set({ slug: `${existingByThisTitle.slug}_old_${Date.now()}` })
+            .where(eq(triplists.id, existingByThisTitle.id));
+          
+          // Step 2: Insert new record with CSV ID
+          await tx.insert(triplists).values(triplistData);
+          
+          // Step 3: Update all FK references from old ID to new ID
+          await tx
+            .update(groupUps)
+            .set({ triplistId: csvId })
+            .where(eq(groupUps.triplistId, existingByThisTitle.id));
+          
+          // Step 4: Re-sync triplistVenues junction table
+          await tx.delete(triplistVenues).where(eq(triplistVenues.triplistId, existingByThisTitle.id));
+          if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+            const venueIds = triplistData.relatedVenueIds
+              .split(/[,;]/)
+              .map(id => id.trim())
+              .filter(id => id.length > 0);
+            for (let i = 0; i < venueIds.length; i++) {
+              await tx.insert(triplistVenues).values({
+                triplistId: csvId,
+                venueId: venueIds[i],
+                order: i,
+              });
+            }
+          }
+          
+          // Step 5: Delete old record
+          await tx.delete(triplists).where(eq(triplists.id, existingByThisTitle.id));
+        });
+        
+        const [newTriplist] = await db.select().from(triplists).where(eq(triplists.id, csvId));
+        results.push(newTriplist);
+      } else if (existingByThisTitle) {
+        // Title matches, no ID conflict - just update (excluding id)
+        const { id, ...updateData } = triplistData;
+        const [triplist] = await db
+          .update(triplists)
+          .set(updateData)
+          .where(eq(triplists.id, existingByThisTitle.id))
+          .returning();
+        
+        // Re-sync junction table
+        if (triplistData.relatedVenueIds !== undefined) {
+          await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, existingByThisTitle.id));
+          if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+            const venueIds = triplistData.relatedVenueIds
+              .split(/[,;]/)
+              .map(id => id.trim())
+              .filter(id => id.length > 0);
+            for (let i = 0; i < venueIds.length; i++) {
+              await this.addVenueToTriplist(existingByThisTitle.id, venueIds[i], i);
+            }
+          }
+        }
+        
+        results.push(triplist);
+      } else {
+        // New triplist - insert
+        const [triplist] = await db.insert(triplists).values(triplistData).returning();
+        
+        // Populate junction table
+        if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
+          const venueIds = triplistData.relatedVenueIds
+            .split(/[,;]/)
+            .map(id => id.trim())
+            .filter(id => id.length > 0);
+          for (let i = 0; i < venueIds.length; i++) {
+            await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+          }
+        }
+        
+        results.push(triplist);
       }
     }
     
-    return createdTriplists;
+    return results;
   }
 
   async addVenueToTriplist(
