@@ -308,7 +308,7 @@ export default function CarouselManagement() {
                           type="number"
                           min={0}
                           placeholder="0"
-                          value={field.value ?? 0}
+                          value={String(field.value ?? 0)}
                           onChange={(e) => {
                             const value = e.target.value;
                             if (value === '') {
@@ -539,7 +539,7 @@ export default function CarouselManagement() {
                         type="number"
                         min={0}
                         placeholder="0"
-                        value={field.value ?? 0}
+                        value={String(field.value ?? 0)}
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === '') {
