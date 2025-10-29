@@ -389,7 +389,11 @@ export class DatabaseStorage implements IStorage {
               .map(id => id.trim())
               .filter(id => id.length > 0);
             for (let i = 0; i < venueIds.length; i++) {
-              await this.addVenueToTriplist(csvId!, venueIds[i], i);
+              try {
+                await this.addVenueToTriplist(csvId!, venueIds[i], i);
+              } catch (error) {
+                console.warn(`Failed to add venue ${venueIds[i]} to triplist ${csvId}:`, error);
+              }
             }
           }
         }
@@ -453,7 +457,11 @@ export class DatabaseStorage implements IStorage {
               .map(id => id.trim())
               .filter(id => id.length > 0);
             for (let i = 0; i < venueIds.length; i++) {
-              await this.addVenueToTriplist(existingByThisTitle.id, venueIds[i], i);
+              try {
+                await this.addVenueToTriplist(existingByThisTitle.id, venueIds[i], i);
+              } catch (error) {
+                console.warn(`Failed to add venue ${venueIds[i]} to triplist ${existingByThisTitle.id}:`, error);
+              }
             }
           }
         }
@@ -470,7 +478,11 @@ export class DatabaseStorage implements IStorage {
             .map(id => id.trim())
             .filter(id => id.length > 0);
           for (let i = 0; i < venueIds.length; i++) {
-            await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+            try {
+              await this.addVenueToTriplist(triplist.id, venueIds[i], i);
+            } catch (error) {
+              console.warn(`Failed to add venue ${venueIds[i]} to triplist ${triplist.id}:`, error);
+            }
           }
         }
         

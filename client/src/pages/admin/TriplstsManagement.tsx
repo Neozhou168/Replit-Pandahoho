@@ -156,11 +156,15 @@ export default function TriplistsManagement() {
     },
   });
 
-  const syncVenues = useMutation({
+  const syncVenues = useMutation<{ synced: number; errors: string[] }, Error, void>({
     mutationFn: async () => {
-      return apiRequest("/api/triplists/sync-venues", "POST", {});
+      const response = await apiRequest("/api/triplists/sync-venues", "POST", {});
+      if (response instanceof Response) {
+        return await response.json();
+      }
+      return response as { synced: number; errors: string[] };
     },
-    onSuccess: (data: { synced: number; errors: string[] }) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
       if (data.errors.length > 0) {
         toast({
