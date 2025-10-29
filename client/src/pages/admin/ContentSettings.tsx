@@ -98,7 +98,8 @@ function CountriesSection() {
 
   const createCountry = useMutation({
     mutationFn: async (data: InsertContentCountry) => {
-      return apiRequest("/api/content/countries", "POST", data);
+      const response = await apiRequest("POST", "/api/content/countries", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/countries"] });
@@ -117,7 +118,8 @@ function CountriesSection() {
 
   const updateCountry = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertContentCountry }) => {
-      return apiRequest(`/api/content/countries/${id}`, "PUT", data);
+      const response = await apiRequest("PUT", `/api/content/countries/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/countries"] });
@@ -129,7 +131,7 @@ function CountriesSection() {
 
   const deleteCountryMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/content/countries/${id}`, "DELETE");
+      await apiRequest("DELETE", `/api/content/countries/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/countries"] });
@@ -342,7 +344,8 @@ function CitiesSection() {
 
   const createCity = useMutation({
     mutationFn: async (data: InsertContentCity) => {
-      return apiRequest("/api/content/cities", "POST", data);
+      const response = await apiRequest("POST", "/api/content/cities", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
@@ -361,7 +364,8 @@ function CitiesSection() {
 
   const updateCity = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertContentCity }) => {
-      return apiRequest(`/api/content/cities/${id}`, "PUT", data);
+      const response = await apiRequest("PUT", `/api/content/cities/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
@@ -373,7 +377,7 @@ function CitiesSection() {
 
   const deleteCityMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/content/cities/${id}`, "DELETE");
+      await apiRequest("DELETE", `/api/content/cities/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/cities"] });
@@ -638,7 +642,8 @@ function TravelTypesSection() {
 
   const createType = useMutation({
     mutationFn: async (data: InsertContentTravelType) => {
-      return apiRequest("/api/content/travel-types", "POST", data);
+      const response = await apiRequest("POST", "/api/content/travel-types", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/travel-types"] });
@@ -650,7 +655,8 @@ function TravelTypesSection() {
 
   const updateType = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertContentTravelType }) => {
-      return apiRequest(`/api/content/travel-types/${id}`, "PUT", data);
+      const response = await apiRequest("PUT", `/api/content/travel-types/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/travel-types"] });
@@ -662,7 +668,7 @@ function TravelTypesSection() {
 
   const deleteTypeMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/content/travel-types/${id}`, "DELETE");
+      await apiRequest("DELETE", `/api/content/travel-types/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/travel-types"] });
@@ -673,7 +679,8 @@ function TravelTypesSection() {
 
   const updateOrderMutation = useMutation({
     mutationFn: async ({ id, displayOrder }: { id: string; displayOrder: number }) => {
-      return apiRequest(`/api/content/travel-types/${id}/order`, "PUT", { displayOrder });
+      const response = await apiRequest("PUT", `/api/content/travel-types/${id}/order`, { displayOrder });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/travel-types"] });
@@ -950,7 +957,8 @@ function SeasonsSection() {
 
   const createSeason = useMutation({
     mutationFn: async (data: InsertContentSeason) => {
-      return apiRequest("/api/content/seasons", "POST", data);
+      const response = await apiRequest("POST", "/api/content/seasons", data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/seasons"] });
@@ -962,7 +970,8 @@ function SeasonsSection() {
 
   const updateSeason = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertContentSeason }) => {
-      return apiRequest(`/api/content/seasons/${id}`, "PUT", data);
+      const response = await apiRequest("PUT", `/api/content/seasons/${id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/seasons"] });
@@ -974,7 +983,7 @@ function SeasonsSection() {
 
   const deleteSeasonMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/content/seasons/${id}`, "DELETE");
+      await apiRequest("DELETE", `/api/content/seasons/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/seasons"] });
@@ -985,7 +994,8 @@ function SeasonsSection() {
 
   const updateOrderMutation = useMutation({
     mutationFn: async ({ id, displayOrder }: { id: string; displayOrder: number }) => {
-      return apiRequest(`/api/content/seasons/${id}/order`, "PUT", { displayOrder });
+      const response = await apiRequest("PUT", `/api/content/seasons/${id}/order`, { displayOrder });
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/content/seasons"] });
