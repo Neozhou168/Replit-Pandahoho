@@ -86,6 +86,7 @@ export interface IStorage {
   // Carousel operations
   getCarouselItems(): Promise<CarouselItem[]>;
   createCarouselItem(item: Omit<CarouselItem, "id" | "createdAt">): Promise<CarouselItem>;
+  updateCarouselItem(id: string, item: Partial<Omit<CarouselItem, "id" | "createdAt">>): Promise<CarouselItem | undefined>;
   deleteCarouselItem(id: string): Promise<void>;
   bulkCreateCarouselItems(items: Omit<CarouselItem, "id" | "createdAt">[]): Promise<CarouselItem[]>;
 
@@ -697,6 +698,18 @@ export class DatabaseStorage implements IStorage {
     itemData: Omit<CarouselItem, "id" | "createdAt">
   ): Promise<CarouselItem> {
     const [item] = await db.insert(carouselItems).values(itemData).returning();
+    return item;
+  }
+
+  async updateCarouselItem(
+    id: string,
+    itemData: Partial<Omit<CarouselItem, "id" | "createdAt">>
+  ): Promise<CarouselItem | undefined> {
+    const [item] = await db
+      .update(carouselItems)
+      .set(itemData)
+      .where(eq(carouselItems.id, id))
+      .returning();
     return item;
   }
 

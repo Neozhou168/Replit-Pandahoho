@@ -62,7 +62,7 @@ export default function CarouselManagement() {
 
   const createItem = useMutation({
     mutationFn: async (data: CarouselFormData) => {
-      return apiRequest("/api/carousel", "POST", data);
+      return apiRequest("POST", "/api/carousel", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
@@ -84,7 +84,7 @@ export default function CarouselManagement() {
 
   const updateItem = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: CarouselFormData }) => {
-      return apiRequest(`/api/carousel/${id}`, "PUT", data);
+      return apiRequest("PUT", `/api/carousel/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
@@ -106,7 +106,7 @@ export default function CarouselManagement() {
 
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/carousel/${id}`, "DELETE");
+      return apiRequest("DELETE", `/api/carousel/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
@@ -134,7 +134,7 @@ export default function CarouselManagement() {
 
   const handleBulkImport = async (data: InsertCarouselItem[]) => {
     try {
-      const response: any = await apiRequest("/api/carousel/bulk", "POST", data);
+      const response: any = await apiRequest("POST", "/api/carousel/bulk", data);
       queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
       toast({
         title: "Success",

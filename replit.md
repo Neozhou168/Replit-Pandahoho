@@ -5,25 +5,36 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 
 ## Recent Changes
 
-**October 29, 2025 - Hero Carousel Display Order Field (COMPLETED)**
+**October 29, 2025 - Hero Carousel Display Order Field & API Fixes (COMPLETED)**
 - **Added: Display Order Input Field**
   - Added number input field for "Display Order" in both Create and Edit carousel forms
   - Input validates non-negative integers only (rejects decimals, negatives, invalid chars)
   - Empty input defaults to 0 to prevent NaN issues
   - Added `min={0}` HTML attribute for browser validation
   - Robust onChange handler preserves previous valid value when invalid input is attempted
+  - Fixed value prop to use `String()` for controlled input compatibility
   
 - **Enhanced: Carousel List Display**
   - Display order value now shown next to each carousel item's title
   - Shows "Order: X" for easy visual reference
   - Handles undefined values gracefully (defaults to 0)
   
+- **Fixed: Critical API Issues**
+  - Fixed all 4 `apiRequest` calls with wrong parameter order (was: url, method, data; corrected to: method, url, data)
+    - createItem mutation
+    - updateItem mutation  
+    - deleteItem mutation
+    - handleBulkImport function
+  - Added missing `PUT /api/carousel/:id` route for carousel updates
+  - Added `updateCarouselItem()` method to storage interface and implementation
+  - Fixed type safety in POST route to ensure proper field mapping
+  
 - **Technical Implementation**
   - Uses `Number(value)` parsing with comprehensive validation
   - Checks: not NaN, is integer, and >= 0
   - Prevents all edge cases: intermediate chars ("-", "+", "e"), decimals, negatives
   - Applied consistently to both Create (data-testid="input-order") and Edit (data-testid="input-edit-order") forms
-  - **Status**: COMPLETED - Architect approved all changes as production-ready
+  - **Status**: COMPLETED - All bugs fixed, carousel CRUD operations now fully functional
 
 **October 29, 2025 - Venue Display Fix & Admin UI Improvements**
 - **Fixed: Venues Not Showing on Triplist Detail Pages**

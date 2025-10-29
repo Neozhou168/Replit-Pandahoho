@@ -443,13 +443,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/carousel", isAuthenticated, isAdmin, async (req, res) => {
     try {
       const item = await storage.createCarouselItem({
-        ...req.body,
+        title: req.body.title,
+        subtitle: req.body.subtitle,
+        imageUrl: req.body.imageUrl,
+        ctaText: req.body.ctaText || null,
+        ctaLink: req.body.ctaLink || null,
+        order: req.body.order ?? 0,
         isActive: true,
       });
       res.status(201).json(item);
     } catch (error) {
       console.error("Error creating carousel item:", error);
       res.status(500).json({ message: "Failed to create carousel item" });
+    }
+  });
+
+  app.put("/api/carousel/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const item = await storage.updateCarouselItem(req.params.id, req.body);
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating carousel item:", error);
+      res.status(500).json({ message: "Failed to update carousel item" });
     }
   });
 
