@@ -31,6 +31,22 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 - **Files**: `client/src/pages/admin/VenuesManagement.tsx`, `client/src/pages/admin/TriplstsManagement.tsx`
 - **Note**: This fix resolved the apiRequest parameter order but the 413 error required the additional body size limit increase above
 
+**October 29, 2025 - Triplist Layout Updates to Match PandaHoHo**
+- **TriplistCard Component Updates**:
+  - Moved badges to bottom left of image (location, category, season)
+  - Changed badge colors: white for location, amber for category, green for season
+  - Added title, location, and description text below the image
+  - Reduced hover scale effect to subtle 1.02
+- **TriplistDetailPage Layout Overhaul**:
+  - Moved "Back to Triplists" link above hero image
+  - Repositioned hero image on LEFT (2/3 width) with 16:9 aspect ratio
+  - Added rounded corners to hero image
+  - Positioned "Group Activities" sidebar on RIGHT aligned with hero
+  - Title and location overlay centered on hero with text shadow
+  - Full title, metadata (location • category • Best in season), and Favorite button below hero
+  - Venues list and map sections below main content
+- **Files Modified**: `client/src/components/TriplistCard.tsx`, `client/src/pages/TriplistDetailPage.tsx`
+
 ## User Preferences
 ### Design Philosophy
 - **Visual-First**: High-quality imagery with gradient overlays
