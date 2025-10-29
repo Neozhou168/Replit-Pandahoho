@@ -297,6 +297,37 @@ export default function CarouselManagement() {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Order</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={field.value ?? 0}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '') {
+                              field.onChange(0);
+                            } else {
+                              const parsed = Number(value);
+                              if (!Number.isNaN(parsed) && Number.isInteger(parsed) && parsed >= 0) {
+                                field.onChange(parsed);
+                              }
+                            }
+                          }}
+                          data-testid="input-order"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="flex justify-end gap-3">
                   <Button
                     type="button"
@@ -346,9 +377,14 @@ export default function CarouselManagement() {
                   />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-2" data-testid={`text-title-${item.id}`}>
-                    {item.title}
-                  </h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-semibold" data-testid={`text-title-${item.id}`}>
+                      {item.title}
+                    </h3>
+                    <span className="text-sm text-muted-foreground" data-testid={`text-order-${item.id}`}>
+                      Order: {item.order ?? 0}
+                    </span>
+                  </div>
                   <p className="text-muted-foreground mb-4" data-testid={`text-subtitle-${item.id}`}>
                     {item.subtitle}
                   </p>
@@ -485,6 +521,37 @@ export default function CarouselManagement() {
                         placeholder="/triplists"
                         {...field}
                         data-testid="input-edit-cta-link"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="order"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Display Order</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={field.value ?? 0}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '') {
+                            field.onChange(0);
+                          } else {
+                            const parsed = Number(value);
+                            if (!Number.isNaN(parsed) && Number.isInteger(parsed) && parsed >= 0) {
+                              field.onChange(parsed);
+                            }
+                          }
+                        }}
+                        data-testid="input-edit-order"
                       />
                     </FormControl>
                     <FormMessage />
