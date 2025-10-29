@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { CarouselItem, InsertCarouselItem } from "@shared/schema";
@@ -41,6 +41,7 @@ type CarouselFormData = z.infer<typeof carouselSchema>;
 
 export default function CarouselManagement() {
   const [open, setOpen] = useState(false);
+  const [editItem, setEditItem] = useState<CarouselItem | null>(null);
   const { toast } = useToast();
 
   const { data: items = [], isLoading } = useQuery<CarouselItem[]>({
@@ -81,6 +82,28 @@ export default function CarouselManagement() {
     },
   });
 
+  const updateItem = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: CarouselFormData }) => {
+      return apiRequest(`/api/carousel/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/carousel"] });
+      toast({
+        title: "Success",
+        description: "Carousel item updated successfully!",
+      });
+      setEditItem(null);
+      form.reset();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update carousel item.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteItem = useMutation({
     mutationFn: async (id: string) => {
       return apiRequest(`/api/carousel/${id}`, "DELETE");
@@ -102,7 +125,11 @@ export default function CarouselManagement() {
   });
 
   const onSubmit = (values: CarouselFormData) => {
-    createItem.mutate(values);
+    if (editItem) {
+      updateItem.mutate({ id: editItem.id, data: values });
+    } else {
+      createItem.mutate(values);
+    }
   };
 
   const handleBulkImport = async (data: InsertCarouselItem[]) => {
@@ -331,19 +358,161 @@ export default function CarouselManagement() {
                     </p>
                   )}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteItem.mutate(item.id)}
-                  data-testid={`button-delete-${item.id}`}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setEditItem(item);
+                      form.reset({
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        imageUrl: item.imageUrl,
+                        ctaText: item.ctaText || "",
+                        ctaLink: item.ctaLink || "",
+                        order: item.order,
+                      });
+                    }}
+                    data-testid={`button-edit-${item.id}`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteItem.mutate(item.id)}
+                    data-testid={`button-delete-${item.id}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editItem} onOpenChange={(open) => !open && setEditItem(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Carousel Slide</DialogTitle>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Discover Hidden Gems"
+                        {...field}
+                        data-testid="input-edit-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="subtitle"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Subtitle</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="e.g., Explore curated travel experiences across China"
+                        rows={2}
+                        {...field}
+                        data-testid="input-edit-subtitle"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://..."
+                        {...field}
+                        data-testid="input-edit-image-url"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ctaText"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CTA Text (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Explore Now"
+                        {...field}
+                        data-testid="input-edit-cta-text"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="ctaLink"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CTA Link (optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="/triplists"
+                        {...field}
+                        data-testid="input-edit-cta-link"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditItem(null)}
+                  data-testid="button-edit-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateItem.isPending}
+                  data-testid="button-edit-submit"
+                >
+                  {updateItem.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
