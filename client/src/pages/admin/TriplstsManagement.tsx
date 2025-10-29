@@ -49,6 +49,7 @@ export default function TriplistsManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTriplist, setEditTriplist] = useState<Triplist | null>(null);
   const [deleteTriplist, setDeleteTriplist] = useState<Triplist | null>(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
@@ -188,6 +189,31 @@ export default function TriplistsManagement() {
     },
   });
 
+  const deleteAllTriplists = useMutation<{ deleted: number }, Error, void>({
+    mutationFn: async () => {
+      const response = await apiRequest("/api/triplists", "DELETE");
+      if (response instanceof Response) {
+        return await response.json();
+      }
+      return response as { deleted: number };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
+      toast({
+        title: "Success",
+        description: `Successfully deleted all ${data.deleted} triplists!`,
+      });
+      setDeleteAllOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete all triplists.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (values: InsertTriplist) => {
     if (editTriplist) {
       updateTriplist.mutate({ id: editTriplist.id, data: values });
@@ -256,6 +282,16 @@ export default function TriplistsManagement() {
         </div>
 
         <div className="flex gap-3">
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteAllOpen(true)}
+            disabled={deleteAllTriplists.isPending || triplists.length === 0}
+            data-testid="button-delete-all"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Delete All
+          </Button>
+
           <Button
             variant="outline"
             onClick={() => syncVenues.mutate()}
@@ -738,6 +774,27 @@ export default function TriplistsManagement() {
               data-testid="button-confirm-delete"
             >
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent data-testid="dialog-delete-all-triplists">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Triplists</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete ALL {triplists.length} triplists? This will also delete all related venue links and group-ups. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete-all">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteAllTriplists.mutate()}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete-all"
+            >
+              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

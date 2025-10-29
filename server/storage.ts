@@ -66,6 +66,7 @@ export interface IStorage {
   createTriplist(triplist: InsertTriplist): Promise<Triplist>;
   updateTriplist(id: string, triplist: Partial<InsertTriplist>): Promise<Triplist | undefined>;
   deleteTriplist(id: string): Promise<void>;
+  deleteAllTriplists(): Promise<{ deleted: number }>;
   addVenueToTriplist(triplistId: string, venueId: string, order?: number): Promise<void>;
   bulkCreateTriplists(triplists: InsertTriplist[]): Promise<Triplist[]>;
   syncTriplistVenues(): Promise<{ synced: number; errors: string[] }>;
@@ -351,7 +352,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTriplist(id: string): Promise<void> {
+    // Delete related records first to avoid FK constraint violations
+    await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, id));
+    await db.delete(groupUps).where(eq(groupUps.triplistId, id));
     await db.delete(triplists).where(eq(triplists.id, id));
+  }
+
+  async deleteAllTriplists(): Promise<{ deleted: number }> {
+    // Get count before deleting
+    const allTriplists = await db.select().from(triplists);
+    const count = allTriplists.length;
+    
+    // Delete all related records first
+    await db.delete(triplistVenues);
+    await db.delete(groupUps);
+    await db.delete(triplists);
+    
+    return { deleted: count };
   }
 
   async bulkCreateTriplists(triplistsData: InsertTriplist[]): Promise<Triplist[]> {

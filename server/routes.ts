@@ -300,6 +300,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/triplists", isAuthenticated, isAdmin, async (_req, res) => {
+    try {
+      const result = await storage.deleteAllTriplists();
+      res.json(result);
+    } catch (error) {
+      console.error("Error deleting all triplists:", error);
+      res.status(500).json({ message: "Failed to delete all triplists" });
+    }
+  });
+
   // ========== Survival Guide Routes ==========
   app.get("/api/guides", async (_req, res) => {
     try {
