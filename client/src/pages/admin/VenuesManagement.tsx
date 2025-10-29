@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -50,6 +50,7 @@ export default function VenuesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editVenue, setEditVenue] = useState<Venue | null>(null);
   const [deleteVenue, setDeleteVenue] = useState<Venue | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const { data: venues = [], isLoading } = useQuery<Venue[]>({
@@ -206,6 +207,12 @@ export default function VenuesManagement() {
     }
   };
 
+  const filteredVenues = venues.filter((venue) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return venue.name.toLowerCase().includes(query);
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -213,8 +220,11 @@ export default function VenuesManagement() {
           <h1 className="text-3xl font-bold" data-testid="page-title">
             Venues Management
           </h1>
-          <p className="text-muted-foreground">
-            Manage specific locations and attractions
+          <p className="text-muted-foreground" data-testid="text-venue-count">
+            {venues.length} {venues.length === 1 ? 'venue' : 'venues'} total
+            {searchQuery && filteredVenues.length !== venues.length && 
+              ` · ${filteredVenues.length} matching search`
+            }
           </p>
         </div>
 
@@ -571,6 +581,22 @@ export default function VenuesManagement() {
       </div>
     </div>
 
+    {venues.length > 0 && (
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search venues by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+            data-testid="input-search-venues"
+          />
+        </div>
+      </div>
+    )}
+
     {isLoading ? (
         <div className="grid gap-6">
           {[...Array(4)].map((_, i) => (
@@ -583,9 +609,15 @@ export default function VenuesManagement() {
             No venues created yet. Click "Add Venue" to get started.
           </p>
         </Card>
+      ) : filteredVenues.length === 0 ? (
+        <Card className="p-12 text-center">
+          <p className="text-muted-foreground" data-testid="text-no-results">
+            No venues found matching "{searchQuery}". Try a different search term.
+          </p>
+        </Card>
       ) : (
         <div className="grid gap-6">
-          {venues.map((venue) => (
+          {filteredVenues.map((venue) => (
             <Card key={venue.id} className="overflow-hidden p-6" data-testid={`card-venue-${venue.id}`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
