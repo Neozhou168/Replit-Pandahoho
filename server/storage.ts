@@ -231,7 +231,7 @@ export class DatabaseStorage implements IStorage {
     // If relatedVenueIds is provided, populate the junction table
     if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
       const venueIds = triplistData.relatedVenueIds
-        .split(',')
+        .split(/[,;]/)
         .map(id => id.trim())
         .filter(id => id.length > 0);
       
@@ -258,7 +258,7 @@ export class DatabaseStorage implements IStorage {
       // Then add new links if provided
       if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
         const venueIds = triplistData.relatedVenueIds
-          .split(',')
+          .split(/[,;]/)
           .map(vid => vid.trim())
           .filter(vid => vid.length > 0);
         
@@ -284,7 +284,7 @@ export class DatabaseStorage implements IStorage {
       const triplistData = triplistsData.find(t => t.title === triplist.title);
       if (triplistData?.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
         const venueIds = triplistData.relatedVenueIds
-          .split(',')
+          .split(/[,;]/)
           .map(id => id.trim())
           .filter(id => id.length > 0);
         
@@ -322,7 +322,7 @@ export class DatabaseStorage implements IStorage {
           
           // Add new links from relatedVenueIds
           const venueIds = triplist.relatedVenueIds
-            .split(',')
+            .split(/[,;]/)
             .map(id => id.trim())
             .filter(id => id.length > 0);
           
