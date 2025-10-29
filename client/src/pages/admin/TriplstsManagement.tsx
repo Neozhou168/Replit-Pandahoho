@@ -199,7 +199,8 @@ export default function TriplistsManagement() {
 
   const handleBulkImport = async (data: InsertTriplist[]) => {
     try {
-      const result: any = await apiRequest("/api/triplists/bulk", "POST", data);
+      const response = await apiRequest("POST", "/api/triplists/bulk", data);
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
       toast({
         title: "Success",
