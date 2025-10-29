@@ -3,6 +3,18 @@
 ## Overview
 PandaHoHo is a comprehensive travel discovery platform designed to be a complete replica of www.pandahoho.com, focusing on Chinese cities. It aims to provide a rich, visual-first experience for exploring cities, triplists, venues, and survival guides. The platform includes a robust admin dashboard for content management, user authentication, and integrates with essential third-party services. Its core capabilities include showcasing curated travel content, enabling efficient content management through CRUD operations and bulk CSV uploads, and offering a dynamic, responsive user interface. The project envisions becoming the go-to platform for discovering travel experiences in Chinese cities, with future plans for advanced search, social features, and integrated payment solutions.
 
+## Recent Changes
+
+**October 29, 2025 - CSV Bulk Import Bug Fix (RESOLVED)**
+- **Issue**: CSV bulk upload for Venues and Triplists failed in production with error: "'[URL]' is not a valid HTTP method"
+- **Root Cause**: Parameters were passed to `apiRequest` function in wrong order
+  - Incorrect: `apiRequest(url, method, data)` 
+  - Correct: `apiRequest(method, url, data)`
+- **Files Fixed**:
+  - `client/src/pages/admin/VenuesManagement.tsx` - Changed to `apiRequest("POST", "/api/venues/bulk", data)`
+  - `client/src/pages/admin/TriplstsManagement.tsx` - Changed to `apiRequest("POST", "/api/triplists/bulk", data)`
+- **Status**: Fixed and deployed. CSV bulk imports now work correctly in production after republishing.
+
 ## User Preferences
 ### Design Philosophy
 - **Visual-First**: High-quality imagery with gradient overlays
