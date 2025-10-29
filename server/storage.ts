@@ -13,6 +13,7 @@ import {
   content_countries,
   content_travel_types,
   content_seasons,
+  content_cities,
   type User,
   type UpsertUser,
   type City,
@@ -32,6 +33,8 @@ import {
   type InsertContentTravelType,
   type ContentSeason,
   type InsertContentSeason,
+  type ContentCity,
+  type InsertContentCity,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -103,6 +106,12 @@ export interface IStorage {
   updateContentSeason(id: string, season: Partial<InsertContentSeason>): Promise<ContentSeason | undefined>;
   deleteContentSeason(id: string): Promise<void>;
   updateContentSeasonOrder(id: string, newOrder: number): Promise<void>;
+
+  // Content Settings - Cities
+  getContentCities(): Promise<ContentCity[]>;
+  createContentCity(city: InsertContentCity): Promise<ContentCity>;
+  updateContentCity(id: string, city: Partial<InsertContentCity>): Promise<ContentCity | undefined>;
+  deleteContentCity(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -409,6 +418,29 @@ export class DatabaseStorage implements IStorage {
       .update(content_seasons)
       .set({ displayOrder: newOrder })
       .where(eq(content_seasons.id, id));
+  }
+
+  // ========== Content Settings - Cities ==========
+  async getContentCities(): Promise<ContentCity[]> {
+    return db.select().from(content_cities).orderBy(content_cities.name);
+  }
+
+  async createContentCity(cityData: InsertContentCity): Promise<ContentCity> {
+    const [city] = await db.insert(content_cities).values(cityData).returning();
+    return city;
+  }
+
+  async updateContentCity(id: string, cityData: Partial<InsertContentCity>): Promise<ContentCity | undefined> {
+    const [city] = await db
+      .update(content_cities)
+      .set(cityData)
+      .where(eq(content_cities.id, id))
+      .returning();
+    return city;
+  }
+
+  async deleteContentCity(id: string): Promise<void> {
+    await db.delete(content_cities).where(eq(content_cities.id, id));
   }
 }
 
