@@ -191,7 +191,7 @@ export default function TriplistsManagement() {
 
   const deleteAllTriplists = useMutation<{ deleted: number }, Error, void>({
     mutationFn: async () => {
-      const response = await apiRequest("/api/triplists", "DELETE");
+      const response = await apiRequest("DELETE", "/api/triplists");
       if (response instanceof Response) {
         return await response.json();
       }
