@@ -5,15 +5,31 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 
 ## Recent Changes
 
-**October 29, 2025 - CSV Bulk Import Bug Fix (RESOLVED)**
-- **Issue**: CSV bulk upload for Venues and Triplists failed in production with error: "'[URL]' is not a valid HTTP method"
-- **Root Cause**: Parameters were passed to `apiRequest` function in wrong order
-  - Incorrect: `apiRequest(url, method, data)` 
-  - Correct: `apiRequest(method, url, data)`
-- **Files Fixed**:
-  - `client/src/pages/admin/VenuesManagement.tsx` - Changed to `apiRequest("POST", "/api/venues/bulk", data)`
-  - `client/src/pages/admin/TriplstsManagement.tsx` - Changed to `apiRequest("POST", "/api/triplists/bulk", data)`
-- **Status**: Fixed and deployed. CSV bulk imports now work correctly in production after republishing.
+**October 29, 2025 - Production Bug Fixes (RESOLVED)**
+- **Bug 1: CSV Upload "413 Request Entity Too Large" Error**
+  - **Issue**: Venue CSV bulk upload failed with HTTP 413 error in production
+  - **Root Cause**: Express.js body parser had default 100kb limit, which was too small for large CSV files with many rows
+  - **Solution**: Increased body size limit to 50mb in `server/index.ts`:
+    - `express.json({ limit: '50mb' })`
+    - `express.urlencoded({ extended: false, limit: '50mb' })`
+  - **Status**: Fixed. Large CSV files can now be uploaded successfully
+
+- **Bug 2: Content Settings Creation Failed**
+  - **Issue**: Creating new content (Countries, Cities, Travel Types, Seasons) failed with "Failed to create" error
+  - **Root Cause**: All 14 `apiRequest` calls in `ContentSettings.tsx` had parameters in wrong order
+    - Incorrect: `apiRequest(url, method, data)`
+    - Correct: `apiRequest(method, url, data)`
+  - **Files Fixed**: `client/src/pages/admin/ContentSettings.tsx`
+    - Fixed all CRUD operations for Countries (3 calls)
+    - Fixed all CRUD operations for Cities (3 calls)
+    - Fixed all CRUD operations for Travel Types (4 calls including order)
+    - Fixed all CRUD operations for Seasons (4 calls including order)
+  - **Status**: Fixed. Content Settings CRUD operations now work correctly
+
+**October 29, 2025 - CSV Bulk Import Parameter Order Fix**
+- **Initial Fix Attempt**: CSV bulk upload for Venues and Triplists  
+- **Files**: `client/src/pages/admin/VenuesManagement.tsx`, `client/src/pages/admin/TriplstsManagement.tsx`
+- **Note**: This fix resolved the apiRequest parameter order but the 413 error required the additional body size limit increase above
 
 ## User Preferences
 ### Design Philosophy
