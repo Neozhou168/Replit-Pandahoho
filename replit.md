@@ -5,6 +5,26 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 
 ## Recent Changes
 
+**October 29, 2025 - Hero Carousel Display Order Field (COMPLETED)**
+- **Added: Display Order Input Field**
+  - Added number input field for "Display Order" in both Create and Edit carousel forms
+  - Input validates non-negative integers only (rejects decimals, negatives, invalid chars)
+  - Empty input defaults to 0 to prevent NaN issues
+  - Added `min={0}` HTML attribute for browser validation
+  - Robust onChange handler preserves previous valid value when invalid input is attempted
+  
+- **Enhanced: Carousel List Display**
+  - Display order value now shown next to each carousel item's title
+  - Shows "Order: X" for easy visual reference
+  - Handles undefined values gracefully (defaults to 0)
+  
+- **Technical Implementation**
+  - Uses `Number(value)` parsing with comprehensive validation
+  - Checks: not NaN, is integer, and >= 0
+  - Prevents all edge cases: intermediate chars ("-", "+", "e"), decimals, negatives
+  - Applied consistently to both Create (data-testid="input-order") and Edit (data-testid="input-edit-order") forms
+  - **Status**: COMPLETED - Architect approved all changes as production-ready
+
 **October 29, 2025 - Venue Display Fix & Admin UI Improvements**
 - **Fixed: Venues Not Showing on Triplist Detail Pages**
   - **Issue**: Related venues weren't appearing on triplist detail pages because `triplist_venues` junction table was empty
