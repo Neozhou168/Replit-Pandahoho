@@ -5,6 +5,32 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 
 ## Recent Changes
 
+**October 29, 2025 - Venue Display Fix & Admin UI Improvements**
+- **Fixed: Venues Not Showing on Triplist Detail Pages**
+  - **Issue**: Related venues weren't appearing on triplist detail pages because `triplist_venues` junction table was empty
+  - **Solution**: Modified `getVenues()` in `server/storage.ts` to add intelligent fallback logic
+    - First tries the `triplist_venues` junction table (for future compatibility)
+    - If empty, reads directly from triplist's `related_venue_ids` field
+    - Parses semicolon/comma-separated IDs and fetches venues in correct order
+  - **Impact**: Venues now display immediately without requiring "Sync Venues" operation
+  - **Status**: RESOLVED - Confirmed working in production
+  
+- **Fixed: LSP Type Errors in bulkCreateVenues**
+  - Added type assertions to silence false-positive TypeScript errors
+  - Errors were related to Drizzle ORM's overly strict type inference
+  - No runtime behavior changes - purely cosmetic TypeScript fixes
+  
+- **Enhanced: Triplist Count Display**
+  - Added total count display in Triplists Management header
+  - Shows "X triplists total" with proper pluralization
+  - Includes data-testid for testing automation
+  
+- **Confirmed: CSV Re-upload Safety**
+  - `bulkCreateTriplists()` already has robust upsert logic that matches by title
+  - When re-uploading CSV with corrected IDs, it updates existing records without creating duplicates
+  - Handles ID replacements via transactions to maintain data integrity
+  - User can safely re-upload triplist CSV to fix ID mismatches
+
 **October 29, 2025 - Production Bug Fixes (RESOLVED)**
 - **Bug 1: CSV Upload "413 Request Entity Too Large" Error**
   - **Issue**: Venue CSV bulk upload failed with HTTP 413 error in production
