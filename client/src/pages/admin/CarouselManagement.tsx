@@ -370,7 +370,7 @@ export default function CarouselManagement() {
                         imageUrl: item.imageUrl,
                         ctaText: item.ctaText || "",
                         ctaLink: item.ctaLink || "",
-                        order: item.order,
+                        order: item.order ?? 0,
                       });
                     }}
                     data-testid={`button-edit-${item.id}`}
