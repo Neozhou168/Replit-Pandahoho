@@ -158,7 +158,7 @@ export default function TriplistsManagement() {
 
   const syncVenues = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/triplists/sync-venues", {});
+      return apiRequest("/api/triplists/sync-venues", "POST", {});
     },
     onSuccess: (data: { synced: number; errors: string[] }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
