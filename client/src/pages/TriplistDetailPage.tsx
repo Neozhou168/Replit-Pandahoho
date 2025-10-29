@@ -55,28 +55,64 @@ export default function TriplistDetailPage() {
         </Link>
       </div>
 
-      <div className="relative h-[50vh]">
-        <img
-          src={triplist.imageUrl}
-          alt={triplist.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-        
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center px-6">
-            <h1 className="font-serif text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
-              {triplist.title.split(':')[0] || triplist.title}
-            </h1>
-            <div className="flex items-center justify-center gap-2 text-white/90 text-xl drop-shadow-md">
-              <MapPin className="w-6 h-6" />
-              <span>{triplist.location.split(',')[0]}</span>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2">
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+              <img
+                src={triplist.imageUrl}
+                alt={triplist.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+              
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center px-6">
+                  <h1 className="font-serif text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }} data-testid="hero-title">
+                    {triplist.title.split(':')[0] || triplist.title}
+                  </h1>
+                  <div className="flex items-center justify-center gap-2 text-white text-lg drop-shadow-md">
+                    <MapPin className="w-5 h-5" />
+                    <span>{triplist.location.split(',')[0]}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div className="lg:col-span-1">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold" data-testid="sidebar-title-group-up">
+                  Group Activities
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Connect with fellow travelers exploring this triplist!
+              </p>
+              <Button
+                className="w-full gap-2"
+                onClick={() => setShowGroupUpModal(true)}
+                data-testid="button-create-group-up"
+              >
+                <Users className="w-4 h-4" />
+                Create Group Activity
+              </Button>
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-center text-muted-foreground">
+                  <Users className="w-12 h-12 opacity-20" />
+                </div>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  No activities yet. Be the first to create one!
+                </p>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2">
             <div className="flex items-start justify-between gap-4 mb-6">
@@ -229,35 +265,6 @@ export default function TriplistDetailPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
-              <Card className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Users className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold" data-testid="sidebar-title-group-up">
-                    Group Activities
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Connect with fellow travelers exploring this triplist!
-                </p>
-                <Button
-                  className="w-full gap-2"
-                  onClick={() => setShowGroupUpModal(true)}
-                  data-testid="button-create-group-up"
-                >
-                  <Users className="w-4 h-4" />
-                  Create Group Activity
-                </Button>
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center justify-center text-muted-foreground">
-                    <Users className="w-12 h-12 opacity-20" />
-                  </div>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    No activities yet. Be the first to create one!
-                  </p>
-                </div>
-              </Card>
-            </div>
           </div>
         </div>
       </div>
