@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, MapPin, Users, ExternalLink, Eye } from "lucide-react";
+import { ArrowLeft, MapPin, Users, ExternalLink, Eye, Heart, Check } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
 
@@ -46,7 +46,16 @@ export default function TriplistDetailPage() {
 
   return (
     <div>
-      <div className="relative h-[60vh]">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-6 pb-4">
+        <Link href="/triplists" data-testid="link-back">
+          <Button variant="ghost" className="hover-elevate -ml-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Triplists
+          </Button>
+        </Link>
+      </div>
+
+      <div className="relative h-[50vh]">
         <img
           src={triplist.imageUrl}
           alt={triplist.title}
@@ -54,55 +63,53 @@ export default function TriplistDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         
-        <div className="absolute inset-0 flex items-end">
-          <div className="max-w-7xl mx-auto w-full px-6 lg:px-8 pb-12">
-            <Link href="/triplists" data-testid="link-back">
-              <Button
-                variant="ghost"
-                className="mb-6 bg-white/10 backdrop-blur text-white hover:bg-white/20"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Triplists
-              </Button>
-            </Link>
-
-            <div className="flex gap-2 mb-4">
-              {triplist.category && (
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 backdrop-blur text-white border-white/30"
-                  data-testid="badge-category"
-                >
-                  {triplist.category}
-                </Badge>
-              )}
-              {triplist.season && (
-                <Badge
-                  variant="secondary"
-                  className="bg-white/20 backdrop-blur text-white border-white/30"
-                  data-testid="badge-season"
-                >
-                  {triplist.season}
-                </Badge>
-              )}
-            </div>
-
-            <h1 className="font-serif text-5xl font-semibold text-white mb-4" data-testid="triplist-title">
-              {triplist.title}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center px-6">
+            <h1 className="font-serif text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+              {triplist.title.split(':')[0] || triplist.title}
             </h1>
-            <div className="flex items-center gap-2 text-white/90">
-              <MapPin className="w-5 h-5" />
-              <span className="text-lg" data-testid="triplist-location">{triplist.location}</span>
+            <div className="flex items-center justify-center gap-2 text-white/90 text-xl drop-shadow-md">
+              <MapPin className="w-6 h-6" />
+              <span>{triplist.location.split(',')[0]}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2">
+            <div className="flex items-start justify-between gap-4 mb-6">
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold mb-3" data-testid="triplist-title">
+                  {triplist.title}
+                </h2>
+                <div className="flex flex-wrap items-center gap-2 text-muted-foreground mb-4">
+                  <span data-testid="triplist-location">{triplist.location}</span>
+                  {triplist.category && (
+                    <>
+                      <span>•</span>
+                      <span data-testid="triplist-category">{triplist.category}</span>
+                    </>
+                  )}
+                  {triplist.season && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span data-testid="triplist-season">Best in {triplist.season}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              <Button variant="outline" size="icon" className="flex-shrink-0" data-testid="button-favorite">
+                <Heart className="w-4 h-4" />
+              </Button>
+            </div>
+
             <div className="prose max-w-none mb-12">
-              <p className="text-lg leading-relaxed" data-testid="triplist-description">
+              <p className="text-base leading-relaxed" data-testid="triplist-description">
                 {triplist.description}
               </p>
             </div>
@@ -224,11 +231,14 @@ export default function TriplistDetailPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
               <Card className="p-6">
-                <h3 className="font-semibold mb-4" data-testid="sidebar-title-group-up">
-                  Join or Create a Group-Up
-                </h3>
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold" data-testid="sidebar-title-group-up">
+                    Group Activities
+                  </h3>
+                </div>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Connect with fellow travelers and explore this triplist together
+                  Connect with fellow travelers exploring this triplist!
                 </p>
                 <Button
                   className="w-full gap-2"
@@ -236,8 +246,16 @@ export default function TriplistDetailPage() {
                   data-testid="button-create-group-up"
                 >
                   <Users className="w-4 h-4" />
-                  Create Group-Up
+                  Create Group Activity
                 </Button>
+                <div className="mt-6 pt-6 border-t">
+                  <div className="flex items-center justify-center text-muted-foreground">
+                    <Users className="w-12 h-12 opacity-20" />
+                  </div>
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    No activities yet. Be the first to create one!
+                  </p>
+                </div>
               </Card>
             </div>
           </div>

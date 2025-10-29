@@ -11,19 +11,29 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
   return (
     <Link href={`/triplists/${triplist.slug}`} data-testid={`link-triplist-${triplist.id}`}>
       <div className="group cursor-pointer" data-testid={`card-triplist-${triplist.id}`}>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-xl mb-4">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl mb-3">
           <img
             src={triplist.imageUrl}
             alt={triplist.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           
-          <div className="absolute top-4 left-4 flex gap-2">
+          <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
+            {triplist.location && (
+              <Badge
+                variant="secondary"
+                className="bg-white/90 backdrop-blur text-gray-900 border-0"
+                data-testid={`badge-location-${triplist.id}`}
+              >
+                <MapPin className="w-3 h-3 mr-1" />
+                {triplist.location.split(',')[0]}
+              </Badge>
+            )}
             {triplist.category && (
               <Badge
                 variant="secondary"
-                className="bg-white/20 backdrop-blur text-white border-white/30"
+                className="bg-amber-500/90 backdrop-blur text-white border-0"
                 data-testid={`badge-category-${triplist.id}`}
               >
                 {triplist.category}
@@ -32,23 +42,27 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
             {triplist.season && (
               <Badge
                 variant="secondary"
-                className="bg-white/20 backdrop-blur text-white border-white/30"
+                className="bg-green-500/90 backdrop-blur text-white border-0"
                 data-testid={`badge-season-${triplist.id}`}
               >
                 {triplist.season}
               </Badge>
             )}
           </div>
-          
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <h3 className="text-xl font-semibold text-white mb-2" data-testid={`text-triplist-title-${triplist.id}`}>
-              {triplist.title}
-            </h3>
-            <div className="flex items-center gap-1 text-sm text-white/90">
-              <MapPin className="w-3 h-3" />
-              <span data-testid={`text-triplist-location-${triplist.id}`}>{triplist.location}</span>
-            </div>
-          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-triplist-title-${triplist.id}`}>
+            {triplist.title}
+          </h3>
+          <p className="text-sm text-muted-foreground" data-testid={`text-triplist-location-below-${triplist.id}`}>
+            {triplist.location}
+          </p>
+          {triplist.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-triplist-description-${triplist.id}`}>
+              {triplist.description}
+            </p>
+          )}
         </div>
       </div>
     </Link>
