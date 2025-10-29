@@ -14,6 +14,7 @@ import {
   insertContentCountrySchema,
   insertContentTravelTypeSchema,
   insertContentSeasonSchema,
+  insertContentCitySchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
@@ -653,6 +654,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating season order:", error);
       res.status(500).json({ message: "Failed to update season order" });
+    }
+  });
+
+  // ========== Content Settings - Cities Routes ==========
+  app.get("/api/content/cities", async (_req, res) => {
+    try {
+      const cities = await storage.getContentCities();
+      res.json(cities);
+    } catch (error) {
+      console.error("Error fetching content cities:", error);
+      res.status(500).json({ message: "Failed to fetch cities" });
+    }
+  });
+
+  app.post("/api/content/cities", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentCitySchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const city = await storage.createContentCity(validation.data);
+      res.status(201).json(city);
+    } catch (error) {
+      console.error("Error creating content city:", error);
+      res.status(500).json({ message: "Failed to create city" });
+    }
+  });
+
+  app.put("/api/content/cities/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertContentCitySchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const city = await storage.updateContentCity(req.params.id, validation.data);
+      if (!city) {
+        return res.status(404).json({ message: "City not found" });
+      }
+      res.json(city);
+    } catch (error) {
+      console.error("Error updating content city:", error);
+      res.status(500).json({ message: "Failed to update city" });
+    }
+  });
+
+  app.delete("/api/content/cities/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteContentCity(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting content city:", error);
+      res.status(500).json({ message: "Failed to delete city" });
     }
   });
 
