@@ -226,14 +226,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createVenue(venueData: InsertVenue): Promise<Venue> {
-    const [venue] = await db.insert(venues).values(venueData).returning();
+    const [venue] = await db.insert(venues).values(venueData as any).returning();
     return venue;
   }
 
   async updateVenue(id: string, venueData: Partial<InsertVenue>): Promise<Venue | undefined> {
     const [venue] = await db
       .update(venues)
-      .set(venueData)
+      .set(venueData as any)
       .where(eq(venues.id, id))
       .returning();
     return venue;
@@ -262,10 +262,10 @@ export class DatabaseStorage implements IStorage {
       
       if (existingByThisId) {
         // CSV ID exists in DB - just update with CSV data (excluding id)
-        const { id, ...updateData } = venueData;
+        const { id: _omittedId, ...updateData } = venueData;
         const [updated] = await db
           .update(venues)
-          .set(updateData)
+          .set(updateData as any)
           .where(eq(venues.id, csvId!))
           .returning();
         results.push(updated);
@@ -279,7 +279,7 @@ export class DatabaseStorage implements IStorage {
             .where(eq(venues.id, existingByThisName.id));
           
           // Step 2: Insert new record with CSV ID
-          await tx.insert(venues).values(venueData);
+          await tx.insert(venues).values(venueData as any);
           
           // Step 3: Update all FK references from old ID to new ID
           await tx
@@ -300,16 +300,16 @@ export class DatabaseStorage implements IStorage {
         results.push(newVenue);
       } else if (existingByThisName) {
         // Name matches, no ID conflict - just update (excluding id)
-        const { id, ...updateData } = venueData;
+        const { id: _omittedId2, ...updateData } = venueData;
         const [updated] = await db
           .update(venues)
-          .set(updateData)
+          .set(updateData as any)
           .where(eq(venues.id, existingByThisName.id))
           .returning();
         results.push(updated);
       } else {
         // New venue - insert
-        const [venue] = await db.insert(venues).values(venueData).returning();
+        const [venue] = await db.insert(venues).values(venueData as any).returning();
         results.push(venue);
       }
     }

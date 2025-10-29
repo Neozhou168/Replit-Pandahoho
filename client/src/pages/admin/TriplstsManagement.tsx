@@ -277,7 +277,7 @@ export default function TriplistsManagement() {
             Triplists Management
           </h1>
           <p className="text-muted-foreground">
-            Manage curated travel itineraries
+            Manage curated travel itineraries • <span data-testid="text-triplist-count">{triplists.length} {triplists.length === 1 ? 'triplist' : 'triplists'} total</span>
           </p>
         </div>
 
