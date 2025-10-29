@@ -37,7 +37,7 @@ import {
   type InsertContentCity,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -174,13 +174,48 @@ export class DatabaseStorage implements IStorage {
   // ========== Venue Operations ==========
   async getVenues(filters?: { triplistId?: string }): Promise<Venue[]> {
     if (filters?.triplistId) {
+      // First try the junction table
       const result = await db
         .select({ venue: venues })
         .from(triplistVenues)
         .innerJoin(venues, eq(triplistVenues.venueId, venues.id))
         .where(eq(triplistVenues.triplistId, filters.triplistId))
         .orderBy(triplistVenues.order);
-      return result.map((r) => r.venue);
+      
+      // If junction table has results, return them
+      if (result.length > 0) {
+        return result.map((r) => r.venue);
+      }
+      
+      // Fallback: read from triplist's related_venue_ids field
+      const [triplist] = await db
+        .select()
+        .from(triplists)
+        .where(eq(triplists.id, filters.triplistId));
+      
+      if (triplist && triplist.relatedVenueIds && triplist.relatedVenueIds.trim()) {
+        // Parse the venue IDs from the semicolon/comma-separated field
+        const venueIds = triplist.relatedVenueIds
+          .split(/[,;]/)
+          .map(id => id.trim())
+          .filter(id => id.length > 0);
+        
+        if (venueIds.length > 0) {
+          // Fetch venues by IDs
+          const venuesResult = await db
+            .select()
+            .from(venues)
+            .where(inArray(venues.id, venueIds));
+          
+          // Sort venues in the same order as they appear in related_venue_ids
+          const venueMap = new Map(venuesResult.map(v => [v.id, v]));
+          return venueIds
+            .map(id => venueMap.get(id))
+            .filter((v): v is Venue => v !== undefined);
+        }
+      }
+      
+      return [];
     }
     return db.select().from(venues).orderBy(venues.name);
   }
