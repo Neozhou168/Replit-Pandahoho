@@ -194,7 +194,8 @@ export default function VenuesManagement() {
 
   const handleBulkImport = async (data: InsertVenue[]) => {
     try {
-      const result: any = await apiRequest("/api/venues/bulk", "POST", data);
+      const response = await apiRequest("POST", "/api/venues/bulk", data);
+      const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
       toast({
         title: "Success",
