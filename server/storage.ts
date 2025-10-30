@@ -414,6 +414,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTriplist(id: string): Promise<void> {
     // Delete related records first to avoid FK constraint violations
+    await db.delete(favorites).where(eq(favorites.triplistId, id));
     await db.delete(triplistVenues).where(eq(triplistVenues.triplistId, id));
     await db.delete(groupUps).where(eq(groupUps.triplistId, id));
     await db.delete(triplists).where(eq(triplists.id, id));
@@ -425,6 +426,7 @@ export class DatabaseStorage implements IStorage {
     const count = allTriplists.length;
     
     // Delete all related records first
+    await db.delete(favorites).where(sql`triplist_id IS NOT NULL`);
     await db.delete(triplistVenues);
     await db.delete(groupUps);
     await db.delete(triplists);
