@@ -62,7 +62,7 @@ export default function CitiesManagement() {
 
   const createCity = useMutation({
     mutationFn: async (data: InsertCity) => {
-      return apiRequest("/api/cities", "POST", data);
+      return apiRequest("POST", "/api/cities", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
@@ -84,7 +84,7 @@ export default function CitiesManagement() {
 
   const updateCity = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertCity }) => {
-      return apiRequest(`/api/cities/${id}`, "PUT", data);
+      return apiRequest("PUT", `/api/cities/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
@@ -106,7 +106,7 @@ export default function CitiesManagement() {
 
   const deleteCityMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/cities/${id}`, "DELETE");
+      return apiRequest("DELETE", `/api/cities/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
@@ -127,7 +127,7 @@ export default function CitiesManagement() {
 
   const handleBulkImport = async (data: InsertCity[]) => {
     try {
-      const response = await apiRequest("/api/cities/bulk", "POST", data);
+      const response = await apiRequest("POST", "/api/cities/bulk", data);
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/cities"] });
       toast({
