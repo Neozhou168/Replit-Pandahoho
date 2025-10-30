@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { User, MapIcon, Users, BookOpen, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { User as UserType } from "@shared/schema";
 
@@ -26,50 +26,48 @@ export default function Navigation() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/cities" data-testid="link-cities">
-              <span
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive("/cities")
-                    ? "text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Cities
-              </span>
-            </Link>
+          <nav className="hidden md:flex items-center gap-1">
             <Link href="/triplists" data-testid="link-triplists">
-              <span
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 hover-elevate ${
                   isActive("/triplists")
                     ? "text-foreground"
                     : "text-muted-foreground"
                 }`}
               >
+                <MapIcon className="w-4 h-4" />
                 Triplists
-              </span>
+              </Button>
             </Link>
             <Link href="/guides" data-testid="link-guides">
-              <span
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 hover-elevate ${
                   isActive("/guides")
                     ? "text-foreground"
                     : "text-muted-foreground"
                 }`}
               >
+                <BookOpen className="w-4 h-4" />
                 Survival Guides
-              </span>
+              </Button>
             </Link>
             <Link href="/membership" data-testid="link-membership">
-              <span
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 hover-elevate ${
                   isActive("/membership")
                     ? "text-foreground"
                     : "text-muted-foreground"
                 }`}
               >
+                <Crown className="w-4 h-4" />
                 Membership
-              </span>
+              </Button>
             </Link>
           </nav>
 
@@ -84,17 +82,25 @@ export default function Navigation() {
                   </Link>
                 )}
                 <Link href="/profile" data-testid="link-profile">
-                  <Button variant="ghost" size="icon" data-testid="button-profile">
+                  <div className="flex items-center gap-2 hover-elevate rounded-md px-2 py-1.5 cursor-pointer">
                     {currentUser.profileImageUrl ? (
                       <img
                         src={currentUser.profileImageUrl}
                         alt={currentUser.firstName || "User"}
                         className="w-8 h-8 rounded-full"
+                        data-testid="img-profile"
                       />
                     ) : (
-                      <User className="w-5 h-5" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="w-4 h-4 text-primary" />
+                      </div>
                     )}
-                  </Button>
+                    <div className="hidden lg:block">
+                      <div className="text-sm font-medium" data-testid="text-user-name">
+                        {currentUser.firstName || currentUser.email?.split('@')[0] || 'User'}
+                      </div>
+                    </div>
+                  </div>
                 </Link>
               </>
             ) : (

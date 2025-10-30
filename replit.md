@@ -5,6 +5,37 @@ PandaHoHo is a comprehensive travel discovery platform designed to be a complete
 
 ## Recent Changes
 
+**October 30, 2025 - Navigation & Hero CTA UI Improvements (COMPLETED)**
+- **Enhanced Navigation Bar**:
+  - Added icons to navigation links (MapIcon for Triplists, BookOpen for Survival Guides, Crown for Membership)
+  - Converted plain text links to Button components with hover-elevate effect
+  - Improved visual prominence and consistency with reference design
+  - Removed Cities link to match reference layout
+  - Added gap-1 spacing between nav items for cleaner look
+  
+- **Improved Hero CTA Button**:
+  - Changed from outline variant with backdrop-blur to solid white button
+  - Updated to `bg-white text-black hover:bg-white/90` for better visibility
+  - Added `font-semibold px-8 shadow-lg` for more prominent appearance
+  - Matches reference design with clean, professional look
+  
+- **Enhanced User Profile Display**:
+  - Shows user name/email alongside profile image on desktop (hidden on mobile)
+  - Added hover-elevate effect for better interactivity
+  - Improved avatar display with primary-colored placeholder for users without profile images
+  - More prominent and professional appearance
+  
+- **Status**: COMPLETED - All UI improvements match reference design
+
+**October 30, 2025 - Triplist Detail Page Hero Image (COMPLETED)**
+- **Removed Text Overlay**: Cleaned up triplist detail page hero image by removing all text overlays
+  - Removed gradient overlay (black fade effect)
+  - Removed centered title text on image
+  - Removed location text with pin icon
+  - Hero image now displays cleanly without any text on top
+  - Title and metadata still appear below the image as intended
+- **Status**: COMPLETED - Hero image displays cleanly
+
 **October 29, 2025 - Hero Carousel Display Order Field & API Fixes (COMPLETED)**
 - **Added: Display Order Input Field**
   - Added number input field for "Display Order" in both Create and Edit carousel forms

@@ -60,9 +60,8 @@ export default function HeroCarousel() {
               </p>
               {slide.ctaText && slide.ctaLink && (
                 <Button
-                  variant="outline"
                   size="lg"
-                  className="bg-white/10 backdrop-blur border-white/30 text-white hover:bg-white/20"
+                  className="bg-white text-black hover:bg-white/90 font-semibold px-8 shadow-lg"
                   onClick={() => window.location.href = slide.ctaLink!}
                   data-testid="carousel-cta"
                 >
