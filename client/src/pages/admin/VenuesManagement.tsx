@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -51,6 +51,7 @@ export default function VenuesManagement() {
   const [editVenue, setEditVenue] = useState<Venue | null>(null);
   const [deleteVenue, setDeleteVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: venues = [], isLoading } = useQuery<Venue[]>({
@@ -207,11 +208,26 @@ export default function VenuesManagement() {
     }
   };
 
+  // Filter venues by search query and city
   const filteredVenues = venues.filter((venue) => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return venue.name.toLowerCase().includes(query);
+    const matchesSearch = searchQuery === "" || 
+      venue.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCity = cityFilter === "all" || venue.cityId === cityFilter;
+    return matchesSearch && matchesCity;
   });
+
+  // Get unique cities for filter dropdown
+  const uniqueCities = Array.from(
+    new Map(
+      venues
+        .filter(v => v.cityId)
+        .map(v => {
+          const city = cities.find(c => c.id === v.cityId);
+          return city ? [city.id, city] : null;
+        })
+        .filter((entry): entry is [string, City] => entry !== null)
+    ).values()
+  );
 
   return (
     <div>
@@ -220,11 +236,8 @@ export default function VenuesManagement() {
           <h1 className="text-3xl font-bold" data-testid="page-title">
             Venues Management
           </h1>
-          <p className="text-muted-foreground" data-testid="text-venue-count">
-            {venues.length} {venues.length === 1 ? 'venue' : 'venues'} total
-            {searchQuery && filteredVenues.length !== venues.length && 
-              ` · ${filteredVenues.length} matching search`
-            }
+          <p className="text-muted-foreground">
+            Create, edit, and manage all venues.
           </p>
         </div>
 
@@ -581,21 +594,43 @@ export default function VenuesManagement() {
       </div>
     </div>
 
-    {venues.length > 0 && (
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search venues by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-            data-testid="input-search-venues"
-          />
+      {/* Search and Filter Section */}
+      <Card className="p-6 mb-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Filter by City:</span>
+            </div>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-[200px]" data-testid="select-city-filter">
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cities</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city.id} value={city.id}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-search"
+              />
+            </div>
+          </div>
+          <span className="text-sm text-muted-foreground whitespace-nowrap" data-testid="text-showing-count">
+            Showing {filteredVenues.length} of {venues.length} venues
+          </span>
         </div>
-      </div>
-    )}
+      </Card>
 
     {isLoading ? (
         <div className="grid gap-6">
@@ -603,16 +638,12 @@ export default function VenuesManagement() {
             <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
-      ) : venues.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground" data-testid="text-no-venues">
-            No venues created yet. Click "Add Venue" to get started.
-          </p>
-        </Card>
       ) : filteredVenues.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-muted-foreground" data-testid="text-no-results">
-            No venues found matching "{searchQuery}". Try a different search term.
+          <p className="text-muted-foreground" data-testid="text-no-venues">
+            {venues.length === 0 
+              ? "No venues created yet. Click \"Add Venue\" to get started."
+              : "No venues match your search or filter criteria."}
           </p>
         </Card>
       ) : (
