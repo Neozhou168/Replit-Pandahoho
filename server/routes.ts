@@ -97,8 +97,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await storage.deleteCity(req.params.id);
       res.status(204).send();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting city:", error);
+      // Check if it's a foreign key constraint error
+      if (error.code === '23503' && error.constraint === 'triplists_city_id_cities_id_fk') {
+        return res.status(409).json({ 
+          message: "Cannot delete city. Please delete all triplists associated with this city first." 
+        });
+      }
       res.status(500).json({ message: "Failed to delete city" });
     }
   });
