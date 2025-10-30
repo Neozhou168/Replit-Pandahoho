@@ -51,7 +51,7 @@ export default function HeroCarousel() {
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           
           <div className="absolute inset-0 flex items-center justify-center text-center">
-            <div className="max-w-3xl px-6">
+            <div className="max-w-5xl px-6">
               <h1 className="font-serif font-semibold text-5xl md:text-6xl text-white mb-4" data-testid="carousel-title">
                 {slide.title}
               </h1>

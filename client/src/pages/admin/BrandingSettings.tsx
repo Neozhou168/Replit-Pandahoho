@@ -146,18 +146,16 @@ export default function BrandingSettings() {
                         data-testid="input-logo-url"
                       />
                     </FormControl>
-                    <FormDescription>
-                      <div className="mt-2 p-3 bg-muted rounded-md text-sm">
-                        <p className="font-medium mb-1">Important: Your logo image should be:</p>
-                        <ul className="list-disc list-inside space-y-1 ml-2">
-                          <li>Square format (1:1 aspect ratio) for best results</li>
-                          <li>High resolution (at least 512x512 pixels)</li>
-                          <li>Hosted on a reliable CDN or image service</li>
-                          <li>Accessible via HTTPS</li>
-                        </ul>
-                        <p className="mt-2">This logo will appear in your site header, footer, and login page.</p>
-                      </div>
-                    </FormDescription>
+                    <div className="mt-2 p-3 bg-muted rounded-md text-sm">
+                      <p className="font-medium mb-1">Important: Your logo image should be:</p>
+                      <ul className="list-disc list-inside space-y-1 ml-2">
+                        <li>Square format (1:1 aspect ratio) for best results</li>
+                        <li>High resolution (at least 512x512 pixels)</li>
+                        <li>Hosted on a reliable CDN or image service</li>
+                        <li>Accessible via HTTPS</li>
+                      </ul>
+                      <p className="mt-2">This logo will appear in your site header, footer, and login page.</p>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
