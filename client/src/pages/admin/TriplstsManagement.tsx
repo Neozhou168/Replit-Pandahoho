@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -49,7 +49,8 @@ export default function TriplistsManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editTriplist, setEditTriplist] = useState<Triplist | null>(null);
   const [deleteTriplist, setDeleteTriplist] = useState<Triplist | null>(null);
-  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [cityFilter, setCityFilter] = useState<string>("all");
   const { toast } = useToast();
 
   const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
@@ -157,62 +158,6 @@ export default function TriplistsManagement() {
     },
   });
 
-  const syncVenues = useMutation<{ synced: number; errors: string[] }, Error, void>({
-    mutationFn: async () => {
-      const response = await apiRequest("/api/triplists/sync-venues", "POST", {});
-      if (response instanceof Response) {
-        return await response.json();
-      }
-      return response as { synced: number; errors: string[] };
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
-      if (data.errors.length > 0) {
-        toast({
-          title: "Sync Completed with Errors",
-          description: `Synced ${data.synced} triplists. ${data.errors.length} errors occurred.`,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: `Successfully synced ${data.synced} triplists with their venues!`,
-        });
-      }
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to sync triplist venues.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteAllTriplists = useMutation<{ deleted: number }, Error, void>({
-    mutationFn: async () => {
-      const response = await apiRequest("DELETE", "/api/triplists");
-      if (response instanceof Response) {
-        return await response.json();
-      }
-      return response as { deleted: number };
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
-      toast({
-        title: "Success",
-        description: `Successfully deleted all ${data.deleted} triplists!`,
-      });
-      setDeleteAllOpen(false);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete all triplists.",
-        variant: "destructive",
-      });
-    },
-  });
 
   const onSubmit = (values: InsertTriplist) => {
     if (editTriplist) {
@@ -269,39 +214,40 @@ export default function TriplistsManagement() {
     }
   };
 
+  // Filter triplists by search query and city
+  const filteredTriplists = triplists.filter((triplist) => {
+    const matchesSearch = searchQuery === "" || 
+      triplist.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCity = cityFilter === "all" || triplist.cityId === cityFilter;
+    return matchesSearch && matchesCity;
+  });
+
+  // Get unique cities for filter dropdown
+  const uniqueCities = Array.from(
+    new Map(
+      triplists
+        .filter(t => t.cityId)
+        .map(t => {
+          const city = cities.find(c => c.id === t.cityId);
+          return city ? [city.id, city] : null;
+        })
+        .filter((entry): entry is [string, City] => entry !== null)
+    ).values()
+  );
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold" data-testid="page-title">
-            Triplists Management
+            Triplist Management
           </h1>
           <p className="text-muted-foreground">
-            Manage curated travel itineraries • <span data-testid="text-triplist-count">{triplists.length} {triplists.length === 1 ? 'triplist' : 'triplists'} total</span>
+            Create, edit, and manage all travel triplists.
           </p>
         </div>
 
         <div className="flex gap-3">
-          <Button
-            variant="destructive"
-            onClick={() => setDeleteAllOpen(true)}
-            disabled={deleteAllTriplists.isPending || triplists.length === 0}
-            data-testid="button-delete-all"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete All
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => syncVenues.mutate()}
-            disabled={syncVenues.isPending}
-            data-testid="button-sync-venues"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncVenues.isPending ? 'animate-spin' : ''}`} />
-            Sync Venues
-          </Button>
-
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
@@ -699,21 +645,61 @@ export default function TriplistsManagement() {
       </div>
     </div>
 
+      {/* Search and Filter Section */}
+      <Card className="p-6 mb-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 flex-1">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Filter by City:</span>
+            </div>
+            <Select value={cityFilter} onValueChange={setCityFilter}>
+              <SelectTrigger className="w-[200px]" data-testid="select-city-filter">
+                <SelectValue placeholder="All Cities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cities</SelectItem>
+                {uniqueCities.map((city) => (
+                  <SelectItem key={city.id} value={city.id}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-search"
+              />
+            </div>
+          </div>
+          <span className="text-sm text-muted-foreground whitespace-nowrap" data-testid="text-showing-count">
+            Showing {filteredTriplists.length} of {triplists.length} triplists
+          </span>
+        </div>
+      </Card>
+
       {isLoading ? (
         <div className="grid gap-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-32 bg-muted rounded-xl animate-pulse" />
           ))}
         </div>
-      ) : triplists.length === 0 ? (
+      ) : filteredTriplists.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-muted-foreground" data-testid="text-no-triplists">
-            No triplists created yet. Click "Add Triplist" to get started.
+            {triplists.length === 0 
+              ? "No triplists created yet. Click \"Create New Triplist\" to get started."
+              : "No triplists match your search or filter criteria."}
           </p>
         </Card>
       ) : (
         <div className="grid gap-6">
-          {triplists.map((triplist) => (
+          {filteredTriplists.map((triplist) => (
             <Card key={triplist.id} className="overflow-hidden" data-testid={`card-triplist-${triplist.id}`}>
               <div className="flex gap-6 p-6">
                 <div className="w-48 aspect-[4/3] rounded-lg overflow-hidden flex-shrink-0">
@@ -774,27 +760,6 @@ export default function TriplistsManagement() {
               data-testid="button-confirm-delete"
             >
               Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
-        <AlertDialogContent data-testid="dialog-delete-all-triplists">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Triplists</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete ALL {triplists.length} triplists? This will also delete all related venue links and group-ups. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete-all">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deleteAllTriplists.mutate()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              data-testid="button-confirm-delete-all"
-            >
-              Delete All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
