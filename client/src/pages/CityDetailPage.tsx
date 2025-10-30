@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, MapPin, Utensils, ShoppingBag, Music, Sparkles, Palette } from "lucide-react";
+import { ArrowLeft, MapPin, Utensils, ShoppingBag, Music, Sparkles, Palette, Landmark, Coffee } from "lucide-react";
 import type { City, Triplist, ContentTravelType } from "@shared/schema";
 
 const categoryIcons: Record<string, any> = {
   "All": MapPin,
+  "Relaxing": Coffee,
+  "Attractions": Landmark,
   "Eating": Utensils,
   "Shopping": ShoppingBag,
   "Nightlife": Music,
