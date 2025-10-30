@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+const DEPLOYMENT_VERSION = "2025-10-30-v2";
 
 declare module 'http' {
   interface IncomingMessage {
@@ -16,6 +17,11 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Version endpoint to verify deployment
+app.get("/api/version", (_req, res) => {
+  res.json({ version: DEPLOYMENT_VERSION, timestamp: new Date().toISOString() });
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
