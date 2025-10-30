@@ -148,7 +148,25 @@ export class DatabaseStorage implements IStorage {
 
   // ========== City Operations ==========
   async getCities(): Promise<City[]> {
-    return db.select().from(cities).orderBy(cities.name);
+    // Get cities with dynamic triplist counts
+    const citiesWithCounts = await db
+      .select({
+        id: cities.id,
+        name: cities.name,
+        slug: cities.slug,
+        tagline: cities.tagline,
+        imageUrl: cities.imageUrl,
+        countryId: cities.countryId,
+        isActive: cities.isActive,
+        createdAt: cities.createdAt,
+        triplistCount: sql<number>`CAST(COUNT(${triplists.id}) AS INTEGER)`,
+      })
+      .from(cities)
+      .leftJoin(triplists, eq(cities.id, triplists.cityId))
+      .groupBy(cities.id)
+      .orderBy(cities.name);
+    
+    return citiesWithCounts;
   }
 
   async getCity(slug: string): Promise<City | undefined> {
