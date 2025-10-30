@@ -748,6 +748,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ========== Branding Routes ==========
+  app.get("/api/branding", async (_req, res) => {
+    try {
+      const brandingSettings = await storage.getBranding();
+      res.json(brandingSettings);
+    } catch (error) {
+      console.error("Error fetching branding:", error);
+      res.status(500).json({ message: "Failed to fetch branding settings" });
+    }
+  });
+
+  app.put("/api/branding", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const brandingSettings = await storage.updateBranding(req.body);
+      res.json(brandingSettings);
+    } catch (error) {
+      console.error("Error updating branding:", error);
+      res.status(500).json({ message: "Failed to update branding settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
