@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Triplist } from "@shared/schema";
 
 export default function TriplistsPage() {
+  const [cityFilter, setCityFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [seasonFilter, setSeasonFilter] = useState<string | null>(null);
 
@@ -15,11 +16,13 @@ export default function TriplistsPage() {
   const activeTriplists = triplists.filter((t) => t.isActive);
   
   const filteredTriplists = activeTriplists.filter((triplist) => {
+    const matchesCity = !cityFilter || triplist.location === cityFilter;
     const matchesCategory = !categoryFilter || triplist.category === categoryFilter;
     const matchesSeason = !seasonFilter || triplist.season === seasonFilter;
-    return matchesCategory && matchesSeason;
+    return matchesCity && matchesCategory && matchesSeason;
   });
 
+  const cities = Array.from(new Set(activeTriplists.map((t) => t.location).filter(Boolean)));
   const categories = Array.from(new Set(activeTriplists.map((t) => t.category).filter(Boolean)));
   const seasons = Array.from(new Set(activeTriplists.map((t) => t.season).filter(Boolean)));
 
@@ -34,32 +37,61 @@ export default function TriplistsPage() {
         </p>
       </div>
 
-      {(categories.length > 0 || seasons.length > 0) && (
-        <div className="mb-8 flex flex-wrap gap-4">
-          <div className="flex flex-wrap gap-2">
-            <span className="text-sm font-medium text-muted-foreground self-center">
-              Category:
-            </span>
-            <Button
-              variant={categoryFilter === null ? "default" : "outline"}
-              size="sm"
-              onClick={() => setCategoryFilter(null)}
-              data-testid="filter-category-all"
-            >
-              All
-            </Button>
-            {categories.map((category) => (
+      {(cities.length > 0 || categories.length > 0 || seasons.length > 0) && (
+        <div className="mb-8 space-y-4">
+          {cities.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-muted-foreground self-center">
+                City:
+              </span>
               <Button
-                key={category}
-                variant={categoryFilter === category ? "default" : "outline"}
+                variant={cityFilter === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCategoryFilter(category!)}
-                data-testid={`filter-category-${category}`}
+                onClick={() => setCityFilter(null)}
+                data-testid="filter-city-all"
               >
-                {category}
+                All
               </Button>
-            ))}
-          </div>
+              {cities.map((city) => (
+                <Button
+                  key={city}
+                  variant={cityFilter === city ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCityFilter(city!)}
+                  data-testid={`filter-city-${city}`}
+                >
+                  {city}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm font-medium text-muted-foreground self-center">
+                Category:
+              </span>
+              <Button
+                variant={categoryFilter === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCategoryFilter(null)}
+                data-testid="filter-category-all"
+              >
+                All
+              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={categoryFilter === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCategoryFilter(category!)}
+                  data-testid={`filter-category-${category}`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          )}
 
           {seasons.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -99,7 +131,7 @@ export default function TriplistsPage() {
       ) : filteredTriplists.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-muted-foreground" data-testid="text-no-triplists">
-            {categoryFilter || seasonFilter
+            {cityFilter || categoryFilter || seasonFilter
               ? "No triplists match your filters. Try adjusting your selection."
               : "No triplists available yet. Check back soon!"}
           </p>

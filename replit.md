@@ -35,6 +35,7 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Branding**: Customizable application name, subtitle, and logo via admin interface.
 - **Pages**: Homepage with hero carousel, browse/detail pages for Cities, Triplists, Venues, Survival Guides, Membership pricing, and a comprehensive Admin dashboard.
 - **Responsive Design**: Mobile-first approach.
+- **Triplists Filtering**: Three-row filter system (City, Category, Season) allowing users to filter triplists by location, travel type, and best season to visit.
 
 ### Technical Implementations
 - **Frontend**: React, TanStack Query, Wouter for routing.
