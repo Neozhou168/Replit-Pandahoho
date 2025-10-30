@@ -2,13 +2,17 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { User, MapIcon, Users, BookOpen, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { User as UserType } from "@shared/schema";
+import type { User as UserType, Branding } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
   
   const { data: currentUser } = useQuery<UserType>({
     queryKey: ["/api/auth/me"],
+  });
+
+  const { data: branding } = useQuery<Branding>({
+    queryKey: ["/api/branding"],
   });
 
   const isActive = (path: string) => {
@@ -21,9 +25,26 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
-            <span className="text-xl font-bold font-serif text-primary">
-              PandaHoHo
-            </span>
+            <div className="flex items-center gap-3">
+              {branding?.logoUrl && (
+                <img
+                  src={branding.logoUrl}
+                  alt={branding.appName}
+                  className="w-10 h-10 object-contain"
+                  data-testid="img-logo"
+                />
+              )}
+              <div>
+                <div className="text-xl font-bold font-serif text-primary" data-testid="text-app-name">
+                  {branding?.appName || "PandaHoHo"}
+                </div>
+                {branding?.appSubtitle && (
+                  <div className="text-xs text-muted-foreground hidden lg:block" data-testid="text-app-subtitle">
+                    {branding.appSubtitle}
+                  </div>
+                )}
+              </div>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
