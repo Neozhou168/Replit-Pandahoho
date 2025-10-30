@@ -89,7 +89,7 @@ export default function VenuesManagement() {
 
   const createVenue = useMutation({
     mutationFn: async (data: InsertVenue) => {
-      return apiRequest("/api/venues", "POST", data);
+      return apiRequest("POST", "/api/venues", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
@@ -111,7 +111,7 @@ export default function VenuesManagement() {
 
   const updateVenue = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertVenue }) => {
-      return apiRequest(`/api/venues/${id}`, "PUT", data);
+      return apiRequest("PUT", `/api/venues/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
@@ -133,7 +133,7 @@ export default function VenuesManagement() {
 
   const deleteVenueMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/venues/${id}`, "DELETE");
+      return apiRequest("DELETE", `/api/venues/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });

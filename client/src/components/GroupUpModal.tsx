@@ -76,7 +76,7 @@ export default function GroupUpModal({
 
   const createGroupUp = useMutation({
     mutationFn: async (data: InsertGroupUp) => {
-      return apiRequest("/api/group-ups", "POST", data);
+      return apiRequest("POST", "/api/group-ups", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/group-ups"] });

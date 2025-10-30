@@ -65,7 +65,7 @@ export default function GuidesManagement() {
 
   const createGuide = useMutation({
     mutationFn: async (data: InsertSurvivalGuide) => {
-      return apiRequest("/api/guides", "POST", data);
+      return apiRequest("POST", "/api/guides", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
@@ -87,7 +87,7 @@ export default function GuidesManagement() {
 
   const updateGuide = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertSurvivalGuide }) => {
-      return apiRequest(`/api/guides/${id}`, "PUT", data);
+      return apiRequest("PUT", `/api/guides/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
@@ -109,7 +109,7 @@ export default function GuidesManagement() {
 
   const deleteGuideMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/guides/${id}`, "DELETE");
+      return apiRequest("DELETE", `/api/guides/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
@@ -166,7 +166,7 @@ export default function GuidesManagement() {
 
   const handleBulkImport = async (data: InsertSurvivalGuide[]) => {
     try {
-      const response = await apiRequest("/api/guides/bulk", "POST", data);
+      const response = await apiRequest("POST", "/api/guides/bulk", data);
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/guides"] });
       toast({

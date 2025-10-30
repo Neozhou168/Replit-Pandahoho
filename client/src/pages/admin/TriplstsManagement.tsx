@@ -95,7 +95,7 @@ export default function TriplistsManagement() {
 
   const createTriplist = useMutation({
     mutationFn: async (data: InsertTriplist) => {
-      return apiRequest("/api/triplists", "POST", data);
+      return apiRequest("POST", "/api/triplists", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
@@ -117,7 +117,7 @@ export default function TriplistsManagement() {
 
   const updateTriplist = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: InsertTriplist }) => {
-      return apiRequest(`/api/triplists/${id}`, "PUT", data);
+      return apiRequest("PUT", `/api/triplists/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
@@ -139,7 +139,7 @@ export default function TriplistsManagement() {
 
   const deleteTriplistMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/triplists/${id}`, "DELETE");
+      return apiRequest("DELETE", `/api/triplists/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/triplists"] });
