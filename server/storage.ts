@@ -148,7 +148,7 @@ export class DatabaseStorage implements IStorage {
 
   // ========== City Operations ==========
   async getCities(): Promise<City[]> {
-    // Get cities with dynamic triplist counts
+    // Get cities with dynamic triplist counts using a correlated subquery
     const citiesWithCounts = await db
       .select({
         id: cities.id,
@@ -159,11 +159,13 @@ export class DatabaseStorage implements IStorage {
         countryId: cities.countryId,
         isActive: cities.isActive,
         createdAt: cities.createdAt,
-        triplistCount: sql<number>`CAST(COUNT(${triplists.id}) AS INTEGER)`,
+        triplistCount: sql<number>`(
+          SELECT CAST(COUNT(*) AS INTEGER)
+          FROM triplists
+          WHERE triplists.city_id = cities.id
+        )`,
       })
       .from(cities)
-      .leftJoin(triplists, eq(cities.id, triplists.cityId))
-      .groupBy(cities.id)
       .orderBy(cities.name);
     
     return citiesWithCounts;
