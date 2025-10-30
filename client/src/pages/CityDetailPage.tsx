@@ -1,12 +1,23 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MapPin, Utensils, ShoppingBag, Music, Sparkles, Palette } from "lucide-react";
 import type { City, Triplist } from "@shared/schema";
+
+const categoryIcons: Record<string, any> = {
+  "All": MapPin,
+  "Eating": Utensils,
+  "Shopping": ShoppingBag,
+  "Nightlife": Music,
+  "Spa": Sparkles,
+  "Art": Palette,
+};
 
 export default function CityDetailPage() {
   const [, params] = useRoute("/cities/:slug");
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   const { data: city, isLoading: cityLoading } = useQuery<City>({
     queryKey: [`/api/cities/${params?.slug}`],
@@ -17,9 +28,15 @@ export default function CityDetailPage() {
     queryKey: ["/api/triplists"],
   });
 
-  const triplists = city
+  const cityTriplists = city
     ? allTriplists.filter((t) => t.cityId === city.id && t.isActive)
     : [];
+
+  const triplists = categoryFilter
+    ? cityTriplists.filter((t) => t.category === categoryFilter)
+    : cityTriplists;
+
+  const categories = Array.from(new Set(cityTriplists.map((t) => t.category).filter(Boolean)));
 
   if (cityLoading) {
     return (
@@ -80,6 +97,35 @@ export default function CityDetailPage() {
             Discover curated travel experiences in this destination
           </p>
         </div>
+
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <Button
+              variant={categoryFilter === null ? "default" : "secondary"}
+              className="rounded-full gap-2"
+              onClick={() => setCategoryFilter(null)}
+              data-testid="filter-category-all"
+            >
+              {categoryIcons["All"] && <MapPin className="w-4 h-4" />}
+              All
+            </Button>
+            {categories.map((category) => {
+              const Icon = categoryIcons[category || ""];
+              return (
+                <Button
+                  key={category}
+                  variant={categoryFilter === category ? "default" : "secondary"}
+                  className="rounded-full gap-2"
+                  onClick={() => setCategoryFilter(category!)}
+                  data-testid={`filter-category-${category}`}
+                >
+                  {Icon && <Icon className="w-4 h-4" />}
+                  {category}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
         {triplists.length === 0 ? (
           <div className="text-center py-20">
