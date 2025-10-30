@@ -10,6 +10,7 @@ import {
   groupUps,
   favorites,
   carouselItems,
+  branding,
   content_countries,
   content_travel_types,
   content_seasons,
@@ -27,6 +28,8 @@ import {
   type GroupUp,
   type InsertGroupUp,
   type CarouselItem,
+  type Branding,
+  type InsertBranding,
   type ContentCountry,
   type InsertContentCountry,
   type ContentTravelType,
@@ -115,6 +118,10 @@ export interface IStorage {
   createContentCity(city: InsertContentCity): Promise<ContentCity>;
   updateContentCity(id: string, city: Partial<InsertContentCity>): Promise<ContentCity | undefined>;
   deleteContentCity(id: string): Promise<void>;
+
+  // Branding operations
+  getBranding(): Promise<Branding>;
+  updateBranding(data: Partial<InsertBranding>): Promise<Branding>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -826,6 +833,42 @@ export class DatabaseStorage implements IStorage {
 
   async deleteContentCity(id: string): Promise<void> {
     await db.delete(content_cities).where(eq(content_cities.id, id));
+  }
+
+  // ========== Branding Operations ==========
+  async getBranding(): Promise<Branding> {
+    const [brandingRow] = await db.select().from(branding).limit(1);
+    
+    // If no branding exists, create default one
+    if (!brandingRow) {
+      const [newBranding] = await db
+        .insert(branding)
+        .values({
+          appName: "PandaHoHo",
+          appSubtitle: "Independent Travel Assistant",
+          logoUrl: null,
+        })
+        .returning();
+      return newBranding;
+    }
+    
+    return brandingRow;
+  }
+
+  async updateBranding(data: Partial<InsertBranding>): Promise<Branding> {
+    // Get existing branding or create if doesn't exist
+    const existing = await this.getBranding();
+    
+    const [updated] = await db
+      .update(branding)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(branding.id, existing.id))
+      .returning();
+    
+    return updated;
   }
 }
 
