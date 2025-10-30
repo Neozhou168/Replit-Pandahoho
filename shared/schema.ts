@@ -45,6 +45,21 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+// Branding settings table - single row for site-wide branding
+export const branding = pgTable("branding", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  appName: varchar("app_name", { length: 100 }).notNull().default("PandaHoHo"),
+  appSubtitle: varchar("app_subtitle", { length: 200 }).default("Independent Travel Assistant"),
+  logoUrl: text("logo_url"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertBrandingSchema = createInsertSchema(branding).omit({
+  id: true,
+});
+export type InsertBranding = z.infer<typeof insertBrandingSchema>;
+export type Branding = typeof branding.$inferSelect;
+
 // ============================================================================
 // CORE CONTENT TABLES
 // ============================================================================
