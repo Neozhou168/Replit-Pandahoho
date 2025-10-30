@@ -10,6 +10,7 @@ import CityDetailPage from "@/pages/CityDetailPage";
 import TriplistsPage from "@/pages/TriplstsPage";
 import TriplistDetailPage from "@/pages/TriplistDetailPage";
 import VenueDetailPage from "@/pages/VenueDetailPage";
+import GroupUpsPage from "@/pages/GroupUpsPage";
 import GuidesPage from "@/pages/GuidesPage";
 import GuideDetailPage from "@/pages/GuideDetailPage";
 import MembershipPage from "@/pages/MembershipPage";
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/triplists" component={TriplistsPage} />
       <Route path="/triplists/:slug" component={TriplistDetailPage} />
       <Route path="/venues/:slug" component={VenueDetailPage} />
+      <Route path="/group-ups" component={GroupUpsPage} />
       <Route path="/guides" component={GuidesPage} />
       <Route path="/guides/:slug" component={GuideDetailPage} />
       <Route path="/membership" component={MembershipPage} />

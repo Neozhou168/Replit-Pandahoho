@@ -47,46 +47,56 @@ export default function Navigation() {
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             <Link href="/triplists" data-testid="link-triplists">
               <Button
                 variant="ghost"
-                size="sm"
                 className={`gap-2 hover-elevate ${
                   isActive("/triplists")
-                    ? "text-foreground"
+                    ? "text-foreground font-medium"
                     : "text-muted-foreground"
                 }`}
               >
-                <MapIcon className="w-4 h-4" />
+                <MapIcon className="w-5 h-5" />
                 Triplists
+              </Button>
+            </Link>
+            <Link href="/group-ups" data-testid="link-group-ups">
+              <Button
+                variant="ghost"
+                className={`gap-2 hover-elevate ${
+                  isActive("/group-ups")
+                    ? "text-foreground font-medium"
+                    : "text-muted-foreground"
+                }`}
+              >
+                <Users className="w-5 h-5" />
+                Group Ups
               </Button>
             </Link>
             <Link href="/guides" data-testid="link-guides">
               <Button
                 variant="ghost"
-                size="sm"
                 className={`gap-2 hover-elevate ${
                   isActive("/guides")
-                    ? "text-foreground"
+                    ? "text-foreground font-medium"
                     : "text-muted-foreground"
                 }`}
               >
-                <BookOpen className="w-4 h-4" />
+                <BookOpen className="w-5 h-5" />
                 Survival Guides
               </Button>
             </Link>
             <Link href="/membership" data-testid="link-membership">
               <Button
                 variant="ghost"
-                size="sm"
                 className={`gap-2 hover-elevate ${
                   isActive("/membership")
-                    ? "text-foreground"
+                    ? "text-foreground font-medium"
                     : "text-muted-foreground"
                 }`}
               >
-                <Crown className="w-4 h-4" />
+                <Crown className="w-5 h-5" />
                 Membership
               </Button>
             </Link>
