@@ -4,7 +4,7 @@ import { useRoute, Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Utensils, ShoppingBag, Music, Sparkles, Palette } from "lucide-react";
-import type { City, Triplist } from "@shared/schema";
+import type { City, Triplist, ContentTravelType } from "@shared/schema";
 
 const categoryIcons: Record<string, any> = {
   "All": MapPin,
@@ -28,6 +28,10 @@ export default function CityDetailPage() {
     queryKey: ["/api/triplists"],
   });
 
+  const { data: travelTypes = [] } = useQuery<ContentTravelType[]>({
+    queryKey: ["/api/content/travel-types"],
+  });
+
   const cityTriplists = city
     ? allTriplists.filter((t) => t.cityId === city.id && t.isActive)
     : [];
@@ -36,7 +40,17 @@ export default function CityDetailPage() {
     ? cityTriplists.filter((t) => t.category === categoryFilter)
     : cityTriplists;
 
-  const categories = Array.from(new Set(cityTriplists.map((t) => t.category).filter(Boolean)));
+  // Get unique categories from city triplists
+  const triplistCategories = Array.from(new Set(cityTriplists.map((t) => t.category).filter(Boolean)));
+  
+  // Sort categories by displayOrder from content settings
+  const categories = triplistCategories.sort((a, b) => {
+    const typeA = travelTypes.find((t) => t.name === a);
+    const typeB = travelTypes.find((t) => t.name === b);
+    const orderA = typeA?.displayOrder ?? 999;
+    const orderB = typeB?.displayOrder ?? 999;
+    return orderA - orderB;
+  });
 
   if (cityLoading) {
     return (
