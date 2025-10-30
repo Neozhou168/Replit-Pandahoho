@@ -148,25 +148,25 @@ export class DatabaseStorage implements IStorage {
 
   // ========== City Operations ==========
   async getCities(): Promise<City[]> {
-    // Get cities with dynamic triplist counts using LEFT JOIN and GROUP BY
-    const citiesWithCounts = await db
-      .select({
-        id: cities.id,
-        name: cities.name,
-        slug: cities.slug,
-        tagline: cities.tagline,
-        imageUrl: cities.imageUrl,
-        countryId: cities.countryId,
-        isActive: cities.isActive,
-        createdAt: cities.createdAt,
-        triplistCount: sql<number>`CAST(COUNT(${triplists.id}) AS INTEGER)`.as('triplistCount'),
-      })
-      .from(cities)
-      .leftJoin(triplists, eq(cities.id, triplists.cityId))
-      .groupBy(cities.id, cities.name, cities.slug, cities.tagline, cities.imageUrl, cities.countryId, cities.isActive, cities.createdAt)
-      .orderBy(cities.name);
+    // Get cities with dynamic triplist counts using raw SQL to ensure production compatibility
+    const citiesWithCounts = await db.execute<City>(sql`
+      SELECT 
+        cities.id,
+        cities.name,
+        cities.slug,
+        cities.tagline,
+        cities.image_url as "imageUrl",
+        cities.country_id as "countryId",
+        cities.is_active as "isActive",
+        cities.created_at as "createdAt",
+        CAST(COUNT(triplists.id) AS INTEGER) as "triplistCount"
+      FROM cities
+      LEFT JOIN triplists ON cities.id = triplists.city_id
+      GROUP BY cities.id, cities.name, cities.slug, cities.tagline, cities.image_url, cities.country_id, cities.is_active, cities.created_at
+      ORDER BY cities.name
+    `);
     
-    return citiesWithCounts;
+    return citiesWithCounts.rows as City[];
   }
 
   async getCity(slug: string): Promise<City | undefined> {

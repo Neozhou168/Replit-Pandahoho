@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
-const DEPLOYMENT_VERSION = "2025-10-30-v4-join-fix";
+const DEPLOYMENT_VERSION = "2025-10-30-v5-raw-sql";
 
 declare module 'http' {
   interface IncomingMessage {
