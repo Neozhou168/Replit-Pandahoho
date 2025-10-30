@@ -26,6 +26,13 @@ export default function TriplistsPage() {
   const categories = Array.from(new Set(activeTriplists.map((t) => t.category).filter(Boolean)));
   const seasons = Array.from(new Set(activeTriplists.map((t) => t.season).filter(Boolean)));
 
+  // Helper function to display city name without country suffix
+  const getCityDisplayName = (location: string | null) => {
+    if (!location) return "";
+    // Remove ", China" or similar country suffixes
+    return location.split(",")[0].trim();
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
       <div className="mb-12">
@@ -60,7 +67,7 @@ export default function TriplistsPage() {
                   onClick={() => setCityFilter(city!)}
                   data-testid={`filter-city-${city}`}
                 >
-                  {city}
+                  {getCityDisplayName(city)}
                 </Button>
               ))}
             </div>
