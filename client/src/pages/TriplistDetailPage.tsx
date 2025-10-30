@@ -64,19 +64,6 @@ export default function TriplistDetailPage() {
                 alt={triplist.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-              
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center px-6">
-                  <h1 className="font-serif text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }} data-testid="hero-title">
-                    {triplist.title.split(':')[0] || triplist.title}
-                  </h1>
-                  <div className="flex items-center justify-center gap-2 text-white text-lg drop-shadow-md">
-                    <MapPin className="w-5 h-5" />
-                    <span>{triplist.location.split(',')[0]}</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
