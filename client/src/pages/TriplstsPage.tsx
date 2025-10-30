@@ -24,7 +24,23 @@ export default function TriplistsPage() {
 
   const cities = Array.from(new Set(activeTriplists.map((t) => t.location).filter(Boolean)));
   const categories = Array.from(new Set(activeTriplists.map((t) => t.category).filter(Boolean)));
-  const seasons = Array.from(new Set(activeTriplists.map((t) => t.season).filter(Boolean)));
+  
+  // Define custom season order
+  const seasonOrder = ["All seasons", "Spring", "Summer", "Autumn", "Winter", "Spring & Autumn"];
+  const unsortedSeasons = Array.from(new Set(activeTriplists.map((t) => t.season).filter(Boolean)));
+  
+  // Sort seasons according to custom order
+  const seasons = unsortedSeasons.sort((a, b) => {
+    const indexA = seasonOrder.indexOf(a!);
+    const indexB = seasonOrder.indexOf(b!);
+    // If both are in the custom order, sort by position
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    // If only one is in the custom order, prioritize it
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    // If neither is in the custom order, sort alphabetically
+    return (a || "").localeCompare(b || "");
+  });
 
   // Helper function to display city name without country suffix
   const getCityDisplayName = (location: string | null) => {
