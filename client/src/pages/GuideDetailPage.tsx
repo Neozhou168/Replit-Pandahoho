@@ -50,43 +50,45 @@ export default function GuideDetailPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="relative h-[400px] md:h-[500px] overflow-hidden">
+      <div className="relative h-[500px] md:h-[600px] overflow-hidden">
         <img
           src={guide.imageUrl}
           alt={guide.title}
           className="w-full h-full object-cover"
           data-testid="guide-cover-image"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
         
-        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-          <div className="max-w-5xl mx-auto">
+        <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
+          <div className="max-w-5xl mx-auto w-full">
             <Button
               variant="ghost"
-              className="mb-4 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+              className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/20"
               onClick={() => window.history.back()}
               data-testid="button-back"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Guides
             </Button>
+          </div>
 
-            <div className="flex items-center gap-3 mb-4">
+          <div className="max-w-5xl mx-auto w-full">
+            <div className="flex items-center gap-3 mb-6">
               {guide.country && (
-                <Badge variant="secondary" className="text-sm" data-testid="badge-country">
+                <Badge variant="secondary" className="text-sm bg-white/90 text-foreground" data-testid="badge-country">
                   <MapPin className="w-3 h-3 mr-1" />
                   {guide.country}
                 </Badge>
               )}
               {guide.createdAt && (
-                <Badge variant="outline" className="text-sm bg-background/80 backdrop-blur-sm" data-testid="badge-date">
+                <Badge variant="outline" className="text-sm bg-white/10 backdrop-blur-sm text-white border-white/30" data-testid="badge-date">
                   <Calendar className="w-3 h-3 mr-1" />
                   {format(new Date(guide.createdAt), "MMM d, yyyy")}
                 </Badge>
               )}
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white drop-shadow-lg" data-testid="guide-title">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6)' }} data-testid="guide-title">
               {guide.title}
             </h1>
           </div>
