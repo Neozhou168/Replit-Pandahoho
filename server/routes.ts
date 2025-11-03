@@ -521,8 +521,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const country = await storage.createContentCountry(validation.data);
       res.status(201).json(country);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating country:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `Country "${req.body.name}" already exists` });
+      }
       res.status(500).json({ message: "Failed to create country" });
     }
   });
@@ -577,8 +580,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const travelType = await storage.createContentTravelType(validation.data);
       res.status(201).json(travelType);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating travel type:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `Travel type "${req.body.name}" already exists` });
+      }
       res.status(500).json({ message: "Failed to create travel type" });
     }
   });
@@ -648,8 +654,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const season = await storage.createContentSeason(validation.data);
       res.status(201).json(season);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating season:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `Season "${req.body.name}" already exists` });
+      }
       res.status(500).json({ message: "Failed to create season" });
     }
   });
@@ -719,8 +728,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const city = await storage.createContentCity(validation.data);
       res.status(201).json(city);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating content city:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `City "${req.body.name}" already exists` });
+      }
       res.status(500).json({ message: "Failed to create city" });
     }
   });
