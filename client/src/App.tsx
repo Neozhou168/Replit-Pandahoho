@@ -14,6 +14,7 @@ import GroupUpsPage from "@/pages/GroupUpsPage";
 import GuidesPage from "@/pages/GuidesPage";
 import GuideDetailPage from "@/pages/GuideDetailPage";
 import MembershipPage from "@/pages/MembershipPage";
+import ProfilePage from "@/pages/ProfilePage";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import NotFound from "@/pages/not-found";
 
@@ -30,6 +31,7 @@ function Router() {
       <Route path="/guides" component={GuidesPage} />
       <Route path="/guides/:slug" component={GuideDetailPage} />
       <Route path="/membership" component={MembershipPage} />
+      <Route path="/profile" component={ProfilePage} />
       <Route path="/admin" component={AdminLayout} />
       <Route path="/admin/:rest*" component={AdminLayout} />
       <Route component={NotFound} />

@@ -30,6 +30,7 @@ import TriplistsManagement from "./TriplstsManagement";
 import VenuesManagement from "./VenuesManagement";
 import GuidesManagement from "./GuidesManagement";
 import GroupUpsManagement from "./GroupUpsManagement";
+import UsersManagement from "./UsersManagement";
 import ContentSettings from "./ContentSettings";
 import BrandingSettings from "./BrandingSettings";
 import type { User } from "@shared/schema";
@@ -42,6 +43,11 @@ function AdminSidebar() {
       title: "Dashboard",
       url: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Users",
+      url: "/admin/users",
+      icon: Users,
     },
     {
       title: "Cities",
@@ -151,6 +157,7 @@ export default function AdminLayout() {
           <main className="p-8">
             <Switch>
               <Route path="/admin" component={AdminDashboard} />
+              <Route path="/admin/users" component={UsersManagement} />
               <Route path="/admin/cities" component={CitiesManagement} />
               <Route path="/admin/carousel" component={CarouselManagement} />
               <Route path="/admin/triplists" component={TriplistsManagement} />
