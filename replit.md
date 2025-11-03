@@ -44,7 +44,7 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Database**: PostgreSQL with Drizzle ORM for type-safe interactions.
 - **Validation**: Zod schemas derived from `drizzle-zod` for API input validation.
 - **Content Management System (CMS)**: Admin dashboard for CRUD operations across all content types (Cities, Triplists, Venues, Survival Guides, Carousel, Content Settings).
-- **Bulk Data Management**: CSV bulk upload for Triplists, Venues, and Survival Guides, supporting ID-based updates and slug auto-generation.
+- **Bulk Data Management**: CSV bulk upload for Triplists, Venues, and Survival Guides, supporting ID-based updates and slug auto-generation. Survival Guides CSV uses capitalized column headers (Title, Description, Country, Cover Image URL, Related Video URL, Created Date) with DD/MM/YYYY date format parsing.
 - **Dynamic Content Options**: Dropdown options (e.g., Country, Travel Type, Season) are fetched from `content_settings` tables.
 - **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
