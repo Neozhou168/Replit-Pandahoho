@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSurvivalGuideSchema } from "@shared/schema";
-import type { InsertSurvivalGuide, SurvivalGuide } from "@shared/schema";
+import type { InsertSurvivalGuide, SurvivalGuide, ContentCountry } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -31,12 +31,20 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
+import { format } from "date-fns";
 
 export default function GuidesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -48,6 +56,12 @@ export default function GuidesManagement() {
     queryKey: ["/api/guides"],
   });
 
+  const { data: countries = [] } = useQuery<ContentCountry[]>({
+    queryKey: ["/api/content/countries"],
+  });
+
+  const activeCountries = countries.filter((c) => c.isActive);
+
   const form = useForm<InsertSurvivalGuide>({
     resolver: zodResolver(insertSurvivalGuideSchema),
     defaultValues: {
@@ -58,8 +72,9 @@ export default function GuidesManagement() {
       imageUrl: "",
       videoUrl: "",
       hasVideo: false,
-      category: "China",
+      country: activeCountries[0]?.name || "China",
       isActive: true,
+      createdAt: new Date(),
     },
   });
 
@@ -153,8 +168,9 @@ export default function GuidesManagement() {
       imageUrl: guide.imageUrl,
       videoUrl: guide.videoUrl || "",
       hasVideo: guide.hasVideo,
-      category: guide.category || "China",
+      country: guide.country || "China",
       isActive: guide.isActive,
+      createdAt: guide.createdAt ? new Date(guide.createdAt) : new Date(),
     });
   };
 
@@ -201,8 +217,9 @@ export default function GuidesManagement() {
               imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d",
               videoUrl: "https://www.youtube.com/embed/example",
               hasVideo: true,
-              category: "China",
+              country: "China",
               isActive: true,
+              createdAt: new Date(),
             }}
             templateFilename="guides-template.csv"
             requiredColumns={["title", "slug", "description", "content", "imageUrl"]}
@@ -223,8 +240,9 @@ export default function GuidesManagement() {
               imageUrl: row.imageUrl,
               videoUrl: row.videoUrl || undefined,
               hasVideo: !!(row.videoUrl && row.videoUrl.trim()),
-              category: row.category || "China",
+              country: row.country || "China",
               isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
+              createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
             })}
             title="Import Survival Guides CSV"
             description="Upload a CSV file to bulk import survival guides"
@@ -367,12 +385,43 @@ export default function GuidesManagement() {
 
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="country"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-guide-country">
+                            <SelectValue placeholder="Select a country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {activeCountries.map((country) => (
+                            <SelectItem key={country.id} value={country.name}>
+                              {country.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="createdAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Created Date</FormLabel>
                       <FormControl>
-                        <Input placeholder="China" {...field} value={field.value || ""} data-testid="input-guide-category" />
+                        <Input
+                          type="date"
+                          {...field}
+                          value={field.value ? format(new Date(field.value), "yyyy-MM-dd") : ""}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                          data-testid="input-guide-created-date"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -230,15 +230,14 @@ export const survivalGuides = pgTable("survival_guides", {
   imageUrl: text("image_url").notNull(),
   videoUrl: text("video_url"), // YouTube embed URL
   hasVideo: boolean("has_video").default(false),
-  category: varchar("category", { length: 50 }).default("China"),
+  country: varchar("country", { length: 50 }).default("China"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertSurvivalGuideSchema = createInsertSchema(survivalGuides).omit({
-  createdAt: true,
-}).extend({
+export const insertSurvivalGuideSchema = createInsertSchema(survivalGuides).extend({
   id: z.string().optional(),
+  createdAt: z.coerce.date().optional(),
 });
 export type InsertSurvivalGuide = z.infer<typeof insertSurvivalGuideSchema>;
 export type SurvivalGuide = typeof survivalGuides.$inferSelect;

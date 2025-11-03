@@ -19,6 +19,7 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
 - City name to ID mapping during CSV imports
+- Survival Guides admin modal includes Created Date field and Country dropdown (from Content Settings)
 
 ### Development Guidelines
 - Never modify `vite.config.ts` or `server/vite.ts`
@@ -46,6 +47,7 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Bulk Data Management**: CSV bulk upload for Triplists, Venues, and Survival Guides, supporting ID-based updates and slug auto-generation.
 - **Dynamic Content Options**: Dropdown options (e.g., Country, Travel Type, Season) are fetched from `content_settings` tables.
 - **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`.
+- **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
 
 ## External Dependencies
