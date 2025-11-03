@@ -91,11 +91,21 @@ export default function ProfilePage() {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
-      toast({
-        title: "Avatar upload",
-        description: "Avatar upload functionality will be implemented with object storage integration.",
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await fetch("/api/profile/avatar", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
       });
-      return null;
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to upload avatar");
+      }
+
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
@@ -104,6 +114,13 @@ export default function ProfilePage() {
       toast({
         title: "Avatar uploaded",
         description: "Your avatar has been successfully updated.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });

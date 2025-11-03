@@ -18,6 +18,8 @@ import {
   updateUserSchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+import multer from "multer";
+import { Client } from "@replit/object-storage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware setup
@@ -53,6 +55,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  const upload = multer({ storage: multer.memoryStorage() });
+
+  app.post("/api/profile/avatar", isAuthenticated, upload.single("avatar"), async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.mimetype)) {
+        return res.status(400).json({ message: "Invalid file type. Only JPG, PNG, and WebP are allowed" });
+      }
+
+      if (file.size > 2 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size must be less than 2MB" });
+      }
+
+      const client = new Client();
+      const fileExtension = file.originalname.split('.').pop() || 'jpg';
+      const objectName = `.private/avatars/${userId}.${fileExtension}`;
+
+      const { ok, error } = await client.uploadFromBytes(objectName, file.buffer);
+
+      if (!ok) {
+        console.error("Upload failed:", error);
+        return res.status(500).json({ message: "Failed to upload avatar" });
+      }
+
+      const avatarUrl = `https://storage.googleapis.com/${process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID}/${objectName}`;
+
+      const user = await storage.updateUser(userId, { profileImageUrl: avatarUrl });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ avatarUrl });
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      res.status(500).json({ message: "Failed to upload avatar" });
     }
   });
 

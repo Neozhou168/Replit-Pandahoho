@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, MapIcon, BookOpen, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { User as UserType, Branding } from "@shared/schema";
@@ -101,18 +102,15 @@ export default function Navigation() {
                 )}
                 <Link href="/profile" data-testid="link-profile">
                   <div className="flex items-center gap-2 hover-elevate rounded-md px-2 py-1.5 cursor-pointer">
-                    {currentUser.profileImageUrl ? (
-                      <img
-                        src={currentUser.profileImageUrl}
-                        alt={currentUser.firstName || "User"}
-                        className="w-8 h-8 rounded-full"
-                        data-testid="img-profile"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary" />
-                      </div>
-                    )}
+                    <Avatar className="w-8 h-8" data-testid="avatar-profile">
+                      <AvatarImage src={currentUser.profileImageUrl || undefined} alt={currentUser.firstName || "User"} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                        {currentUser.firstName ? 
+                          currentUser.firstName.charAt(0).toUpperCase() + (currentUser.lastName?.charAt(0).toUpperCase() || '') :
+                          <User className="w-4 h-4" />
+                        }
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="hidden lg:block">
                       <div className="text-sm font-medium" data-testid="text-user-name">
                         {currentUser.firstName || currentUser.email?.split('@')[0] || 'User'}
