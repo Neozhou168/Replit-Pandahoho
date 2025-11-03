@@ -117,15 +117,17 @@ export default function GuideDetailPage() {
           </Card>
         )}
 
-        <Card className="p-6 md:p-8">
-          <h2 className="text-2xl font-semibold mb-6">Detailed Guide</h2>
-          <div
-            className="prose prose-lg max-w-none whitespace-pre-wrap"
-            data-testid="guide-content"
-          >
-            {guide.content}
-          </div>
-        </Card>
+        {guide.content && guide.content !== guide.description && (
+          <Card className="p-6 md:p-8">
+            <h2 className="text-2xl font-semibold mb-6">Detailed Guide</h2>
+            <div
+              className="prose prose-lg max-w-none whitespace-pre-wrap"
+              data-testid="guide-content"
+            >
+              {guide.content}
+            </div>
+          </Card>
+        )}
       </div>
     </div>
   );
