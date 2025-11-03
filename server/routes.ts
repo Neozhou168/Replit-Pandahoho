@@ -78,7 +78,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "File size must be less than 2MB" });
       }
 
-      const client = new Client();
+      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
+      if (!bucketId) {
+        console.error("DEFAULT_OBJECT_STORAGE_BUCKET_ID not configured");
+        return res.status(500).json({ message: "Object storage not configured" });
+      }
+
+      const client = new Client(bucketId);
       const fileExtension = file.originalname.split('.').pop() || 'jpg';
       const objectName = `.private/avatars/${userId}.${fileExtension}`;
 
@@ -89,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Failed to upload avatar" });
       }
 
-      const avatarUrl = `https://storage.googleapis.com/${process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID}/${objectName}`;
+      const avatarUrl = `https://storage.googleapis.com/${bucketId}/${objectName}`;
 
       const user = await storage.updateUser(userId, { profileImageUrl: avatarUrl });
       if (!user) {
