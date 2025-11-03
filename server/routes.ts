@@ -84,9 +84,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: "Object storage not configured" });
       }
 
-      const client = new Client(bucketId);
+      const client = new Client();
       const fileExtension = file.originalname.split('.').pop() || 'jpg';
-      const objectName = `.private/avatars/${userId}.${fileExtension}`;
+      const objectName = `avatars/${userId}.${fileExtension}`;
 
       const { ok, error } = await client.uploadFromBytes(objectName, file.buffer);
 
