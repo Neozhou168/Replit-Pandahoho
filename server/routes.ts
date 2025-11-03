@@ -19,9 +19,16 @@ import {
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import multer from "multer";
-import { Client } from "@replit/object-storage";
+import { v2 as cloudinary } from "cloudinary";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure Cloudinary
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
   // Auth middleware setup
   await setupAuth(app);
 
@@ -78,24 +85,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "File size must be less than 2MB" });
       }
 
-      const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID;
-      if (!bucketId) {
-        console.error("DEFAULT_OBJECT_STORAGE_BUCKET_ID not configured");
-        return res.status(500).json({ message: "Object storage not configured" });
-      }
+      // Upload to Cloudinary
+      const uploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'pandahoho/Avatars',
+            public_id: userId,
+            overwrite: true,
+            transformation: [
+              { width: 500, height: 500, crop: 'fill', gravity: 'face' }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(file.buffer);
+      });
 
-      const client = new Client();
-      const fileExtension = file.originalname.split('.').pop() || 'jpg';
-      const objectName = `avatars/${userId}.${fileExtension}`;
-
-      const { ok, error } = await client.uploadFromBytes(objectName, file.buffer);
-
-      if (!ok) {
-        console.error("Upload failed:", error);
-        return res.status(500).json({ message: "Failed to upload avatar" });
-      }
-
-      const avatarUrl = `https://storage.googleapis.com/${bucketId}/${objectName}`;
+      const avatarUrl = (uploadResult as any).secure_url;
 
       const user = await storage.updateUser(userId, { profileImageUrl: avatarUrl });
       if (!user) {
