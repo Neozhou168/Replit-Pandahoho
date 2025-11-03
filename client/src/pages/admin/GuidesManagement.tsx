@@ -210,40 +210,76 @@ export default function GuidesManagement() {
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
-              title: "How to Use WeChat Pay",
-              slug: "how-to-use-wechat-pay",
-              description: "Complete guide to setting up and using WeChat Pay in China",
-              content: "Step-by-step instructions for international travelers to set up WeChat Pay...",
-              imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d",
-              videoUrl: "https://www.youtube.com/embed/example",
-              hasVideo: true,
-              country: "China",
-              isActive: true,
-              createdAt: new Date(),
-            }}
-            templateFilename="guides-template.csv"
-            requiredColumns={["title", "slug", "description", "content", "imageUrl"]}
+              "Title": "How to Use WeChat Pay",
+              "Description": "Complete guide to setting up and using WeChat Pay in China. Step-by-step instructions...",
+              "Country": "China",
+              "Cover Image URL": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d",
+              "Related Video URL": "https://www.youtube.com/watch?v=example",
+              "Created Date": "22/08/2025, 14:52:10",
+            } as any}
+            templateFilename="panda-hoho-survival-guides.csv"
+            requiredColumns={["Title", "Description", "Country", "Cover Image URL"]}
             validateRow={(row) => {
               const errors: string[] = [];
-              if (!row.title || row.title.trim() === "") errors.push("Title is required");
-              if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
-              if (!row.description || row.description.trim() === "") errors.push("Description is required");
-              if (!row.content || row.content.trim() === "") errors.push("Content is required");
-              if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              if (!row["Title"] || row["Title"].trim() === "") errors.push("Title is required");
+              if (!row["Description"] || row["Description"].trim() === "") errors.push("Description is required");
+              if (!row["Country"] || row["Country"].trim() === "") errors.push("Country is required");
+              if (!row["Cover Image URL"] || row["Cover Image URL"].trim() === "") errors.push("Cover Image URL is required");
               return { valid: errors.length === 0, errors };
             }}
-            transformRow={(row) => ({
-              title: row.title,
-              slug: row.slug,
-              description: row.description,
-              content: row.content,
-              imageUrl: row.imageUrl,
-              videoUrl: row.videoUrl || undefined,
-              hasVideo: !!(row.videoUrl && row.videoUrl.trim()),
-              country: row.country || "China",
-              isActive: row.isActive === "true" || row.isActive === true || row.isActive === "1",
-              createdAt: row.createdAt ? new Date(row.createdAt) : undefined,
-            })}
+            transformRow={(row) => {
+              const title = row["Title"];
+              const slug = title
+                .toLowerCase()
+                .replace(/\s+/g, "-")
+                .replace(/[^\w-]+/g, "")
+                .replace(/^-+|-+$/g, "");
+              
+              // Parse date format "DD/MM/YYYY, HH:mm:ss" or use current date
+              let createdAt: Date | undefined;
+              if (row["Created Date"]) {
+                try {
+                  const dateStr = row["Created Date"];
+                  const parts = dateStr.split(", ");
+                  const datePart = parts[0];
+                  const timePart = parts[1];
+                  const [day, month, year] = datePart.split("/");
+                  
+                  if (timePart) {
+                    const [hours, minutes, seconds] = timePart.split(":");
+                    createdAt = new Date(
+                      parseInt(year),
+                      parseInt(month) - 1,
+                      parseInt(day),
+                      parseInt(hours),
+                      parseInt(minutes),
+                      parseInt(seconds)
+                    );
+                  } else {
+                    createdAt = new Date(
+                      parseInt(year),
+                      parseInt(month) - 1,
+                      parseInt(day)
+                    );
+                  }
+                } catch (e) {
+                  createdAt = undefined;
+                }
+              }
+              
+              return {
+                title: row["Title"],
+                slug: slug,
+                description: row["Description"],
+                content: row["Description"], // Use description as content
+                imageUrl: row["Cover Image URL"],
+                videoUrl: row["Related Video URL"] || undefined,
+                hasVideo: !!(row["Related Video URL"] && row["Related Video URL"].trim()),
+                country: row["Country"] || "China",
+                isActive: true,
+                createdAt: createdAt,
+              };
+            }}
             title="Import Survival Guides CSV"
             description="Upload a CSV file to bulk import survival guides"
           />
