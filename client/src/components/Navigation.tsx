@@ -3,15 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, MapIcon, BookOpen, Crown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import type { User as UserType, Branding } from "@shared/schema";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Branding } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const { user, loading } = useAuth();
   
-  const { data: currentUser } = useQuery<UserType>({
-    queryKey: ["/api/auth/me"],
-  });
-
   const { data: branding } = useQuery<Branding>({
     queryKey: ["/api/branding"],
   });
@@ -91,40 +89,40 @@ export default function Navigation() {
           </nav>
 
           <div className="flex items-center gap-3">
-            {currentUser ? (
+            {user ? (
               <>
-                {currentUser.isAdmin && (
-                  <Link href="/admin" data-testid="link-admin">
-                    <Button variant="outline" size="sm">
-                      Admin
-                    </Button>
-                  </Link>
-                )}
                 <Link href="/profile" data-testid="link-profile">
                   <div className="flex items-center gap-2 hover-elevate rounded-md px-2 py-1.5 cursor-pointer">
                     <Avatar className="w-8 h-8" data-testid="avatar-profile">
-                      <AvatarImage src={currentUser.profileImageUrl || undefined} alt={currentUser.firstName || "User"} />
+                      <AvatarImage 
+                        src={user.user_metadata?.avatar_url || undefined} 
+                        alt={user.user_metadata?.full_name || user.email || "User"} 
+                      />
                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                        {currentUser.firstName ? 
-                          currentUser.firstName.charAt(0).toUpperCase() + (currentUser.lastName?.charAt(0).toUpperCase() || '') :
-                          <User className="w-4 h-4" />
+                        {user.user_metadata?.full_name ? 
+                          user.user_metadata.full_name.charAt(0).toUpperCase() :
+                          user.email?.charAt(0).toUpperCase() || <User className="w-4 h-4" />
                         }
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden lg:block">
                       <div className="text-sm font-medium" data-testid="text-user-name">
-                        {currentUser.firstName || currentUser.email?.split('@')[0] || 'User'}
+                        {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
                       </div>
                     </div>
                   </div>
                 </Link>
               </>
+            ) : loading ? (
+              <Button variant="ghost" size="sm" disabled>
+                Loading...
+              </Button>
             ) : (
-              <a href="/api/login" data-testid="link-login">
+              <Link href="/auth" data-testid="link-login">
                 <Button variant="default" size="sm">
                   Sign In
                 </Button>
-              </a>
+              </Link>
             )}
           </div>
         </div>

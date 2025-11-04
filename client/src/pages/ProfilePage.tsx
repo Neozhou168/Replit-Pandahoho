@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,42 +9,40 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { User } from "@shared/schema";
-import { User as UserIcon, Mail, Shield, Calendar, Upload } from "lucide-react";
-import { format } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
+import { User as UserIcon, Mail, Shield, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().optional(),
+  fullName: z.string().min(1, "Full name is required"),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
   const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const [, setLocation] = useLocation();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-
-  const { data: currentUser, isLoading } = useQuery<User>({
-    queryKey: ["/api/auth/me"],
-  });
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     values: {
-      firstName: currentUser?.firstName || "",
-      lastName: currentUser?.lastName || "",
+      fullName: user?.user_metadata?.full_name || "",
     },
   });
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      return await apiRequest("PUT", "/api/profile", data);
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: data.fullName },
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
@@ -91,24 +89,31 @@ export default function ProfilePage() {
 
   const uploadAvatarMutation = useMutation({
     mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("avatar", file);
+      if (!user) throw new Error("Not authenticated");
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
 
-      const res = await fetch("/api/profile/avatar", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl },
       });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to upload avatar");
-      }
+      if (updateError) throw updateError;
 
-      return await res.json();
+      return { avatarUrl: publicUrl };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       setAvatarFile(null);
       setAvatarPreview(null);
       toast({
@@ -129,26 +134,19 @@ export default function ProfilePage() {
     updateProfileMutation.mutate(data);
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-lg text-muted-foreground">Loading profile...</div>
-        </div>
-      </div>
-    );
-  }
+  const handleLogout = async () => {
+    await signOut();
+    setLocation('/');
+  };
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-8 max-w-md">
           <div className="text-center">
             <h2 className="text-xl font-semibold mb-2">Not logged in</h2>
             <p className="text-muted-foreground mb-4">Please log in to view your profile.</p>
-            <a href="/api/login">
-              <Button data-testid="button-login">Sign In</Button>
-            </a>
+            <Button onClick={() => setLocation('/auth')} data-testid="button-login">Sign In</Button>
           </div>
         </Card>
       </div>
@@ -156,10 +154,11 @@ export default function ProfilePage() {
   }
 
   const getUserInitials = () => {
-    if (currentUser.firstName) {
-      return currentUser.firstName.charAt(0).toUpperCase() + (currentUser.lastName?.charAt(0).toUpperCase() || '');
+    if (user.user_metadata?.full_name) {
+      const names = user.user_metadata.full_name.split(' ');
+      return names.map(n => n.charAt(0).toUpperCase()).join('').slice(0, 2);
     }
-    return currentUser.email?.charAt(0).toUpperCase() || 'U';
+    return user.email?.charAt(0).toUpperCase() || 'U';
   };
 
   return (
@@ -175,7 +174,7 @@ export default function ProfilePage() {
             <div className="text-center">
               <div className="mb-4 flex justify-center">
                 <Avatar className="w-32 h-32" data-testid="avatar-profile">
-                  <AvatarImage src={avatarPreview || currentUser.profileImageUrl || undefined} />
+                  <AvatarImage src={avatarPreview || user.user_metadata?.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -183,9 +182,9 @@ export default function ProfilePage() {
               </div>
 
               <h2 className="text-xl font-semibold mb-1" data-testid="text-user-name">
-                {currentUser.firstName} {currentUser.lastName}
+                {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
               </h2>
-              <p className="text-sm text-muted-foreground mb-4" data-testid="text-user-email">{currentUser.email}</p>
+              <p className="text-sm text-muted-foreground mb-4" data-testid="text-user-email">{user.email}</p>
 
               <div className="space-y-2">
                 <input
@@ -223,27 +222,16 @@ export default function ProfilePage() {
             <h3 className="text-xl font-semibold mb-6">Profile Information</h3>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name *</Label>
-                  <Input
-                    id="firstName"
-                    {...form.register("firstName")}
-                    data-testid="input-first-name"
-                  />
-                  {form.formState.errors.firstName && (
-                    <p className="text-sm text-destructive">{form.formState.errors.firstName.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    {...form.register("lastName")}
-                    data-testid="input-last-name"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name *</Label>
+                <Input
+                  id="fullName"
+                  {...form.register("fullName")}
+                  data-testid="input-full-name"
+                />
+                {form.formState.errors.fullName && (
+                  <p className="text-sm text-destructive">{form.formState.errors.fullName.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -252,7 +240,7 @@ export default function ProfilePage() {
                   Email
                 </Label>
                 <Input
-                  value={currentUser.email || ""}
+                  value={user.email || ""}
                   disabled
                   className="bg-muted"
                   data-testid="input-email-readonly"
@@ -260,45 +248,19 @@ export default function ProfilePage() {
                 <p className="text-xs text-muted-foreground">Email cannot be changed</p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Shield className="w-4 h-4" />
-                    Role
-                  </Label>
-                  <div data-testid="text-user-role">
-                    <Badge variant={currentUser.isAdmin ? "default" : "secondary"} className="text-sm">
-                      {currentUser.role || (currentUser.isAdmin ? "administrator" : "member")}
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
-                    Login Provider
-                  </Label>
-                  <div data-testid="text-auth-provider">
-                    <Badge variant="outline" className="text-sm">
-                      {currentUser.authProvider || "replit"}
-                    </Badge>
-                  </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <UserIcon className="w-4 h-4" />
+                  Login Provider
+                </Label>
+                <div data-testid="text-auth-provider">
+                  <Badge variant="outline" className="text-sm">
+                    {user.app_metadata?.provider || "email"}
+                  </Badge>
                 </div>
               </div>
 
-              {currentUser.createdAt && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Member Since
-                  </Label>
-                  <div className="text-sm text-muted-foreground" data-testid="text-member-since">
-                    {format(new Date(currentUser.createdAt), "MMMM d, yyyy")}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 border-t">
                 <Button
                   type="submit"
                   disabled={updateProfileMutation.isPending}
@@ -313,6 +275,16 @@ export default function ProfilePage() {
                   data-testid="button-cancel"
                 >
                   Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleLogout}
+                  className="ml-auto"
+                  data-testid="button-logout"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
                 </Button>
               </div>
             </form>
