@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction, RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
+import { storage } from "./storage";
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -55,17 +56,26 @@ export const isAdmin: RequestHandler = async (
   res: Response,
   next: NextFunction
 ) => {
-  const user = (req as any).user;
+  const supabaseUser = (req as any).user;
   
-  if (!user) {
+  if (!supabaseUser) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const isUserAdmin = user.user_metadata?.is_admin === true;
+  try {
+    const dbUser = await storage.getUser(supabaseUser.id);
+    
+    if (!dbUser) {
+      return res.status(403).json({ message: "Forbidden - User not found" });
+    }
 
-  if (!isUserAdmin) {
-    return res.status(403).json({ message: "Forbidden - Admin access required" });
+    if (!dbUser.isAdmin) {
+      return res.status(403).json({ message: "Forbidden - Admin access required" });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Admin check error:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
-
-  next();
 };

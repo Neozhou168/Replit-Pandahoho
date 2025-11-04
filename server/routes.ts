@@ -1,9 +1,8 @@
 // PandaHoHo - API Routes
-// ref: blueprint:javascript_log_in_with_replit
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { isAuthenticated, isAdmin } from "./supabaseAuth";
 import {
   insertCitySchema,
   insertVenueSchema,
@@ -29,14 +28,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  // Auth middleware setup
-  await setupAuth(app);
-
   // ========== Auth Routes ==========
   app.get("/api/auth/me", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const supabaseUser = req.user;
+      const userId = supabaseUser.id;
+      const metadata = supabaseUser.user_metadata || {};
+      const provider = supabaseUser.app_metadata?.provider || 'email';
+      
+      let user = await storage.getUser(userId);
+      
+      if (!user) {
+        user = await storage.upsertUser({
+          id: userId,
+          email: supabaseUser.email || null,
+          firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || null,
+          lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || null,
+          profileImageUrl: metadata.avatar_url || null,
+          authProvider: provider,
+          role: metadata.role || 'member',
+          isAdmin: metadata.is_admin === true,
+          lastLoginAt: new Date(),
+        });
+      } else {
+        user = await storage.updateUser(userId, {
+          email: supabaseUser.email || user.email,
+          firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || user.firstName,
+          lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || user.lastName,
+          profileImageUrl: metadata.avatar_url || user.profileImageUrl,
+          role: metadata.role || user.role,
+          isAdmin: metadata.is_admin ?? user.isAdmin,
+          lastLoginAt: new Date(),
+        });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -47,17 +72,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========== User Profile Routes ==========
   app.put("/api/profile", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const validation = updateUserSchema.safeParse(req.body);
       if (!validation.success) {
         const error = fromError(validation.error);
         return res.status(400).json({ message: error.toString() });
       }
 
-      const user = await storage.updateUser(userId, validation.data);
+      let user = await storage.getUser(userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      user = await storage.updateUser(userId, validation.data);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -69,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/profile/avatar", isAuthenticated, upload.single("avatar"), async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const file = req.file;
 
       if (!file) {
@@ -547,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.toString() });
       }
 
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const groupUp = await storage.createGroupUp({
         ...validation.data,
         userId,

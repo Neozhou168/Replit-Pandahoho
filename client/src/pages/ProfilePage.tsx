@@ -11,8 +11,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
-import { User as UserIcon, Mail, Shield, LogOut } from "lucide-react";
-import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
+import { User as UserIcon, Mail, Shield, LogOut, Upload } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
 const profileSchema = z.object({
@@ -30,10 +31,18 @@ export default function ProfilePage() {
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    values: {
-      fullName: user?.user_metadata?.full_name || "",
+    defaultValues: {
+      fullName: "",
     },
   });
+
+  useEffect(() => {
+    if (user?.user_metadata?.full_name) {
+      form.reset({
+        fullName: user.user_metadata.full_name,
+      });
+    }
+  }, [user, form]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
@@ -91,27 +100,19 @@ export default function ProfilePage() {
     mutationFn: async (file: File) => {
       if (!user) throw new Error("Not authenticated");
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const formData = new FormData();
+      formData.append('avatar', file);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const response = await apiRequest('POST', '/api/profile/avatar', formData);
+      const data = await response.json();
 
       const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl },
+        data: { avatar_url: data.avatarUrl },
       });
 
       if (updateError) throw updateError;
 
-      return { avatarUrl: publicUrl };
+      return data;
     },
     onSuccess: () => {
       setAvatarFile(null);
