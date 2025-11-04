@@ -21,17 +21,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.access_token) {
+        try {
+          await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+        } catch (error) {
+          console.error('[AuthContext] Failed to sync user:', error);
+        }
+      }
+      
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.access_token) {
+        try {
+          await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`
+            }
+          });
+        } catch (error) {
+          console.error('[AuthContext] Failed to sync user:', error);
+        }
+      }
+      
       setLoading(false);
     });
 

@@ -49,6 +49,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const authHeaders = await getAuthHeaders();
     
+    console.log('[QueryClient] Fetching:', queryKey.join("/"), 'with auth:', !!authHeaders.Authorization);
+    
     const res = await fetch(queryKey.join("/") as string, {
       headers: authHeaders,
     });

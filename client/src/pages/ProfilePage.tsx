@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,12 +10,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDbUser } from "@/hooks/useDbUser";
 import { supabase } from "@/lib/supabaseClient";
 import { apiRequest } from "@/lib/queryClient";
 import { User as UserIcon, Mail, Shield, LogOut, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import type { User as DbUser } from "@shared/schema";
 
 const profileSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -26,10 +26,16 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
-  const { dbUser, refetch: refetchDbUser } = useDbUser();
+  const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const { data: dbUser } = useQuery<DbUser>({
+    queryKey: ["/api/auth/me"],
+    enabled: !!user,
+    retry: 1,
+  });
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -119,7 +125,7 @@ export default function ProfilePage() {
     onSuccess: async () => {
       setAvatarFile(null);
       setAvatarPreview(null);
-      await refetchDbUser();
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
       toast({
         title: "Avatar uploaded",
         description: "Your avatar has been successfully updated.",

@@ -4,16 +4,20 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User, MapIcon, BookOpen, Crown, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDbUser } from "@/hooks/useDbUser";
-import type { Branding } from "@shared/schema";
+import type { Branding, User as DbUser } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
   const { user, loading } = useAuth();
-  const { isAdmin, isLoading: dbUserLoading } = useDbUser();
   
   const { data: branding } = useQuery<Branding>({
     queryKey: ["/api/branding"],
+  });
+
+  const { data: dbUser } = useQuery<DbUser>({
+    queryKey: ["/api/auth/me"],
+    enabled: !!user && !loading,
+    retry: 1,
   });
 
   const isActive = (path: string) => {
@@ -88,7 +92,7 @@ export default function Navigation() {
                 Membership
               </Button>
             </Link>
-            {isAdmin && (
+            {dbUser?.isAdmin && (
               <Link href="/admin" data-testid="link-admin">
                 <Button
                   variant="ghost"
