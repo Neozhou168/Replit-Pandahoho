@@ -36,36 +36,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metadata = supabaseUser.user_metadata || {};
       const provider = supabaseUser.app_metadata?.provider || 'email';
       
+      console.log('[Auth] User ID:', userId);
+      console.log('[Auth] Provider:', provider);
+      console.log('[Auth] Metadata:', metadata);
+      
       let user = await storage.getUser(userId);
       
       if (!user) {
-        user = await storage.upsertUser({
-          id: userId,
-          email: supabaseUser.email || null,
-          firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || null,
-          lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || null,
-          profileImageUrl: metadata.avatar_url || null,
-          authProvider: provider,
-          role: metadata.role || 'member',
-          isAdmin: metadata.is_admin === true,
-          lastLoginAt: new Date(),
-        });
+        console.log('[Auth] User not in DB, creating...');
+        try {
+          user = await storage.upsertUser({
+            id: userId,
+            email: supabaseUser.email || null,
+            firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || metadata.name?.split(' ')[0] || null,
+            lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || metadata.name?.split(' ').slice(1).join(' ') || null,
+            profileImageUrl: metadata.picture || metadata.avatar_url || null,
+            authProvider: provider,
+            role: metadata.role || 'member',
+            isAdmin: metadata.is_admin === true,
+            lastLoginAt: new Date(),
+          });
+          console.log('[Auth] User created:', user.id);
+        } catch (dbError) {
+          console.error('[Auth] DB Error creating user:', dbError);
+          return res.json({
+            id: userId,
+            email: supabaseUser.email,
+            firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || null,
+            lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || null,
+            profileImageUrl: metadata.picture || metadata.avatar_url || null,
+            authProvider: provider,
+            role: 'member',
+            isAdmin: false,
+          });
+        }
       } else {
-        user = await storage.updateUser(userId, {
-          email: supabaseUser.email || user.email,
-          firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || user.firstName,
-          lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || user.lastName,
-          profileImageUrl: metadata.avatar_url || user.profileImageUrl,
-          role: metadata.role || user.role,
-          isAdmin: metadata.is_admin ?? user.isAdmin,
-          lastLoginAt: new Date(),
-        });
+        console.log('[Auth] User exists, updating...');
+        try {
+          user = await storage.updateUser(userId, {
+            email: supabaseUser.email || user.email,
+            firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || user.firstName,
+            lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || user.lastName,
+            profileImageUrl: metadata.picture || metadata.avatar_url || user.profileImageUrl,
+            role: metadata.role || user.role,
+            isAdmin: metadata.is_admin ?? user.isAdmin,
+            lastLoginAt: new Date(),
+          });
+          console.log('[Auth] User updated');
+        } catch (updateError) {
+          console.error('[Auth] Error updating user:', updateError);
+        }
       }
       
       res.json(user);
     } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
+      console.error("[Auth] Critical error in /api/auth/me:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch user",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
