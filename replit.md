@@ -57,9 +57,19 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
 
+### Authentication System
+- **Supabase Authentication**: Google OAuth and email/password login
+- **Auto-Sync Mechanism**: `useDbUser` hook automatically syncs Supabase users to PostgreSQL database via `/api/auth/me` endpoint
+- **Admin Access**: Determined by `isAdmin` field in database (source of truth)
+  - Admin status can be set via Supabase user metadata (`is_admin: true`) or directly in database
+  - Navigation component shows Admin button only for users with `isAdmin: true`
+- **Avatar Uploads**: Cloudinary integration uploads to `pandahoho/Avatars` folder
+- **JWT Verification**: Backend middleware validates Supabase JWT tokens for protected routes
+
 ## External Dependencies
-- **Replit Auth**: User authentication (OpenID Connect, email/password).
-- **PostgreSQL**: Primary database.
-- **Object Storage**: For image uploads.
-- **Stripe**: (Planned) Membership payment processing.
-- **Google Maps**: Embedding maps and location linking.
+- **Supabase**: User authentication (Google OAuth, email/password)
+- **PostgreSQL**: Primary database (Neon-backed)
+- **Cloudinary**: Avatar and image uploads to `pandahoho/Avatars` folder
+- **Object Storage**: For additional image uploads
+- **Stripe**: (Planned) Membership payment processing
+- **Google Maps**: Embedding maps and location linking
