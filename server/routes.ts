@@ -71,20 +71,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } else {
-        console.log('[Auth] User exists, updating...');
-        try {
-          user = await storage.updateUser(userId, {
-            email: supabaseUser.email || user.email,
-            firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || user.firstName,
-            lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || user.lastName,
-            profileImageUrl: metadata.picture || metadata.avatar_url || user.profileImageUrl,
-            role: metadata.role || user.role,
-            isAdmin: metadata.is_admin ?? user.isAdmin,
-            lastLoginAt: new Date(),
-          });
-          console.log('[Auth] User updated');
-        } catch (updateError) {
-          console.error('[Auth] Error updating user:', updateError);
+        const newProfileImageUrl = metadata.picture || metadata.avatar_url || user.profileImageUrl;
+        const shouldUpdate = newProfileImageUrl !== user.profileImageUrl || 
+                           metadata.is_admin !== undefined && metadata.is_admin !== user.isAdmin;
+        
+        if (shouldUpdate) {
+          console.log('[Auth] User data changed, updating...');
+          try {
+            user = await storage.updateUser(userId, {
+              email: supabaseUser.email || user.email,
+              firstName: metadata.full_name?.split(' ')[0] || metadata.first_name || user.firstName,
+              lastName: metadata.full_name?.split(' ').slice(1).join(' ') || metadata.last_name || user.lastName,
+              profileImageUrl: newProfileImageUrl,
+              role: metadata.role || user.role,
+              isAdmin: metadata.is_admin ?? user.isAdmin,
+              lastLoginAt: new Date(),
+            });
+            console.log('[Auth] User updated');
+          } catch (updateError) {
+            console.error('[Auth] Error updating user:', updateError);
+          }
+        } else {
+          console.log('[Auth] No changes detected, skipping update');
         }
       }
       
@@ -676,7 +684,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.toString() });
       }
 
-      const items = await storage.bulkCreateCarouselItems(validation.data);
+      const normalizedData = validation.data.map(item => ({
+        ...item,
+        isActive: item.isActive ?? null,
+        ctaText: item.ctaText ?? null,
+        ctaLink: item.ctaLink ?? null,
+        order: item.order ?? null,
+      }));
+
+      const items = await storage.bulkCreateCarouselItems(normalizedData);
       res.status(201).json({ count: items.length, items });
     } catch (error) {
       console.error("Error bulk creating carousel items:", error);
