@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDbUser } from "@/hooks/useDbUser";
 import { supabase } from "@/lib/supabaseClient";
 import { apiRequest } from "@/lib/queryClient";
 import { User as UserIcon, Mail, Shield, LogOut, Upload } from "lucide-react";
@@ -25,6 +26,7 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
   const { toast } = useToast();
   const { user, signOut } = useAuth();
+  const { dbUser, refetch: refetchDbUser } = useDbUser();
   const [, setLocation] = useLocation();
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -114,9 +116,10 @@ export default function ProfilePage() {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       setAvatarFile(null);
       setAvatarPreview(null);
+      await refetchDbUser();
       toast({
         title: "Avatar uploaded",
         description: "Your avatar has been successfully updated.",
@@ -175,7 +178,7 @@ export default function ProfilePage() {
             <div className="text-center">
               <div className="mb-4 flex justify-center">
                 <Avatar className="w-32 h-32" data-testid="avatar-profile">
-                  <AvatarImage src={avatarPreview || user.user_metadata?.avatar_url || undefined} />
+                  <AvatarImage src={avatarPreview || dbUser?.profileImageUrl || user.user_metadata?.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -256,10 +259,24 @@ export default function ProfilePage() {
                 </Label>
                 <div data-testid="text-auth-provider">
                   <Badge variant="outline" className="text-sm">
-                    {user.app_metadata?.provider || "email"}
+                    {dbUser?.authProvider || user.app_metadata?.provider || "email"}
                   </Badge>
                 </div>
               </div>
+
+              {dbUser?.role && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Role
+                  </Label>
+                  <div data-testid="text-user-role">
+                    <Badge variant={dbUser.isAdmin ? "default" : "secondary"} className="text-sm">
+                      {dbUser.isAdmin ? "Administrator" : "Member"}
+                    </Badge>
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3 pt-4 border-t">
                 <Button

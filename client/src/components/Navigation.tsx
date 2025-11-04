@@ -1,14 +1,16 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, MapIcon, BookOpen, Crown } from "lucide-react";
+import { User, MapIcon, BookOpen, Crown, Settings } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDbUser } from "@/hooks/useDbUser";
 import type { Branding } from "@shared/schema";
 
 export default function Navigation() {
   const [location] = useLocation();
   const { user, loading } = useAuth();
+  const { isAdmin, isLoading: dbUserLoading } = useDbUser();
   
   const { data: branding } = useQuery<Branding>({
     queryKey: ["/api/branding"],
@@ -86,6 +88,21 @@ export default function Navigation() {
                 Membership
               </Button>
             </Link>
+            {isAdmin && (
+              <Link href="/admin" data-testid="link-admin">
+                <Button
+                  variant="ghost"
+                  className={`gap-2 hover-elevate ${
+                    isActive("/admin")
+                      ? "text-foreground font-medium"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  Admin
+                </Button>
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center gap-3">
