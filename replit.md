@@ -59,12 +59,15 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 
 ### Authentication System
 - **Supabase Authentication**: Google OAuth and email/password login
-- **Auto-Sync Mechanism**: `useDbUser` hook automatically syncs Supabase users to PostgreSQL database via `/api/auth/me` endpoint
+- **Eager User Sync**: `AuthContext` automatically syncs Supabase users to PostgreSQL database immediately after sign-in by calling `/api/auth/me` with JWT token
+  - Sync happens on initial session load and any auth state changes
+  - All React Query requests include Authorization header with Supabase JWT token
 - **Admin Access**: Determined by `isAdmin` field in database (source of truth)
   - Admin status can be set via Supabase user metadata (`is_admin: true`) or directly in database
-  - Navigation component shows Admin button only for users with `isAdmin: true`
+  - Navigation component queries `/api/auth/me` to fetch database user and displays Admin button for users with `isAdmin: true`
 - **Avatar Uploads**: Cloudinary integration uploads to `pandahoho/Avatars` folder
 - **JWT Verification**: Backend middleware validates Supabase JWT tokens for protected routes
+- **User Sync Flow**: AuthContext → /api/auth/me (with Bearer token) → Upsert user to PostgreSQL → React Query fetches user for admin status check
 
 ## External Dependencies
 - **Supabase**: User authentication (Google OAuth, email/password)
