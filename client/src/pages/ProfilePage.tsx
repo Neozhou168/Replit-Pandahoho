@@ -166,7 +166,7 @@ export default function ProfilePage() {
   const getUserInitials = () => {
     if (user.user_metadata?.full_name) {
       const names = user.user_metadata.full_name.split(' ');
-      return names.map(n => n.charAt(0).toUpperCase()).join('').slice(0, 2);
+      return names.map((n: string) => n.charAt(0).toUpperCase()).join('').slice(0, 2);
     }
     return user.email?.charAt(0).toUpperCase() || 'U';
   };
@@ -184,7 +184,7 @@ export default function ProfilePage() {
             <div className="text-center">
               <div className="mb-4 flex justify-center">
                 <Avatar className="w-32 h-32" data-testid="avatar-profile">
-                  <AvatarImage src={avatarPreview || dbUser?.profileImageUrl || user.user_metadata?.avatar_url || undefined} />
+                  <AvatarImage src={avatarPreview || user.user_metadata?.avatar_url || dbUser?.profileImageUrl || undefined} />
                   <AvatarFallback className="text-3xl bg-primary/10 text-primary">
                     {getUserInitials()}
                   </AvatarFallback>
