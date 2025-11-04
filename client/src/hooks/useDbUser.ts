@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import type { User } from "@shared/schema";
+import { useEffect } from "react";
 
 export function useDbUser() {
   const { user: supabaseUser, loading: authLoading } = useAuth();
@@ -11,6 +12,16 @@ export function useDbUser() {
     retry: 1,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  useEffect(() => {
+    console.log('[useDbUser] Auth state:', { 
+      hasSupabaseUser: !!supabaseUser, 
+      authLoading,
+      dbUser,
+      error,
+      isLoading 
+    });
+  }, [supabaseUser, authLoading, dbUser, error, isLoading]);
 
   return {
     dbUser,
