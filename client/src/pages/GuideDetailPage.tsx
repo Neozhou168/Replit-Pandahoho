@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import type { SurvivalGuide } from "@shared/schema";
@@ -31,14 +30,18 @@ export default function GuideDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <div className="h-96 bg-muted animate-pulse" />
+        <div className="h-[60vh] bg-muted animate-pulse" />
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+          <div className="h-8 bg-muted rounded w-1/3 mb-4 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-2/3 animate-pulse" />
+        </div>
       </div>
     );
   }
 
   if (!guide) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
         <p className="text-muted-foreground" data-testid="text-not-found">
           Guide not found
         </p>
@@ -49,87 +52,101 @@ export default function GuideDetailPage() {
   const embedUrl = guide.videoUrl ? convertToEmbedUrl(guide.videoUrl) : null;
 
   return (
-    <div className="min-h-screen">
-      <div className="relative h-[500px] md:h-[600px] overflow-hidden">
-        <img
-          src={guide.imageUrl}
-          alt={guide.title}
-          className="w-full h-full object-cover"
-          data-testid="guide-cover-image"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
-        
-        <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
-          <div className="max-w-5xl mx-auto w-full">
-            <Button
-              variant="ghost"
-              className="bg-white/10 backdrop-blur-md hover:bg-white/20 text-white border border-white/20"
-              onClick={() => window.history.back()}
-              data-testid="button-back"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Guides
-            </Button>
+    <div>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-6 pb-4">
+        <Link href="/guides" data-testid="link-back">
+          <Button variant="ghost" className="hover-elevate -ml-4">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Guides
+          </Button>
+        </Link>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2">
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+              <img
+                src={guide.imageUrl}
+                alt={guide.title}
+                className="w-full h-full object-cover"
+                data-testid="guide-cover-image"
+              />
+            </div>
           </div>
 
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="flex items-center gap-3 mb-6">
-              {guide.country && (
-                <Badge variant="secondary" className="text-sm bg-white/90 text-foreground" data-testid="badge-country">
-                  <MapPin className="w-3 h-3 mr-1" />
-                  {guide.country}
-                </Badge>
-              )}
-              {guide.createdAt && (
-                <Badge variant="outline" className="text-sm bg-white/10 backdrop-blur-sm text-white border-white/30" data-testid="badge-date">
-                  <Calendar className="w-3 h-3 mr-1" />
-                  {format(new Date(guide.createdAt), "MMM d, yyyy")}
-                </Badge>
-              )}
-            </div>
-
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.6)' }} data-testid="guide-title">
-              {guide.title}
-            </h1>
+          <div className="lg:col-span-1">
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <Card className="p-6 md:p-8 mb-8">
-          <p className="text-xl text-foreground leading-relaxed" data-testid="guide-description">
-            {guide.description}
-          </p>
-        </Card>
-
-        {embedUrl && (
-          <Card className="p-4 md:p-6 mb-8">
-            <h2 className="text-2xl font-semibold mb-4">Watch Video Guide</h2>
-            <div className="aspect-video rounded-lg overflow-hidden">
-              <iframe
-                src={embedUrl}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                data-testid="video-embed"
-              />
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold mb-3" data-testid="guide-title">
+                {guide.title}
+              </h2>
+              <div className="flex flex-wrap items-center gap-2 text-muted-foreground mb-4">
+                {guide.country && (
+                  <>
+                    <MapPin className="w-4 h-4" />
+                    <span data-testid="guide-country">{guide.country}</span>
+                  </>
+                )}
+                {guide.country && guide.createdAt && <span>•</span>}
+                {guide.createdAt && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    <span data-testid="guide-date">{format(new Date(guide.createdAt), "MMM d, yyyy")}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </Card>
-        )}
 
-        {guide.content && guide.content !== guide.description && (
-          <Card className="p-6 md:p-8">
-            <h2 className="text-2xl font-semibold mb-6">Detailed Guide</h2>
-            <div
-              className="prose prose-lg max-w-none whitespace-pre-wrap"
-              data-testid="guide-content"
-            >
-              {guide.content}
+            <div className="prose max-w-none mb-12">
+              <p className="text-base leading-relaxed" data-testid="guide-description">
+                {guide.description}
+              </p>
             </div>
-          </Card>
-        )}
+
+            {embedUrl && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-semibold mb-6" data-testid="section-title-video">
+                  Watch Video Guide
+                </h2>
+                <div className="aspect-video rounded-xl overflow-hidden border">
+                  <iframe
+                    src={embedUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    data-testid="video-embed"
+                  />
+                </div>
+              </div>
+            )}
+
+            {guide.content && guide.content !== guide.description && (
+              <div className="mb-12">
+                <h2 className="text-2xl font-semibold mb-6" data-testid="section-title-content">
+                  Detailed Guide
+                </h2>
+                <div
+                  className="prose prose-lg max-w-none whitespace-pre-wrap"
+                  data-testid="guide-content"
+                >
+                  {guide.content}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="lg:col-span-1">
+          </div>
+        </div>
       </div>
     </div>
   );
