@@ -76,6 +76,14 @@ export default function GuideDetailPage() {
           </div>
 
           <div className="lg:col-span-1">
+            <Card className="p-6 sticky top-6">
+              <img
+                src="/attached_assets/ChatGPT Image Nov 5, 2025, 12_52_04 PM_1762318356076.png"
+                alt="Chat with hoho, your travel assistant"
+                className="w-full h-auto"
+                data-testid="image-chat-assistant"
+              />
+            </Card>
           </div>
         </div>
       </div>
