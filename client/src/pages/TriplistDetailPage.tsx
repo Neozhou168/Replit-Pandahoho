@@ -59,41 +59,25 @@ export default function TriplistDetailPage() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           <div className="lg:col-span-2">
-            <div className="relative aspect-[16/9] rounded-xl overflow-hidden shadow-xl">
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
               <img
                 src={triplist.imageUrl}
                 alt={triplist.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg" data-testid="triplist-title-hero">
-                  {triplist.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-3">
-                  {triplist.location && (
-                    <Badge variant="secondary" className="bg-white/90 text-black backdrop-blur-sm">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {triplist.location}
-                    </Badge>
-                  )}
-                  {triplist.category && (
-                    <Badge variant="secondary" className="bg-white/90 text-black backdrop-blur-sm">
-                      {triplist.category}
-                    </Badge>
-                  )}
-                  {triplist.season && (
-                    <Badge variant="secondary" className="bg-green-600/90 text-white backdrop-blur-sm">
-                      <Check className="w-3 h-3 mr-1" />
-                      Best in {triplist.season}
-                    </Badge>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
 
           <div className="lg:col-span-1 space-y-6">
+            <Card className="p-6">
+              <img
+                src={chatAssistantImage}
+                alt="Chat with hoho, your travel assistant"
+                className="w-full h-auto rounded-lg"
+                data-testid="image-chat-assistant"
+              />
+            </Card>
+
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-primary" />
@@ -101,7 +85,7 @@ export default function TriplistDetailPage() {
                   Group Activities
                 </h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-6">
                 Connect with fellow travelers exploring this triplist!
               </p>
               <Button
@@ -112,7 +96,7 @@ export default function TriplistDetailPage() {
                 <Users className="w-4 h-4" />
                 Create Group Activity
               </Button>
-              <div className="mt-4 pt-4 border-t">
+              <div className="mt-6 pt-6 border-t">
                 <div className="flex items-center justify-center text-muted-foreground">
                   <Users className="w-12 h-12 opacity-20" />
                 </div>
@@ -121,15 +105,6 @@ export default function TriplistDetailPage() {
                 </p>
               </div>
             </Card>
-
-            <div className="flex justify-center">
-              <img
-                src={chatAssistantImage}
-                alt="Chat with hoho, your travel assistant"
-                className="w-48 h-auto hover:scale-105 transition-transform cursor-pointer drop-shadow-lg"
-                data-testid="image-chat-assistant"
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -139,9 +114,27 @@ export default function TriplistDetailPage() {
           <div className="lg:col-span-2">
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="flex-1">
-                <h2 className="text-2xl font-semibold mb-2" data-testid="section-title-about">
-                  About This Triplist
+                <h2 className="text-3xl font-bold mb-3" data-testid="triplist-title">
+                  {triplist.title}
                 </h2>
+                <div className="flex flex-wrap items-center gap-2 text-muted-foreground mb-4">
+                  <span data-testid="triplist-location">{triplist.location}</span>
+                  {triplist.category && (
+                    <>
+                      <span>•</span>
+                      <span data-testid="triplist-category">{triplist.category}</span>
+                    </>
+                  )}
+                  {triplist.season && (
+                    <>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span data-testid="triplist-season">Best in {triplist.season}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
               <Button variant="outline" size="icon" className="flex-shrink-0" data-testid="button-favorite">
                 <Heart className="w-4 h-4" />
@@ -149,7 +142,7 @@ export default function TriplistDetailPage() {
             </div>
 
             <div className="prose max-w-none mb-12">
-              <p className="text-base leading-relaxed text-muted-foreground" data-testid="triplist-description">
+              <p className="text-base leading-relaxed" data-testid="triplist-description">
                 {triplist.description}
               </p>
             </div>
