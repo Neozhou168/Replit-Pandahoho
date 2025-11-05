@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import type { CarouselItem } from "@shared/schema";
+import chatAssistantImage from "@assets/hoho in production_1762319214555.png";
 
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -111,6 +112,15 @@ export default function HeroCarousel() {
           </div>
         </>
       )}
+
+      <div className="absolute bottom-8 right-8 z-10 hidden md:block">
+        <img
+          src={chatAssistantImage}
+          alt="Chat with hoho, your travel assistant"
+          className="w-64 h-auto drop-shadow-2xl"
+          data-testid="hero-chat-assistant"
+        />
+      </div>
     </div>
   );
 }
