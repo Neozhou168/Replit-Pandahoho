@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import type { SurvivalGuide } from "@shared/schema";
 import { format } from "date-fns";
-import chatAssistantImage from "@assets/hoho客服_1762321242800.jpg";
+import chatAssistantImage from "@assets/magical hoho_1762323906044.jpg";
 
 function convertToEmbedUrl(url: string): string {
   if (!url) return url;
