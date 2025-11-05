@@ -114,24 +114,14 @@ export default function HeroCarousel() {
       )}
 
       <div className="absolute bottom-8 right-8 z-10 hidden md:block">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 max-w-sm hover-elevate active-elevate-2 cursor-pointer transition-transform hover:scale-105" data-testid="hero-chat-widget">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <img
-                src={chatAssistantImage}
-                alt="hoho travel assistant"
-                className="w-24 h-24 object-contain"
-                data-testid="hero-chat-assistant"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <p className="text-sm font-medium text-muted-foreground">Online now</p>
-              </div>
-              <h3 className="font-semibold text-lg text-foreground mb-1">Chat with hoho</h3>
-              <p className="text-sm text-muted-foreground">Your travel assistant</p>
-            </div>
+        <div className="relative group cursor-pointer" data-testid="hero-chat-widget">
+          <div className="transition-transform group-hover:scale-105 drop-shadow-2xl">
+            <img
+              src={chatAssistantImage}
+              alt="Chat with hoho, your travel assistant"
+              className="w-80 h-auto"
+              data-testid="hero-chat-assistant"
+            />
           </div>
         </div>
       </div>
