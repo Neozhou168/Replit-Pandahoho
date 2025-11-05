@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import type { SurvivalGuide } from "@shared/schema";
 import { format } from "date-fns";
+import chatAssistantImage from "@assets/ChatGPT Image Nov 5, 2025, 12_52_04 PM_1762318356076.png";
 
 function convertToEmbedUrl(url: string): string {
   if (!url) return url;
@@ -78,9 +79,9 @@ export default function GuideDetailPage() {
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-6">
               <img
-                src="/attached_assets/ChatGPT Image Nov 5, 2025, 12_52_04 PM_1762318356076.png"
+                src={chatAssistantImage}
                 alt="Chat with hoho, your travel assistant"
-                className="w-full h-auto"
+                className="w-full h-auto rounded-lg"
                 data-testid="image-chat-assistant"
               />
             </Card>
