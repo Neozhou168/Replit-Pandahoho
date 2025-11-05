@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import type { CarouselItem } from "@shared/schema";
-import chatAssistantImage from "@assets/magic hoho assistant_1762324164581.jpg";
+import chatAssistantImage from "@assets/hoho on homepage_1762324477127.jpg";
 
 export default function HeroCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0);
