@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Users, ExternalLink, Eye, Heart, Check } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
-import chatAssistantImage from "@assets/hoho in production_1762318958485.png";
+import chatAssistantImage from "@assets/hoho客服_1762321242800.jpg";
 
 export default function TriplistDetailPage() {
   const [, params] = useRoute("/triplists/:slug");
