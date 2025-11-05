@@ -102,7 +102,7 @@ export default function GuideDetailPage() {
           </p>
         </Card>
 
-        {guide.hasVideo && embedUrl && (
+        {embedUrl && (
           <Card className="p-4 md:p-6 mb-8">
             <h2 className="text-2xl font-semibold mb-4">Watch Video Guide</h2>
             <div className="aspect-video rounded-lg overflow-hidden">
