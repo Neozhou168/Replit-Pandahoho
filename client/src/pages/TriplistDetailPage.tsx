@@ -59,59 +59,14 @@ export default function TriplistDetailPage() {
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="relative aspect-[16/9] rounded-xl overflow-hidden">
+            <div className="relative aspect-[16/9] rounded-xl overflow-hidden mb-6">
               <img
                 src={triplist.imageUrl}
                 alt={triplist.title}
                 className="w-full h-full object-cover"
               />
             </div>
-          </div>
 
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="p-6">
-              <img
-                src={chatAssistantImage}
-                alt="Chat with hoho, your travel assistant"
-                className="w-full h-auto rounded-lg"
-                data-testid="image-chat-assistant"
-              />
-            </Card>
-
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold" data-testid="sidebar-title-group-up">
-                  Group Activities
-                </h3>
-              </div>
-              <p className="text-sm text-muted-foreground mb-6">
-                Connect with fellow travelers exploring this triplist!
-              </p>
-              <Button
-                className="w-full gap-2"
-                onClick={() => setShowGroupUpModal(true)}
-                data-testid="button-create-group-up"
-              >
-                <Users className="w-4 h-4" />
-                Create Group Activity
-              </Button>
-              <div className="mt-6 pt-6 border-t">
-                <div className="flex items-center justify-center text-muted-foreground">
-                  <Users className="w-12 h-12 opacity-20" />
-                </div>
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  No activities yet. Be the first to create one!
-                </p>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 mt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="flex-1">
                 <h2 className="text-3xl font-bold mb-3" data-testid="triplist-title">
@@ -261,7 +216,43 @@ export default function TriplistDetailPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold" data-testid="sidebar-title-group-up">
+                  Group Activities
+                </h3>
+              </div>
+              <p className="text-sm text-muted-foreground mb-6">
+                Connect with fellow travelers exploring this triplist!
+              </p>
+              <Button
+                className="w-full gap-2"
+                onClick={() => setShowGroupUpModal(true)}
+                data-testid="button-create-group-up"
+              >
+                <Users className="w-4 h-4" />
+                Create Group Activity
+              </Button>
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-center text-muted-foreground">
+                  <Users className="w-12 h-12 opacity-20" />
+                </div>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  No activities yet. Be the first to create one!
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <img
+                src={chatAssistantImage}
+                alt="Chat with hoho, your travel assistant"
+                className="w-full h-auto rounded-lg"
+                data-testid="image-chat-assistant"
+              />
+            </Card>
           </div>
         </div>
       </div>
