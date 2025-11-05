@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Users, ExternalLink, Eye, Heart, Check } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
+import chatAssistantImage from "@assets/hoho in production_1762318958485.png";
 
 export default function TriplistDetailPage() {
   const [, params] = useRoute("/triplists/:slug");
@@ -67,7 +68,16 @@ export default function TriplistDetailPage() {
             </div>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
+            <Card className="p-6">
+              <img
+                src={chatAssistantImage}
+                alt="Chat with hoho, your travel assistant"
+                className="w-full h-auto rounded-lg"
+                data-testid="image-chat-assistant"
+              />
+            </Card>
+
             <Card className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5 text-primary" />

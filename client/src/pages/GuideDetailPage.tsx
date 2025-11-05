@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import type { SurvivalGuide } from "@shared/schema";
 import { format } from "date-fns";
-import chatAssistantImage from "@assets/ChatGPT Image Nov 5, 2025, 12_52_04 PM_1762318356076.png";
+import chatAssistantImage from "@assets/hoho in production_1762318958485.png";
 
 function convertToEmbedUrl(url: string): string {
   if (!url) return url;
