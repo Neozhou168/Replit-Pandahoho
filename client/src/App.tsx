@@ -16,6 +16,7 @@ import GuidesPage from "@/pages/GuidesPage";
 import GuideDetailPage from "@/pages/GuideDetailPage";
 import MembershipPage from "@/pages/MembershipPage";
 import ProfilePage from "@/pages/ProfilePage";
+import ChatAssistantComingSoon from "@/pages/ChatAssistantComingSoon";
 import AdminLayout from "@/pages/admin/AdminLayout";
 import AuthPage from "@/pages/AuthPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/guides" component={GuidesPage} />
       <Route path="/guides/:slug" component={GuideDetailPage} />
       <Route path="/membership" component={MembershipPage} />
+      <Route path="/chat-assistant" component={ChatAssistantComingSoon} />
       <Route path="/auth" component={AuthPage} />
       <Route path="/reset-password" component={ResetPasswordPage} />
       <Route path="/profile" component={ProfilePage} />
