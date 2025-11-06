@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import type { CarouselItem } from "@shared/schema";
 import chatAssistantImage from "@assets/hoho on homepage_1762324477127.jpg";
 
@@ -113,18 +114,20 @@ export default function HeroCarousel() {
         </>
       )}
 
-      <div className="absolute bottom-8 right-8 z-10 hidden md:block">
-        <div className="relative group cursor-pointer" data-testid="hero-chat-widget">
-          <div className="transition-transform group-hover:scale-105 drop-shadow-2xl">
-            <img
-              src={chatAssistantImage}
-              alt="Chat with hoho, your travel assistant"
-              className="w-80 h-auto"
-              data-testid="hero-chat-assistant"
-            />
+      <Link href="/chat-assistant">
+        <div className="absolute bottom-8 right-8 z-10 hidden md:block">
+          <div className="relative group cursor-pointer" data-testid="hero-chat-widget">
+            <div className="transition-transform group-hover:scale-105 drop-shadow-2xl">
+              <img
+                src={chatAssistantImage}
+                alt="Chat with hoho, your travel assistant"
+                className="w-80 h-auto"
+                data-testid="hero-chat-assistant"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </div>
   );
 }

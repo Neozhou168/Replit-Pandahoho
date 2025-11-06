@@ -77,14 +77,16 @@ export default function GuideDetailPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <Card className="p-6 sticky top-6">
-              <img
-                src={chatAssistantImage}
-                alt="Chat with hoho, your travel assistant"
-                className="w-full h-auto rounded-lg"
-                data-testid="image-chat-assistant"
-              />
-            </Card>
+            <Link href="/chat-assistant">
+              <Card className="p-6 sticky top-6 cursor-pointer hover-elevate">
+                <img
+                  src={chatAssistantImage}
+                  alt="Chat with hoho, your travel assistant"
+                  className="w-full h-auto rounded-lg"
+                  data-testid="image-chat-assistant"
+                />
+              </Card>
+            </Link>
           </div>
         </div>
       </div>

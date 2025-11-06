@@ -245,14 +245,16 @@ export default function TriplistDetailPage() {
               </div>
             </Card>
 
-            <Card className="p-0 overflow-hidden bg-white dark:bg-white">
-              <img
-                src={chatAssistantImage}
-                alt="Chat with hoho, your travel assistant"
-                className="w-full h-auto"
-                data-testid="image-chat-assistant"
-              />
-            </Card>
+            <Link href="/chat-assistant">
+              <Card className="p-0 overflow-hidden bg-white dark:bg-white cursor-pointer hover-elevate">
+                <img
+                  src={chatAssistantImage}
+                  alt="Chat with hoho, your travel assistant"
+                  className="w-full h-auto"
+                  data-testid="image-chat-assistant"
+                />
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
