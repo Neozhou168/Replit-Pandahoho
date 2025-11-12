@@ -1057,6 +1057,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Valid page types for SEO management
+  const VALID_PAGE_TYPES = ["global", "homepage", "cities", "triplists", "venues", "guides"] as const;
+
+  // Admin route to get SEO settings for a specific page type
+  app.get("/api/seo/page/:pageType", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { pageType } = req.params;
+      
+      // Validate page type
+      if (!VALID_PAGE_TYPES.includes(pageType as any)) {
+        return res.status(400).json({ 
+          message: `Invalid page type. Supported types: ${VALID_PAGE_TYPES.join(", ")}` 
+        });
+      }
+      
+      const settings = await storage.getSeoSettings(pageType);
+      res.json(settings || {
+        pageType,
+        pageIdentifier: null,
+        metaTitle: null,
+        metaDescription: null,
+        keywords: [],
+        canonicalUrl: null,
+        robotsMetaTag: "index, follow",
+        schemaMarkup: null,
+      });
+    } catch (error) {
+      console.error(`Error fetching SEO settings for ${req.params.pageType}:`, error);
+      res.status(500).json({ message: "Failed to fetch SEO settings" });
+    }
+  });
+
+  // Admin route to update SEO settings for a specific page type
+  app.put("/api/seo/page/:pageType", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { pageType } = req.params;
+      
+      // Validate page type
+      if (!VALID_PAGE_TYPES.includes(pageType as any)) {
+        return res.status(400).json({ 
+          message: `Invalid page type. Supported types: ${VALID_PAGE_TYPES.join(", ")}` 
+        });
+      }
+      
+      // Use partial schema for updates, then merge with required fields
+      const validation = insertSeoSettingsSchema.partial().safeParse(req.body);
+
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      // Merge validated data with required page type fields
+      const settings = await storage.upsertSeoSettings({
+        ...validation.data,
+        pageType,
+        pageIdentifier: null,
+      });
+      res.json(settings);
+    } catch (error: any) {
+      console.error(`Error updating SEO settings for ${req.params.pageType}:`, error);
+      res.status(500).json({ message: error.message || "Failed to update SEO settings" });
+    }
+  });
+
   // Admin route to get all SEO settings (with optional filters)
   app.get("/api/seo/settings", isAuthenticated, isAdmin, async (req, res) => {
     try {

@@ -13,10 +13,21 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { SeoSettings } from "@shared/schema";
 
+// Page type options for SEO management
+const PAGE_TYPES = [
+  { value: "global", label: "Global Settings" },
+  { value: "homepage", label: "Homepage" },
+  { value: "cities", label: "Cities Page" },
+  { value: "triplists", label: "Triplists Page" },
+  { value: "venues", label: "Venues Page" },
+  { value: "guides", label: "Survival Guides Page" },
+] as const;
+
 export default function SEOManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("basic");
   const [keywordInput, setKeywordInput] = useState("");
+  const [selectedPage, setSelectedPage] = useState<string>("global");
 
   // Form state
   const [metaTitle, setMetaTitle] = useState("");
@@ -26,9 +37,18 @@ export default function SEOManagement() {
   const [robotsMetaTag, setRobotsMetaTag] = useState("index, follow");
   const [schemaMarkup, setSchemaMarkup] = useState("");
 
-  // Fetch global SEO settings
+  // Fetch SEO settings for selected page
   const { data: seoSettings, isLoading } = useQuery<SeoSettings>({
-    queryKey: ["/api/seo/global"],
+    queryKey: ["/api/seo/page", selectedPage],
+    queryFn: async () => {
+      const response = await fetch(`/api/seo/page/${selectedPage}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch SEO settings");
+      }
+      return response.json();
+    },
   });
 
   // Initialize form state when data is loaded
@@ -46,10 +66,10 @@ export default function SEOManagement() {
   // Update SEO settings mutation
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<SeoSettings>) => {
-      return apiRequest("PUT", "/api/seo/global", data);
+      return apiRequest("PUT", `/api/seo/page/${selectedPage}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/seo/global"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/seo/page", selectedPage] });
       toast({
         title: "Success",
         description: "SEO settings updated successfully",
@@ -159,12 +179,16 @@ export default function SEOManagement() {
           <CardDescription>Choose which page to configure SEO settings for</CardDescription>
         </CardHeader>
         <CardContent>
-          <Select value="global" disabled>
+          <Select value={selectedPage} onValueChange={setSelectedPage}>
             <SelectTrigger data-testid="select-page-type">
               <SelectValue placeholder="Select page..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="global">Global Settings...</SelectItem>
+              {PAGE_TYPES.map((page) => (
+                <SelectItem key={page.value} value={page.value}>
+                  {page.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardContent>

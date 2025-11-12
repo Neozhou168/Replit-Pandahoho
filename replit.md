@@ -13,13 +13,21 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 
 ### Content Management
 - Admin dashboard accessible only to users with `isAdmin: true`
-- CMS for cities, triplists, venues, survival guides, carousel, content settings, **user management**
+- CMS for cities, triplists, venues, survival guides, carousel, content settings, **user management**, **SEO management**
 - CSV bulk upload functionality for efficient data management
 - Dynamic dropdown options managed via Content Settings (no hardcoded values)
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
 - City name to ID mapping during CSV imports
 - Survival Guides admin modal includes Created Date field and Country dropdown (from Content Settings)
+
+### SEO Management System
+- **Page-Specific SEO Settings**: Configure SEO metadata for Global Settings, Homepage, Cities Page, Triplists Page, Venues Page, and Survival Guides Page
+- **Basic SEO Tab**: Meta title, meta description, keywords (tag-based input)
+- **Technical SEO Tab**: Canonical URLs, robots meta tags, structured data (JSON schema markup)
+- **Database Schema**: `seo_settings` table with unique constraints ensuring one setting per page type
+- **API Routes**: RESTful endpoints at `/api/seo/page/:pageType` for GET/PUT operations
+- **Admin UI**: Two-tab interface with page selector dropdown, form validation, and auto-save functionality
 
 ### User Management System
 - **User Profile Page** (`/profile`): Users can view and edit their name, view email (read-only), view role, upload avatar (prepared for object storage), and see login provider
