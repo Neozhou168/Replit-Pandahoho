@@ -1,6 +1,6 @@
 // PandaHoHo Travel Platform - Complete Data Schema
 // Database blueprint integration - ref: javascript_database
-import { sql } from "drizzle-orm";
+import { sql, isNull, isNotNull } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -10,6 +10,7 @@ import {
   boolean,
   jsonb,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -391,3 +392,36 @@ export const insertPageViewSchema = createInsertSchema(pageViews).omit({
 });
 export type InsertPageView = z.infer<typeof insertPageViewSchema>;
 export type PageView = typeof pageViews.$inferSelect;
+
+// ============================================================================
+// SEO SETTINGS TABLE
+// ============================================================================
+
+export const seoSettings = pgTable("seo_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pageType: varchar("page_type", { length: 50 }).notNull().default("global"), // global, home, triplists, venues, guides, etc.
+  pageIdentifier: varchar("page_identifier", { length: 200 }), // null for global, slug/id for specific pages
+  metaTitle: varchar("meta_title", { length: 200 }),
+  metaDescription: text("meta_description"),
+  keywords: text("keywords").array().default(sql`ARRAY[]::text[]`),
+  canonicalUrl: varchar("canonical_url", { length: 500 }),
+  robotsMetaTag: varchar("robots_meta_tag", { length: 100 }).default("index, follow"),
+  schemaMarkup: jsonb("schema_markup"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("IDX_seo_page_type").on(table.pageType),
+  index("IDX_seo_page_identifier").on(table.pageIdentifier),
+  // Enforce uniqueness for global settings (where pageIdentifier IS NULL)
+  uniqueIndex("UNQ_seo_global_page_type").on(table.pageType).where(isNull(table.pageIdentifier)),
+  // Enforce uniqueness for page-specific settings (where pageIdentifier IS NOT NULL)
+  uniqueIndex("UNQ_seo_page_type_identifier").on(table.pageType, table.pageIdentifier).where(isNotNull(table.pageIdentifier)),
+]);
+
+export const insertSeoSettingsSchema = createInsertSchema(seoSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertSeoSettings = z.infer<typeof insertSeoSettingsSchema>;
+export type SeoSettings = typeof seoSettings.$inferSelect;

@@ -16,6 +16,7 @@ import {
   insertContentCitySchema,
   updateUserSchema,
   insertPageViewSchema,
+  insertSeoSettingsSchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import multer from "multer";
@@ -1009,6 +1010,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching analytics stats:", error);
       res.status(500).json({ message: "Failed to fetch analytics stats" });
+    }
+  });
+
+  // ========== SEO Settings Routes ==========
+  // Public route to get global SEO settings
+  app.get("/api/seo/global", async (_req, res) => {
+    try {
+      const settings = await storage.getSeoSettings("global");
+      res.json(settings || {
+        pageType: "global",
+        metaTitle: null,
+        metaDescription: null,
+        keywords: [],
+        canonicalUrl: null,
+        robotsMetaTag: "index, follow",
+        schemaMarkup: null,
+      });
+    } catch (error) {
+      console.error("Error fetching global SEO settings:", error);
+      res.status(500).json({ message: "Failed to fetch global SEO settings" });
+    }
+  });
+
+  // Admin route to update global SEO settings
+  app.put("/api/seo/global", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      // Use partial schema for updates, then merge with required global fields
+      const validation = insertSeoSettingsSchema.partial().safeParse(req.body);
+
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      // Merge validated data with required global settings fields
+      const settings = await storage.upsertSeoSettings({
+        ...validation.data,
+        pageType: "global",
+        pageIdentifier: null,
+      });
+      res.json(settings);
+    } catch (error: any) {
+      console.error("Error updating global SEO settings:", error);
+      res.status(500).json({ message: error.message || "Failed to update global SEO settings" });
+    }
+  });
+
+  // Admin route to get all SEO settings (with optional filters)
+  app.get("/api/seo/settings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const pageType = req.query.pageType as string | undefined;
+      const pageIdentifier = req.query.pageIdentifier as string | undefined;
+
+      if (pageType && pageIdentifier) {
+        const settings = await storage.getSeoSettings(pageType, pageIdentifier);
+        res.json(settings || null);
+      } else {
+        const allSettings = await storage.getAllSeoSettings();
+        res.json(allSettings);
+      }
+    } catch (error) {
+      console.error("Error fetching SEO settings:", error);
+      res.status(500).json({ message: "Failed to fetch SEO settings" });
+    }
+  });
+
+  // Admin route to create/upsert SEO settings
+  app.post("/api/seo/settings", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertSeoSettingsSchema.safeParse(req.body);
+
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const settings = await storage.upsertSeoSettings(validation.data);
+      res.status(201).json(settings);
+    } catch (error: any) {
+      console.error("Error creating SEO settings:", error);
+      res.status(500).json({ message: error.message || "Failed to create SEO settings" });
+    }
+  });
+
+  // Admin route to update specific SEO settings by ID
+  app.put("/api/seo/settings/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertSeoSettingsSchema.partial().safeParse(req.body);
+
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const settings = await storage.updateSeoSettings(req.params.id, validation.data);
+      if (!settings) {
+        return res.status(404).json({ message: "SEO settings not found" });
+      }
+      res.json(settings);
+    } catch (error: any) {
+      console.error("Error updating SEO settings:", error);
+      res.status(500).json({ message: error.message || "Failed to update SEO settings" });
+    }
+  });
+
+  // Admin route to delete SEO settings
+  app.delete("/api/seo/settings/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteSeoSettings(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting SEO settings:", error);
+      res.status(500).json({ message: "Failed to delete SEO settings" });
     }
   });
 

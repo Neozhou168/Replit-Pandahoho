@@ -22,6 +22,7 @@ import {
   Settings,
   Palette,
   BarChart,
+  Search,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import AdminDashboard from "./AdminDashboard";
@@ -35,6 +36,7 @@ import UsersManagement from "./UsersManagement";
 import ContentSettings from "./ContentSettings";
 import BrandingSettings from "./BrandingSettings";
 import Analytics from "./Analytics";
+import SEOManagement from "./SEOManagement";
 import type { User } from "@shared/schema";
 
 function AdminSidebar() {
@@ -90,6 +92,11 @@ function AdminSidebar() {
       title: "Branding",
       url: "/admin/branding",
       icon: Palette,
+    },
+    {
+      title: "SEO",
+      url: "/admin/seo",
+      icon: Search,
     },
     {
       title: "Content Settings",
@@ -173,6 +180,7 @@ export default function AdminLayout() {
               <Route path="/admin/guides" component={GuidesManagement} />
               <Route path="/admin/group-ups" component={GroupUpsManagement} />
               <Route path="/admin/branding" component={BrandingSettings} />
+              <Route path="/admin/seo" component={SEOManagement} />
               <Route path="/admin/content-settings" component={ContentSettings} />
             </Switch>
           </main>

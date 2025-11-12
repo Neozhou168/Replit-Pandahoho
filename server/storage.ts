@@ -16,6 +16,7 @@ import {
   content_seasons,
   content_cities,
   pageViews,
+  seoSettings,
   type User,
   type UpsertUser,
   type City,
@@ -41,9 +42,11 @@ import {
   type InsertContentCity,
   type PageView,
   type InsertPageView,
+  type SeoSettings,
+  type InsertSeoSettings,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, inArray, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -131,6 +134,13 @@ export interface IStorage {
 
   // Analytics operations
   trackPageView(pageView: InsertPageView): Promise<PageView>;
+
+  // SEO Settings operations
+  getSeoSettings(pageType: string, pageIdentifier?: string): Promise<SeoSettings | undefined>;
+  getAllSeoSettings(): Promise<SeoSettings[]>;
+  upsertSeoSettings(settings: InsertSeoSettings): Promise<SeoSettings>;
+  updateSeoSettings(id: string, settings: Partial<InsertSeoSettings>): Promise<SeoSettings | undefined>;
+  deleteSeoSettings(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -927,6 +937,104 @@ export class DatabaseStorage implements IStorage {
       .values(pageViewData)
       .returning();
     return pageView;
+  }
+
+  // ========== SEO Settings Operations ==========
+  // Helper to normalize page identifiers (empty string → undefined)
+  private normalizePageIdentifier(identifier: string | null | undefined): string | undefined {
+    if (!identifier || identifier.trim() === '') {
+      return undefined;
+    }
+    return identifier.trim();
+  }
+
+  async getSeoSettings(pageType: string, pageIdentifier?: string): Promise<SeoSettings | undefined> {
+    const normalizedIdentifier = this.normalizePageIdentifier(pageIdentifier);
+    
+    const conditions = normalizedIdentifier
+      ? and(eq(seoSettings.pageType, pageType), eq(seoSettings.pageIdentifier, normalizedIdentifier))
+      : and(eq(seoSettings.pageType, pageType), isNull(seoSettings.pageIdentifier));
+    
+    const [settings] = await db.select().from(seoSettings).where(conditions);
+    return settings;
+  }
+
+  async getAllSeoSettings(): Promise<SeoSettings[]> {
+    return db.select().from(seoSettings).orderBy(seoSettings.pageType);
+  }
+
+  async upsertSeoSettings(settingsData: InsertSeoSettings): Promise<SeoSettings> {
+    // Normalize the page identifier (empty string → undefined/null)
+    const normalizedData = {
+      ...settingsData,
+      pageIdentifier: this.normalizePageIdentifier(settingsData.pageIdentifier) || null,
+    };
+
+    // Check if settings already exist for this page type and identifier
+    const existing = await this.getSeoSettings(
+      normalizedData.pageType, 
+      normalizedData.pageIdentifier || undefined
+    );
+    
+    if (existing) {
+      // Update existing settings
+      const [updated] = await db
+        .update(seoSettings)
+        .set({
+          ...normalizedData,
+          updatedAt: new Date(),
+        })
+        .where(eq(seoSettings.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new settings
+      try {
+        const [created] = await db
+          .insert(seoSettings)
+          .values(normalizedData)
+          .returning();
+        return created;
+      } catch (error: any) {
+        // Handle unique constraint violation
+        if (error.code === '23505') { // PostgreSQL unique violation code
+          throw new Error(`SEO settings already exist for pageType "${normalizedData.pageType}" with identifier "${normalizedData.pageIdentifier || 'global'}"`);
+        }
+        throw error;
+      }
+    }
+  }
+
+  async updateSeoSettings(id: string, settingsData: Partial<InsertSeoSettings>): Promise<SeoSettings | undefined> {
+    // Normalize the page identifier if provided
+    const normalizedData = {
+      ...settingsData,
+      ...(settingsData.pageIdentifier !== undefined && {
+        pageIdentifier: this.normalizePageIdentifier(settingsData.pageIdentifier) || null,
+      }),
+    };
+
+    try {
+      const [updated] = await db
+        .update(seoSettings)
+        .set({
+          ...normalizedData,
+          updatedAt: new Date(),
+        })
+        .where(eq(seoSettings.id, id))
+        .returning();
+      return updated;
+    } catch (error: any) {
+      // Handle unique constraint violation
+      if (error.code === '23505') {
+        throw new Error(`Cannot update: SEO settings with this pageType and identifier combination already exist`);
+      }
+      throw error;
+    }
+  }
+
+  async deleteSeoSettings(id: string): Promise<void> {
+    await db.delete(seoSettings).where(eq(seoSettings.id, id));
   }
 }
 
