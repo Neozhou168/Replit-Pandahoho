@@ -15,10 +15,12 @@ import {
   insertContentSeasonSchema,
   insertContentCitySchema,
   updateUserSchema,
+  insertPageViewSchema,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import multer from "multer";
 import { v2 as cloudinary } from "cloudinary";
+import { getAnalyticsStats } from "./analytics";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Configure Cloudinary
@@ -984,6 +986,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating branding:", error);
       res.status(500).json({ message: "Failed to update branding settings" });
+    }
+  });
+
+  // ========== Analytics Routes ==========
+  app.post("/api/analytics/track", async (req, res) => {
+    try {
+      const pageViewData = insertPageViewSchema.parse(req.body);
+      await storage.trackPageView(pageViewData);
+      res.status(201).json({ success: true });
+    } catch (error) {
+      console.error("Error tracking page view:", error);
+      res.status(500).json({ message: "Failed to track page view" });
+    }
+  });
+
+  app.get("/api/analytics/stats", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const timeRange = (req.query.timeRange as string) || "24h";
+      const stats = await getAnalyticsStats(timeRange);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching analytics stats:", error);
+      res.status(500).json({ message: "Failed to fetch analytics stats" });
     }
   });
 

@@ -15,6 +15,7 @@ import {
   content_travel_types,
   content_seasons,
   content_cities,
+  pageViews,
   type User,
   type UpsertUser,
   type City,
@@ -38,6 +39,8 @@ import {
   type InsertContentSeason,
   type ContentCity,
   type InsertContentCity,
+  type PageView,
+  type InsertPageView,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
@@ -125,6 +128,9 @@ export interface IStorage {
   // Branding operations
   getBranding(): Promise<Branding>;
   updateBranding(data: Partial<InsertBranding>): Promise<Branding>;
+
+  // Analytics operations
+  trackPageView(pageView: InsertPageView): Promise<PageView>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -912,6 +918,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updated;
+  }
+
+  // ========== Analytics Operations ==========
+  async trackPageView(pageViewData: InsertPageView): Promise<PageView> {
+    const [pageView] = await db
+      .insert(pageViews)
+      .values(pageViewData)
+      .returning();
+    return pageView;
   }
 }
 

@@ -358,3 +358,36 @@ export const groupUpsRelations = relations(groupUps, ({ one }) => ({
     references: [venues.id],
   }),
 }));
+
+// ============================================================================
+// ANALYTICS TABLES
+// ============================================================================
+
+export const pageViews = pgTable("page_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  visitorId: varchar("visitor_id").notNull(), // Fingerprint or anonymous ID
+  sessionId: varchar("session_id").notNull(), // Session identifier
+  pagePath: varchar("page_path", { length: 500 }).notNull(), // e.g., /triplists/beijing-food-tour
+  pageType: varchar("page_type", { length: 50 }), // e.g., triplist, venue, guide, home
+  referenceId: varchar("reference_id"), // ID of triplist, venue, guide, etc.
+  referenceTitle: text("reference_title"), // Title of the content being viewed
+  deviceType: varchar("device_type", { length: 20 }).default("desktop"), // mobile, desktop, tablet
+  trafficSource: varchar("traffic_source", { length: 100 }), // direct, referral, social, etc.
+  referrer: text("referrer"), // Full referrer URL
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_page_views_visitor").on(table.visitorId),
+  index("IDX_page_views_session").on(table.sessionId),
+  index("IDX_page_views_page_path").on(table.pagePath),
+  index("IDX_page_views_page_type").on(table.pageType),
+  index("IDX_page_views_created_at").on(table.createdAt),
+]);
+
+export const insertPageViewSchema = createInsertSchema(pageViews).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPageView = z.infer<typeof insertPageViewSchema>;
+export type PageView = typeof pageViews.$inferSelect;
