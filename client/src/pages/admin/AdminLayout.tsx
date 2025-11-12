@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Settings,
   Palette,
+  BarChart,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import AdminDashboard from "./AdminDashboard";
@@ -33,6 +34,7 @@ import GroupUpsManagement from "./GroupUpsManagement";
 import UsersManagement from "./UsersManagement";
 import ContentSettings from "./ContentSettings";
 import BrandingSettings from "./BrandingSettings";
+import Analytics from "./Analytics";
 import type { User } from "@shared/schema";
 
 function AdminSidebar() {
@@ -43,6 +45,11 @@ function AdminSidebar() {
       title: "Dashboard",
       url: "/admin",
       icon: LayoutDashboard,
+    },
+    {
+      title: "Analytics",
+      url: "/admin/analytics",
+      icon: BarChart,
     },
     {
       title: "Users",
@@ -157,6 +164,7 @@ export default function AdminLayout() {
           <main className="p-8">
             <Switch>
               <Route path="/admin" component={AdminDashboard} />
+              <Route path="/admin/analytics" component={Analytics} />
               <Route path="/admin/users" component={UsersManagement} />
               <Route path="/admin/cities" component={CitiesManagement} />
               <Route path="/admin/carousel" component={CarouselManagement} />

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, ExternalLink } from "lucide-react";
 import type { Venue } from "@shared/schema";
+import { trackPageView } from "@/lib/analytics";
 
 export default function VenueDetailPage() {
   const [, params] = useRoute("/venues/:slug");
@@ -13,6 +15,18 @@ export default function VenueDetailPage() {
     queryKey: [`/api/venues/${params?.slug}`],
     enabled: !!params?.slug,
   });
+
+  useEffect(() => {
+    if (venue) {
+      trackPageView({
+        pageType: "venue",
+        pageUrl: window.location.pathname,
+        pageTitle: `${venue.name} - PandaHoHo`,
+        relatedEntityId: venue.id,
+        relatedEntityName: venue.name,
+      });
+    }
+  }, [venue]);
 
   if (isLoading) {
     return (

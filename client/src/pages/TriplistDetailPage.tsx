@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { ArrowLeft, MapPin, Users, ExternalLink, Eye, Heart, Check } from "lucid
 import GroupUpModal from "@/components/GroupUpModal";
 import type { Triplist, Venue } from "@shared/schema";
 import chatAssistantImage from "@assets/magic hoho assistant_1762324164581.jpg";
+import { trackPageView } from "@/lib/analytics";
 
 export default function TriplistDetailPage() {
   const [, params] = useRoute("/triplists/:slug");
@@ -22,6 +23,18 @@ export default function TriplistDetailPage() {
     queryKey: [`/api/venues?triplistId=${triplist?.id}`],
     enabled: !!triplist?.id,
   });
+
+  useEffect(() => {
+    if (triplist) {
+      trackPageView({
+        pageType: "triplist",
+        pageUrl: window.location.pathname,
+        pageTitle: `${triplist.title} - PandaHoHo`,
+        relatedEntityId: triplist.id,
+        relatedEntityName: triplist.title,
+      });
+    }
+  }, [triplist]);
 
   if (isLoading) {
     return (

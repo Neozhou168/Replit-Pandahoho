@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import HeroCarousel from "@/components/HeroCarousel";
@@ -5,6 +6,7 @@ import CityCard from "@/components/CityCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import type { City } from "@shared/schema";
+import { trackPageView } from "@/lib/analytics";
 
 export default function HomePage() {
   const { data: cities = [], isLoading } = useQuery<City[]>({
@@ -12,6 +14,14 @@ export default function HomePage() {
   });
 
   const activeCities = cities.filter((city) => city.isActive).slice(0, 8);
+
+  useEffect(() => {
+    trackPageView({
+      pageType: "home",
+      pageUrl: window.location.pathname,
+      pageTitle: "Home - PandaHoHo",
+    });
+  }, []);
 
   return (
     <div>

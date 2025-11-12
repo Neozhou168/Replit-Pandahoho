@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { ArrowLeft, MapPin, Calendar } from "lucide-react";
 import type { SurvivalGuide } from "@shared/schema";
 import { format } from "date-fns";
 import chatAssistantImage from "@assets/magic hoho assistant_1762324164581.jpg";
+import { trackPageView } from "@/lib/analytics";
 
 function convertToEmbedUrl(url: string): string {
   if (!url) return url;
@@ -27,6 +29,18 @@ export default function GuideDetailPage() {
     queryKey: [`/api/guides/${params?.slug}`],
     enabled: !!params?.slug,
   });
+
+  useEffect(() => {
+    if (guide) {
+      trackPageView({
+        pageType: "guide",
+        pageUrl: window.location.pathname,
+        pageTitle: `${guide.title} - PandaHoHo`,
+        relatedEntityId: guide.id,
+        relatedEntityName: guide.title,
+      });
+    }
+  }, [guide]);
 
   if (isLoading) {
     return (

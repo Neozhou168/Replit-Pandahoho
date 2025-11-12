@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MapPin, Utensils, ShoppingBag, Music, Sparkles, Palette, Landmark, Coffee } from "lucide-react";
 import type { City, Triplist, ContentTravelType } from "@shared/schema";
+import { trackPageView } from "@/lib/analytics";
 
 const categoryIcons: Record<string, any> = {
   "All": MapPin,
@@ -53,6 +54,18 @@ export default function CityDetailPage() {
     const orderB = typeB?.displayOrder ?? 999;
     return orderA - orderB;
   });
+
+  useEffect(() => {
+    if (city) {
+      trackPageView({
+        pageType: "city",
+        pageUrl: window.location.pathname,
+        pageTitle: `${city.name} - PandaHoHo`,
+        relatedEntityId: city.id,
+        relatedEntityName: city.name,
+      });
+    }
+  }, [city]);
 
   if (cityLoading) {
     return (
