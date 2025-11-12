@@ -59,10 +59,9 @@ export default function CityDetailPage() {
     if (city) {
       trackPageView({
         pageType: "city",
-        pageUrl: window.location.pathname,
-        pageTitle: `${city.name} - PandaHoHo`,
-        relatedEntityId: city.id,
-        relatedEntityName: city.name,
+        pagePath: window.location.pathname,
+        referenceId: city.id,
+        referenceTitle: city.name,
       });
     }
   }, [city]);

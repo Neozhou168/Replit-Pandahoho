@@ -18,8 +18,7 @@ export default function HomePage() {
   useEffect(() => {
     trackPageView({
       pageType: "home",
-      pageUrl: window.location.pathname,
-      pageTitle: "Home - PandaHoHo",
+      pagePath: window.location.pathname,
     });
   }, []);
 

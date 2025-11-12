@@ -20,10 +20,9 @@ export default function VenueDetailPage() {
     if (venue) {
       trackPageView({
         pageType: "venue",
-        pageUrl: window.location.pathname,
-        pageTitle: `${venue.name} - PandaHoHo`,
-        relatedEntityId: venue.id,
-        relatedEntityName: venue.name,
+        pagePath: window.location.pathname,
+        referenceId: venue.id,
+        referenceTitle: venue.name,
       });
     }
   }, [venue]);

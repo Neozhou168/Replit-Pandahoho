@@ -76,24 +76,22 @@ function getTrafficSource(): string {
 
 export interface TrackPageViewParams {
   pageType: "city" | "triplist" | "venue" | "guide" | "membership" | "groupup" | "home" | "other";
-  pageUrl: string;
-  pageTitle?: string;
-  relatedEntityId?: string;
-  relatedEntityName?: string;
+  pagePath: string;
+  referenceId?: string;
+  referenceTitle?: string;
 }
 
 export async function trackPageView(params: TrackPageViewParams): Promise<void> {
   try {
     const pageViewData = {
       pageType: params.pageType,
-      pageUrl: params.pageUrl,
-      pageTitle: params.pageTitle || document.title,
+      pagePath: params.pagePath,
       visitorId: getOrCreateVisitorId(),
       sessionId: getOrCreateSessionId(),
       deviceType: getDeviceType(),
       trafficSource: getTrafficSource(),
-      relatedEntityId: params.relatedEntityId || null,
-      relatedEntityName: params.relatedEntityName || null,
+      referenceId: params.referenceId || null,
+      referenceTitle: params.referenceTitle || null,
     };
     
     await apiRequest("POST", "/api/analytics/track", pageViewData);

@@ -34,10 +34,9 @@ export default function GuideDetailPage() {
     if (guide) {
       trackPageView({
         pageType: "guide",
-        pageUrl: window.location.pathname,
-        pageTitle: `${guide.title} - PandaHoHo`,
-        relatedEntityId: guide.id,
-        relatedEntityName: guide.title,
+        pagePath: window.location.pathname,
+        referenceId: guide.id,
+        referenceTitle: guide.title,
       });
     }
   }, [guide]);

@@ -28,10 +28,9 @@ export default function TriplistDetailPage() {
     if (triplist) {
       trackPageView({
         pageType: "triplist",
-        pageUrl: window.location.pathname,
-        pageTitle: `${triplist.title} - PandaHoHo`,
-        relatedEntityId: triplist.id,
-        relatedEntityName: triplist.title,
+        pagePath: window.location.pathname,
+        referenceId: triplist.id,
+        referenceTitle: triplist.title,
       });
     }
   }, [triplist]);
