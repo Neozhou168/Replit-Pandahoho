@@ -39,16 +39,7 @@ export default function SEOManagement() {
 
   // Fetch SEO settings for selected page
   const { data: seoSettings, isLoading } = useQuery<SeoSettings>({
-    queryKey: ["/api/seo/page", selectedPage],
-    queryFn: async () => {
-      const response = await fetch(`/api/seo/page/${selectedPage}`, {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch SEO settings");
-      }
-      return response.json();
-    },
+    queryKey: [`/api/seo/page/${selectedPage}`],
   });
 
   // Initialize form state when data is loaded
@@ -69,7 +60,7 @@ export default function SEOManagement() {
       return apiRequest("PUT", `/api/seo/page/${selectedPage}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/seo/page", selectedPage] });
+      queryClient.invalidateQueries({ queryKey: [`/api/seo/page/${selectedPage}`] });
       toast({
         title: "Success",
         description: "SEO settings updated successfully",
