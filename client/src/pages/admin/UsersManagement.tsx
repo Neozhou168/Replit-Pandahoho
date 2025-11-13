@@ -44,7 +44,6 @@ export default function UsersManagement() {
   const [editForm, setEditForm] = useState({
     firstName: "",
     lastName: "",
-    role: "member",
     isAdmin: false,
   });
 
@@ -109,7 +108,6 @@ export default function UsersManagement() {
     setEditForm({
       firstName: user.firstName || "",
       lastName: user.lastName || "",
-      role: user.role || (user.isAdmin ? "administrator" : "member"),
       isAdmin: user.isAdmin || false,
     });
   };
@@ -117,14 +115,12 @@ export default function UsersManagement() {
   const handleUpdateUser = () => {
     if (!editingUser) return;
     
-    const isAdmin = editForm.role === "administrator";
     updateUserMutation.mutate({
       id: editingUser.id,
       data: {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
-        role: editForm.role,
-        isAdmin,
+        isAdmin: editForm.isAdmin,
       },
     });
   };
@@ -191,7 +187,7 @@ export default function UsersManagement() {
                     {user.firstName} {user.lastName}
                   </h3>
                   <Badge variant={user.isAdmin ? "default" : "secondary"} data-testid={`badge-role-${user.id}`}>
-                    {user.role || (user.isAdmin ? "administrator" : "member")}
+                    {user.isAdmin ? "Administrator" : "Member"}
                   </Badge>
                   <Badge variant="outline" data-testid={`badge-provider-${user.id}`}>
                     {user.authProvider || "replit"}
@@ -281,8 +277,8 @@ export default function UsersManagement() {
             <div className="space-y-2">
               <Label htmlFor="edit-role">Role</Label>
               <Select
-                value={editForm.role}
-                onValueChange={(value) => setEditForm({ ...editForm, role: value, isAdmin: value === "administrator" })}
+                value={editForm.isAdmin ? "administrator" : "member"}
+                onValueChange={(value) => setEditForm({ ...editForm, isAdmin: value === "administrator" })}
               >
                 <SelectTrigger id="edit-role" data-testid="select-edit-role">
                   <SelectValue />
