@@ -398,21 +398,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: error.toString() });
       }
 
-      // Get existing venues before bulk operation to calculate created vs updated
-      const existingVenues = await storage.getVenues();
-      const existingIds = new Set(existingVenues.map((v: Venue) => v.id));
-      
-      const venues = await storage.bulkCreateVenues(validation.data);
-      
-      // Calculate created vs updated counts
-      const created = validation.data.filter(v => !v.id || !existingIds.has(v.id)).length;
-      const updated = validation.data.filter(v => v.id && existingIds.has(v.id)).length;
+      const result = await storage.bulkCreateVenues(validation.data);
       
       res.status(201).json({ 
-        count: venues.length,
-        created,
-        updated,
-        venues 
+        count: result.venues.length,
+        created: result.created,
+        updated: result.updated,
+        venues: result.venues
       });
     } catch (error) {
       console.error("Error bulk creating venues:", error);

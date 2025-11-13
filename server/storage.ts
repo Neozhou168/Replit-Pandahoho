@@ -67,7 +67,7 @@ export interface IStorage {
   createVenue(venue: InsertVenue): Promise<Venue>;
   updateVenue(id: string, venue: Partial<InsertVenue>): Promise<Venue | undefined>;
   deleteVenue(id: string): Promise<void>;
-  bulkCreateVenues(venues: InsertVenue[]): Promise<Venue[]>;
+  bulkCreateVenues(venues: InsertVenue[]): Promise<{ venues: Venue[]; created: number; updated: number }>;
 
   // Triplist operations
   getTriplists(): Promise<Triplist[]>;
@@ -299,8 +299,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(venues).where(eq(venues.id, id));
   }
 
-  async bulkCreateVenues(venuesData: InsertVenue[]): Promise<Venue[]> {
-    if (venuesData.length === 0) return [];
+  async bulkCreateVenues(venuesData: InsertVenue[]): Promise<{ venues: Venue[]; created: number; updated: number }> {
+    if (venuesData.length === 0) return { venues: [], created: 0, updated: 0 };
     
     // Upsert logic: match by name to avoid duplicates
     const allExistingVenues = await db.select().from(venues);
@@ -310,6 +310,8 @@ export class DatabaseStorage implements IStorage {
     const existingById = new Map(allExistingVenues.map(v => [v.id, v]));
     
     const results: Venue[] = [];
+    let createdCount = 0;
+    let updatedCount = 0;
     
     for (const venueData of venuesData) {
       const csvId = venueData.id;
@@ -325,8 +327,9 @@ export class DatabaseStorage implements IStorage {
           .where(eq(venues.id, csvId!))
           .returning();
         results.push(updated);
+        updatedCount++;
       } else if (existingByThisName && csvId && existingByThisName.id !== csvId) {
-        // Name matches but different ID - need to replace with new ID
+        // Name matches but different ID - need to replace with new ID (count as update)
         await db.transaction(async (tx) => {
           // Step 1: Temporarily rename old record's slug to avoid conflict
           await tx
@@ -354,6 +357,7 @@ export class DatabaseStorage implements IStorage {
         
         const [newVenue] = await db.select().from(venues).where(eq(venues.id, csvId));
         results.push(newVenue);
+        updatedCount++;  // This is an update (replacing existing venue with new ID)
       } else if (existingByThisName) {
         // Name matches, no ID conflict - just update (excluding id)
         const { id: _omittedId2, ...updateData } = venueData;
@@ -363,14 +367,16 @@ export class DatabaseStorage implements IStorage {
           .where(eq(venues.id, existingByThisName.id))
           .returning();
         results.push(updated);
+        updatedCount++;
       } else {
         // New venue - insert
         const [venue] = await db.insert(venues).values(venueData as any).returning();
         results.push(venue);
+        createdCount++;
       }
     }
     
-    return results;
+    return { venues: results, created: createdCount, updated: updatedCount };
   }
 
   // ========== Triplist Operations ==========
