@@ -5,7 +5,9 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 
 ## Recent Changes
 
-### November 13, 2025 - CSV Import & Dynamic Type Dropdown Fix
+### November 13, 2025 - CSV Import & Dynamic Dropdowns Fix
+
+#### Issue 1: Type Field Empty in Edit Modal
 **Problem:** Type field appeared empty in Edit Venue modal after CSV import
 
 **Root Cause:** 
@@ -13,18 +15,40 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 2. Edit Venue form had hardcoded Type dropdown missing "Nightlife" option
 3. Select component couldn't display values not in dropdown list
 
-**Solution Implemented:**
+**Solution:**
 1. ✅ Replaced hardcoded Type dropdown with dynamic query to `/api/content/travel-types`
 2. ✅ Added "Nightlife" and "Relaxing" to content_travel_types table
 3. ✅ Type dropdown now automatically shows all active Travel Types from Content Settings
-4. ✅ CSV import uses `emptyToNull()` helper to convert empty strings to `null` (not `undefined`)
-5. ✅ Drizzle now properly updates nullable fields during bulk imports
+
+#### Issue 2: City Field Empty in Production
+**Problem:** City dropdown showed "No cities found for China" in production (worked fine in dev)
+
+**Root Cause:**
+- Production cities table had `NULL` values in `country_id` column
+- Dev cities had `country_id` properly assigned to China
+- Filtering logic: `cities.filter(c => c.countryId === selectedCountryObj.id)` excluded null values
+- Result: `null === 'china-uuid'` returned false, so zero cities matched
+
+**Solution:**
+1. ✅ Updated filtering logic to include cities with null country_id: `c.countryId === selectedCountryObj.id || c.countryId === null`
+2. ✅ Provided SQL to update production cities with correct country_id
+3. ✅ Added fallback protection so cities without country assignment still appear
+
+**Production Database Fix:**
+```sql
+-- Step 1: Find China country ID
+SELECT id, name FROM content_countries WHERE name = 'China';
+
+-- Step 2: Update cities (replace YOUR_CHINA_ID with actual ID)
+UPDATE cities SET country_id = 'YOUR_CHINA_ID' WHERE country_id IS NULL;
+```
 
 **Benefits:**
 - Admins can add new travel types in Content Settings without code changes
-- Type dropdown stays in sync with Content Settings vocabulary
+- Type/City dropdowns stay in sync with Content Settings vocabulary
 - No more missing dropdown options for CSV-imported data
-- Aligns with existing dynamic dropdown pattern used for Countries and Cities
+- Fallback protection handles null country_id gracefully
+- Works consistently between dev and production environments
 
 ## User Preferences
 ### Design Philosophy
