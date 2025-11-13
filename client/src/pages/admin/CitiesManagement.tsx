@@ -205,25 +205,36 @@ export default function CitiesManagement() {
               slug: "beijing",
               tagline: "China's historic capital city",
               imageUrl: "https://images.unsplash.com/photo-1508804185872-d7badad00f7d",
+              country: "China",
               isActive: true,
-            }}
+            } as any}
             templateFilename="cities-template.csv"
-            requiredColumns={["name", "slug", "tagline", "imageUrl"]}
+            requiredColumns={["name", "slug", "tagline", "imageUrl", "country"]}
             validateRow={(row) => {
               const errors: string[] = [];
               if (!row.name || row.name.trim() === "") errors.push("Name is required");
               if (!row.slug || row.slug.trim() === "") errors.push("Slug is required");
               if (!row.imageUrl || row.imageUrl.trim() === "") errors.push("Image URL is required");
+              if (!row.country || row.country.trim() === "") errors.push("Country is required");
               return { valid: errors.length === 0, errors };
             }}
-            transformRow={(row) => ({
-              name: row.name,
-              slug: row.slug,
-              tagline: row.tagline || "",
-              imageUrl: row.imageUrl,
-              triplistCount: 0,
-              isActive: row.isActive === "true" || row.isActive === true,
-            })}
+            transformRow={(row) => {
+              // Map country name to ID
+              const country = countries.find(
+                (c) => c.name.toLowerCase() === row.country?.toLowerCase()
+              );
+              const countryId = country?.id || countries.find((c) => c.isActive)?.id || "";
+              
+              return {
+                name: row.name,
+                slug: row.slug,
+                tagline: row.tagline || "",
+                imageUrl: row.imageUrl,
+                countryId,
+                triplistCount: 0,
+                isActive: row.isActive === "true" || row.isActive === true,
+              };
+            }}
             title="Import Cities"
             description="Upload a CSV file to bulk import cities"
           />
@@ -412,9 +423,14 @@ export default function CitiesManagement() {
                   {city.tagline}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {city.triplistCount} triplists
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-muted-foreground" data-testid={`text-city-country-${city.id}`}>
+                      {countries.find((c) => c.id === city.countryId)?.name || "No country"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {city.triplistCount} triplists
+                    </span>
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
