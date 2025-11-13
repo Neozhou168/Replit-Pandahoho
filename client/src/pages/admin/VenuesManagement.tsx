@@ -458,34 +458,47 @@ export default function VenuesManagement() {
                   <FormField
                     control={form.control}
                     name="cityId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value || undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-venue-city">
-                              <SelectValue placeholder="Select city" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {cities.map((city) => (
-                              <SelectItem key={city.id} value={city.id}>
-                                {city.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {cities.length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Found {cities.length} cities for China
-                          </p>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const selectedCountry = form.watch("country");
+                      const selectedCountryObj = countries.find(c => c.name === selectedCountry);
+                      const filteredCities = selectedCountryObj 
+                        ? cities.filter(c => c.countryId === selectedCountryObj.id)
+                        : cities;
+                      
+                      return (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || undefined}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-venue-city">
+                                <SelectValue placeholder="Select city" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {filteredCities.map((city) => (
+                                <SelectItem key={city.id} value={city.id}>
+                                  {city.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {selectedCountry && filteredCities.length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Found {filteredCities.length} cities for {selectedCountry}
+                            </p>
+                          )}
+                          {selectedCountry && filteredCities.length === 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              No cities found for {selectedCountry}
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
