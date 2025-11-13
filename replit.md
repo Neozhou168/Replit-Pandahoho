@@ -33,7 +33,9 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 - **User Profile Page** (`/profile`): Users can view and edit their name, view email (read-only), view role, upload avatar (prepared for object storage), and see login provider
 - **Admin User Management** (`/admin/users`): Administrators can view all users, search by name/email, edit user details (name, role), change user role (member/administrator), and delete users
 - **Enhanced User Schema**: Added `authProvider`, `role`, and `lastLoginAt` fields to track authentication source and activity
-- **Role-Based Access**: Two roles supported - "member" (default) and "administrator"
+- **Role-Based Access**: `isAdmin` boolean field is the source of truth for admin status (displays "Administrator" or "Member")
+  - Legacy `role` field exists in database but is deprecated and no longer used by frontend
+  - All role displays and updates now derive from `isAdmin` boolean to ensure consistency
 - **Avatar Upload**: UI prepared for avatar upload with file validation (max 2MB, JPG/PNG/WebP formats)
 
 ### Development Guidelines
