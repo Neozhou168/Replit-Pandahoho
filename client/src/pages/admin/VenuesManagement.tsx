@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertVenueSchema } from "@shared/schema";
-import type { InsertVenue, Venue, City } from "@shared/schema";
+import type { InsertVenue, Venue, City, ContentCountry, ContentTravelType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -44,7 +44,6 @@ import { Plus, Pencil, Trash2, Search, Filter, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
-import type { ContentCountry } from "@shared/schema";
 
 export default function VenuesManagement() {
   const [createOpen, setCreateOpen] = useState(false);
@@ -64,6 +63,10 @@ export default function VenuesManagement() {
 
   const { data: countries = [] } = useQuery<ContentCountry[]>({
     queryKey: ["/api/content/countries"],
+  });
+
+  const { data: travelTypes = [], isLoading: isLoadingTravelTypes } = useQuery<ContentTravelType[]>({
+    queryKey: ["/api/content/travel-types"],
   });
 
   const form = useForm<InsertVenue>({
@@ -507,23 +510,21 @@ export default function VenuesManagement() {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value || undefined}
+                          disabled={isLoadingTravelTypes}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-venue-type">
-                              <SelectValue placeholder="Select type" />
+                              <SelectValue placeholder={isLoadingTravelTypes ? "Loading types..." : "Select type"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Hiking">Hiking</SelectItem>
-                            <SelectItem value="Historical Site">Historical Site</SelectItem>
-                            <SelectItem value="Nature">Nature</SelectItem>
-                            <SelectItem value="Cultural">Cultural</SelectItem>
-                            <SelectItem value="Food & Drink">Food & Drink</SelectItem>
-                            <SelectItem value="Shopping">Shopping</SelectItem>
-                            <SelectItem value="Entertainment">Entertainment</SelectItem>
-                            <SelectItem value="Nightlife">Nightlife</SelectItem>
-                            <SelectItem value="Museums & Galleries">Museums & Galleries</SelectItem>
-                            <SelectItem value="Temples & Shrines">Temples & Shrines</SelectItem>
+                            {travelTypes
+                              .filter((type) => type.isActive)
+                              .map((type) => (
+                                <SelectItem key={type.id} value={type.name}>
+                                  {type.name}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

@@ -3,6 +3,29 @@
 ## Overview
 PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused on Chinese cities. It offers a visual-first experience for exploring cities, triplists, venues, and survival guides. Key features include curated travel content, an admin dashboard for content management (CRUD, CSV uploads), and a responsive UI. The project aims to be the leading platform for Chinese city travel, with future plans for advanced search, social features, and integrated payments.
 
+## Recent Changes
+
+### November 13, 2025 - CSV Import & Dynamic Type Dropdown Fix
+**Problem:** Type field appeared empty in Edit Venue modal after CSV import
+
+**Root Cause:** 
+1. CSV import was working correctly - data saved to database
+2. Edit Venue form had hardcoded Type dropdown missing "Nightlife" option
+3. Select component couldn't display values not in dropdown list
+
+**Solution Implemented:**
+1. ✅ Replaced hardcoded Type dropdown with dynamic query to `/api/content/travel-types`
+2. ✅ Added "Nightlife" and "Relaxing" to content_travel_types table
+3. ✅ Type dropdown now automatically shows all active Travel Types from Content Settings
+4. ✅ CSV import uses `emptyToNull()` helper to convert empty strings to `null` (not `undefined`)
+5. ✅ Drizzle now properly updates nullable fields during bulk imports
+
+**Benefits:**
+- Admins can add new travel types in Content Settings without code changes
+- Type dropdown stays in sync with Content Settings vocabulary
+- No more missing dropdown options for CSV-imported data
+- Aligns with existing dynamic dropdown pattern used for Countries and Cities
+
 ## User Preferences
 ### Design Philosophy
 - **Visual-First**: High-quality imagery with gradient overlays
@@ -21,11 +44,15 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
   - Country name displayed on each city card when assigned
   - CSV import supports country name (e.g., "China") auto-mapped to countryId
   - countryId is optional (nullable) in both database and schema - cities can exist without country assignment
+- **Venues Management** (`/admin/venues`): 
+  - **Dynamic Type Dropdown**: Type field now dynamically loads from Content Settings Travel Types instead of hardcoded values
+  - Automatically displays all active travel types (Nightlife, Hiking, Attractions, etc.)
+  - Supports CSV import with Type field mapping to category column
+  - CSV Import uses `emptyToNull()` helper to properly handle empty values as `null`
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
 - City name to ID mapping during CSV imports (venues CSV automatically links cities by name)
 - Survival Guides admin modal includes Created Date field and Country dropdown (from Content Settings)
-- **CSV Import Fix (Nov 2025)**: Fixed critical bug where empty CSV cells were converted to `undefined`, causing Drizzle to skip field updates. Now uses `emptyToNull()` helper to properly handle empty values as `null`, ensuring Type and City fields are correctly imported/updated
 
 ### SEO Management System
 - **Page-Specific SEO Settings**: Configure SEO metadata for Global Settings, Homepage, Cities Page, Triplists Page, Venues Page, and Survival Guides Page
