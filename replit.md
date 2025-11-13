@@ -99,6 +99,51 @@ UPDATE cities SET country_id = 'YOUR_CHINA_ID' WHERE country_id IS NULL;
 - Never modify `vite.config.ts` or `server/vite.ts`
 - Don't change ID column types (breaks migrations)
 
+### Production Deployment Checklist
+When deploying to production or debugging production issues, always verify these **three critical factors**:
+
+#### 1. Code ✅
+- Latest code changes deployed via republish
+- Logic correctly implemented and tested in development
+- All feature flags and environment variables configured
+
+**Verification:** Does the feature work in development environment?
+
+#### 2. Data ✅
+- Database state matches code expectations
+- Nullable fields handled correctly (use `emptyToNull()` helper for CSV imports)
+- Foreign keys properly assigned (e.g., `country_id` for cities)
+- Production database schema synced with development
+
+**Verification:** Run SQL queries on production database to inspect data state
+```bash
+psql $DATABASE_URL -c "SELECT id, name, country_id FROM cities LIMIT 5;"
+```
+
+#### 3. Cache ✅
+- Browser cache cleared for latest JavaScript bundles
+- CDN serving fresh static assets
+- Service workers updated (if applicable)
+
+**Verification:** Hard refresh browser (Cmd/Ctrl + Shift + R) or wait 2-5 minutes after republish
+
+#### Common Production Issue Pattern:
+```
+✅ Code deployed → ✅ Data correct → ❌ Stale cache → Feature appears broken
+```
+
+**Lesson Learned (Nov 13, 2025):** The City dropdown appeared broken in production after multiple republishes. Investigation revealed:
+- Code was correctly deployed with fallback logic
+- Database already had correct `country_id` values (`UPDATE 0` confirmed no changes needed)
+- **Browser/CDN cache was serving old JavaScript bundle** - the hidden culprit!
+
+**Solution:** After republishing, either:
+1. Wait 2-5 minutes for CDN cache to invalidate
+2. Force hard refresh in browser
+3. Test in incognito/private browsing mode
+
+**Pro Tip:** When debugging production, check all three factors in order: Code → Data → Cache
+
 ## System Architecture
 PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 
