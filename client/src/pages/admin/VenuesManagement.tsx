@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -208,6 +208,83 @@ export default function VenuesManagement() {
     }
   };
 
+  const handleExportCSV = () => {
+    try {
+      // Create CSV header
+      const headers = [
+        "ID",
+        "Title",
+        "Cover Image URL",
+        "Video URL",
+        "Type",
+        "Country",
+        "City",
+        "Description",
+        "Tips",
+        "Google Maps Embed URL",
+        "Google Maps Direct URL",
+        "Created Date",
+      ];
+
+      // Convert venues to CSV rows
+      const rows = venues.map((venue) => {
+        const city = cities.find((c) => c.id === venue.cityId);
+        
+        return [
+          venue.id,
+          venue.name,
+          venue.imageUrl,
+          venue.videoUrl || "",
+          venue.category || "",
+          venue.country || "",
+          city?.name || "",
+          venue.description,
+          venue.proTips || "",
+          venue.googleMapsEmbedUrl || "",
+          venue.googleMapsDirectUrl || "",
+          venue.createdAt ? new Date(venue.createdAt).toLocaleDateString() : "",
+        ];
+      });
+
+      // Combine header and rows
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) =>
+          row.map((cell) => {
+            // Escape quotes and wrap in quotes if contains comma, newline, or quote
+            const cellStr = String(cell);
+            if (cellStr.includes(",") || cellStr.includes("\n") || cellStr.includes('"')) {
+              return `"${cellStr.replace(/"/g, '""')}"`;
+            }
+            return cellStr;
+          }).join(",")
+        ),
+      ].join("\n");
+
+      // Create download link
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `venues-export-${new Date().toISOString().split("T")[0]}.csv`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Success",
+        description: `Exported ${venues.length} venues to CSV`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to export venues",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Filter venues by search query and city
   const filteredVenues = venues.filter((venue) => {
     const matchesSearch = searchQuery === "" || 
@@ -242,6 +319,15 @@ export default function VenuesManagement() {
         </div>
 
         <div className="flex gap-3">
+          <Button
+            variant="outline"
+            onClick={handleExportCSV}
+            data-testid="button-export-venues"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
+
           <CSVImport
             onImport={handleBulkImport}
             templateData={{
@@ -274,6 +360,10 @@ export default function VenuesManagement() {
               const slug = row.Title ? generateSlug(row.Title) : "";
               const location = cityName && row.Country ? `${cityName}, ${row.Country}` : cityName || "";
               
+              if (cityName && !city) {
+                throw new Error(`City "${cityName}" not found. Please ensure the city exists in the system.`);
+              }
+              
               return {
                 id: row.ID || undefined,
                 name: row.Title,
@@ -291,8 +381,8 @@ export default function VenuesManagement() {
                 isActive: true,
               };
             }}
-            title="Import Venues CSV"
-            description="Upload a CSV file to bulk import venues. City names will be matched to existing cities."
+            title="Import Venues CSV (Create & Update)"
+            description="Upload a CSV file to bulk import or update venues. Include venue ID to update existing venues. City names will be matched to existing cities."
           />
 
           <Dialog open={createOpen || editVenue !== null} onOpenChange={(open) => {
