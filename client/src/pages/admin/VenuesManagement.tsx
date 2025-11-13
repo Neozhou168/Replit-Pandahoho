@@ -569,7 +569,7 @@ export default function VenuesManagement() {
                       const selectedCountry = form.watch("country");
                       const selectedCountryObj = countries.find(c => c.name === selectedCountry);
                       const filteredCities = selectedCountryObj 
-                        ? cities.filter(c => c.countryId === selectedCountryObj.id)
+                        ? cities.filter(c => c.countryId === selectedCountryObj.id || c.countryId === null)
                         : cities;
                       
                       return (
