@@ -125,23 +125,7 @@ export const insertContentSeasonSchema = createInsertSchema(content_seasons).omi
 export type InsertContentSeason = z.infer<typeof insertContentSeasonSchema>;
 export type ContentSeason = typeof content_seasons.$inferSelect;
 
-// Content Settings - Cities
-export const content_cities = pgTable("content_cities", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: varchar("name", { length: 100 }).notNull().unique(),
-  countryId: varchar("country_id").references(() => content_countries.id),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertContentCitySchema = createInsertSchema(content_cities).omit({
-  id: true,
-  createdAt: true,
-});
-export type InsertContentCity = z.infer<typeof insertContentCitySchema>;
-export type ContentCity = typeof content_cities.$inferSelect;
-
-// Cities - Main destinations
+// Cities - Main destinations (also used in Content Settings)
 export const cities = pgTable("cities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 100 }).notNull(),

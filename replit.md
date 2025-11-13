@@ -15,10 +15,11 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 - Admin dashboard accessible only to users with `isAdmin: true`
 - CMS for cities, triplists, venues, survival guides, carousel, content settings, **user management**, **SEO management**
 - CSV bulk upload functionality for efficient data management
-- Dynamic dropdown options managed via Content Settings (no hardcoded values)
+- **Content Settings** manages simple dropdown vocabularies (Countries, Travel Types, Seasons) - excludes cities
+- **Cities Management** (`/admin/cities`): Full CRUD for cities with slug, tagline, imageUrl, and country assignment
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
-- City name to ID mapping during CSV imports
+- City name to ID mapping during CSV imports (venues CSV automatically links cities by name)
 - Survival Guides admin modal includes Created Date field and Country dropdown (from Content Settings)
 
 ### SEO Management System
@@ -63,7 +64,7 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Content Management System (CMS)**: Admin dashboard for CRUD operations across all content types (Cities, Triplists, Venues, Survival Guides, Carousel, Content Settings).
 - **Bulk Data Management**: CSV bulk upload for Triplists, Venues, and Survival Guides, supporting ID-based updates and slug auto-generation. Survival Guides CSV uses capitalized column headers (Title, Description, Country, Cover Image URL, Related Video URL, Created Date) with DD/MM/YYYY date format parsing.
 - **Dynamic Content Options**: Dropdown options (e.g., Country, Travel Type, Season) are fetched from `content_settings` tables.
-- **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`.
+- **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, `seo_settings`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`. Note: `cities` table contains full city entities (not just dropdown options) managed via `/admin/cities`.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
 

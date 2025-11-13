@@ -17,68 +17,6 @@ async function seed() {
     isActive: true,
   });
 
-  // Create content settings - Cities
-  console.log("Creating content cities...");
-  await storage.createContentCity({
-    name: "Beijing",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Shanghai",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Chengdu",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Xi'an",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Hangzhou",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Guangzhou",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Chongqing",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Shenzhen",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Guilin",
-    countryId: china.id,
-    isActive: true,
-  });
-
-  await storage.createContentCity({
-    name: "Suzhou",
-    countryId: china.id,
-    isActive: true,
-  });
-
   // Create content settings - Travel Types
   console.log("Creating travel types...");
   await storage.createContentTravelType({
@@ -311,6 +249,16 @@ async function seed() {
     slug: "shenzhen",
     tagline: "China's innovation hub and tech capital",
     imageUrl: "https://images.unsplash.com/photo-1589895363804-1f42159f2e79?w=800&h=600&fit=crop",
+    triplistCount: 0,
+    countryId: china.id,
+    isActive: true,
+  });
+
+  await storage.createCity({
+    name: "Kunming",
+    slug: "kunming",
+    tagline: "City of Eternal Spring",
+    imageUrl: "https://images.unsplash.com/photo-1566997880861-e23f2c0b0ab6?w=800&h=600&fit=crop",
     triplistCount: 0,
     countryId: china.id,
     isActive: true,
