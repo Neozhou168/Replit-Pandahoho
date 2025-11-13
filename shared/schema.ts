@@ -133,7 +133,7 @@ export const cities = pgTable("cities", {
   tagline: text("tagline").notNull(),
   imageUrl: text("image_url").notNull(),
   triplistCount: integer("triplist_count").default(0),
-  countryId: varchar("country_id").references(() => content_countries.id),
+  countryId: varchar("country_id").notNull().references(() => content_countries.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
