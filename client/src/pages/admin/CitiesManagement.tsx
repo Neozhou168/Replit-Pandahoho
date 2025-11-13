@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertCitySchema } from "@shared/schema";
-import type { InsertCity, City } from "@shared/schema";
+import type { InsertCity, City, ContentCountry } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -31,6 +31,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -48,6 +55,10 @@ export default function CitiesManagement() {
     queryKey: ["/api/cities"],
   });
 
+  const { data: countries = [] } = useQuery<ContentCountry[]>({
+    queryKey: ["/api/content/countries"],
+  });
+
   const form = useForm<InsertCity>({
     resolver: zodResolver(insertCitySchema),
     defaultValues: {
@@ -56,6 +67,7 @@ export default function CitiesManagement() {
       tagline: "",
       imageUrl: "",
       triplistCount: 0,
+      countryId: "",
       isActive: true,
     },
   });
@@ -162,6 +174,7 @@ export default function CitiesManagement() {
       tagline: city.tagline || "",
       imageUrl: city.imageUrl,
       triplistCount: city.triplistCount,
+      countryId: city.countryId || "",
       isActive: city.isActive,
     });
   };
@@ -271,6 +284,33 @@ export default function CitiesManagement() {
                           data-testid="input-slug"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="countryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-country">
+                            <SelectValue placeholder="Select a country" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {countries
+                            .filter((c) => c.isActive)
+                            .map((country) => (
+                              <SelectItem key={country.id} value={country.id}>
+                                {country.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

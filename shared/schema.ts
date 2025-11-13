@@ -142,6 +142,7 @@ export const insertCitySchema = createInsertSchema(cities).omit({
   createdAt: true,
 }).extend({
   id: z.string().optional(),
+  countryId: z.string().min(1, "Country is required"),
 });
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type City = typeof cities.$inferSelect;
