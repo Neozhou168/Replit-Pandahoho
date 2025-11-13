@@ -371,20 +371,26 @@ export default function VenuesManagement() {
                 throw new Error(`City "${cityName}" not found. Please ensure the city exists in the system.`);
               }
               
+              // Helper to convert empty strings to null (Drizzle skips undefined but updates null)
+              const emptyToNull = (value: string | undefined) => {
+                if (!value || value.trim() === "") return null;
+                return value.trim();
+              };
+              
               return {
-                id: row.ID || undefined,
+                id: row.ID && row.ID.trim() ? row.ID.trim() : undefined,
                 name: row.Title,
                 slug: slug,
                 description: row.Description,
                 location: location,
                 imageUrl: row["Cover Image URL"],
-                videoUrl: row["Video URL"] || undefined,
-                cityId: city?.id || undefined,
-                category: row.Type || undefined,
-                country: row.Country || "China",
-                proTips: row.Tips || undefined,
-                googleMapsEmbedUrl: row["Google Maps Embed URL"] || undefined,
-                googleMapsDirectUrl: row["Google Maps Direct URL"] || undefined,
+                videoUrl: emptyToNull(row["Video URL"]),
+                cityId: city?.id ?? null,
+                category: emptyToNull(row.Type),
+                country: row.Country && row.Country.trim() ? row.Country.trim() : "China",
+                proTips: emptyToNull(row.Tips),
+                googleMapsEmbedUrl: emptyToNull(row["Google Maps Embed URL"]),
+                googleMapsDirectUrl: emptyToNull(row["Google Maps Direct URL"]),
                 isActive: true,
               };
             }}

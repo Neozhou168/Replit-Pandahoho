@@ -25,6 +25,7 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 - Sidebar navigation with metric cards
 - City name to ID mapping during CSV imports (venues CSV automatically links cities by name)
 - Survival Guides admin modal includes Created Date field and Country dropdown (from Content Settings)
+- **CSV Import Fix (Nov 2025)**: Fixed critical bug where empty CSV cells were converted to `undefined`, causing Drizzle to skip field updates. Now uses `emptyToNull()` helper to properly handle empty values as `null`, ensuring Type and City fields are correctly imported/updated
 
 ### SEO Management System
 - **Page-Specific SEO Settings**: Configure SEO metadata for Global Settings, Homepage, Cities Page, Triplists Page, Venues Page, and Survival Guides Page
