@@ -199,9 +199,16 @@ export default function VenuesManagement() {
       const response = await apiRequest("POST", "/api/venues/bulk", data);
       const result = await response.json();
       queryClient.invalidateQueries({ queryKey: ["/api/venues"] });
+      
+      const message = result.created > 0 && result.updated > 0
+        ? `${result.created} venues created, ${result.updated} updated`
+        : result.created > 0
+        ? `${result.created} venues created`
+        : `${result.updated} venues updated`;
+      
       toast({
         title: "Success",
-        description: `${result.count} venues imported successfully!`,
+        description: message,
       });
     } catch (error) {
       throw error;
