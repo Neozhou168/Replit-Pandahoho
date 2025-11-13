@@ -16,11 +16,11 @@ PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused 
 - CMS for cities, triplists, venues, survival guides, carousel, content settings, **user management**, **SEO management**
 - CSV bulk upload functionality for efficient data management
 - **Content Settings** manages simple dropdown vocabularies (Countries, Travel Types, Seasons) - excludes cities
-- **Cities Management** (`/admin/cities`): Full CRUD for cities with slug, tagline, imageUrl, and **mandatory country assignment**
+- **Cities Management** (`/admin/cities`): Full CRUD for cities with slug, tagline, imageUrl, and **optional country assignment**
   - Country dropdown populated from Content Settings
-  - Country name displayed on each city card
+  - Country name displayed on each city card when assigned
   - CSV import supports country name (e.g., "China") auto-mapped to countryId
-  - countryId is required via schema validation (DB column nullable for backward compatibility)
+  - countryId is optional (nullable) in both database and schema - cities can exist without country assignment
 - Object storage for image uploads (configured, ready for admin integration)
 - Sidebar navigation with metric cards
 - City name to ID mapping during CSV imports (venues CSV automatically links cities by name)

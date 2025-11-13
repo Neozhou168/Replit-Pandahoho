@@ -133,7 +133,7 @@ export const cities = pgTable("cities", {
   tagline: text("tagline").notNull(),
   imageUrl: text("image_url").notNull(),
   triplistCount: integer("triplist_count").default(0),
-  countryId: varchar("country_id").notNull().references(() => content_countries.id),
+  countryId: varchar("country_id").references(() => content_countries.id),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -142,7 +142,7 @@ export const insertCitySchema = createInsertSchema(cities).omit({
   createdAt: true,
 }).extend({
   id: z.string().optional(),
-  countryId: z.string().min(1, "Country is required"),
+  countryId: z.string().optional(),
 });
 export type InsertCity = z.infer<typeof insertCitySchema>;
 export type City = typeof cities.$inferSelect;
