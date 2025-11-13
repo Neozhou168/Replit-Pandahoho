@@ -78,8 +78,8 @@ export default function TriplistsManagement() {
     defaultValues: {
       title: "",
       slug: "",
-      cityId: "",
-      country: "China",
+      cityId: undefined,
+      country: undefined,
       category: "",
       season: "",
       description: "",
@@ -160,10 +160,23 @@ export default function TriplistsManagement() {
 
 
   const onSubmit = (values: InsertTriplist) => {
+    // Convert "NONE" sentinel value to undefined (omit field) for country and cityId
+    const transformedValues = { ...values };
+    
+    // Delete country if it's "NONE", undefined, null, or empty string
+    if (!transformedValues.country || transformedValues.country === "NONE") {
+      delete transformedValues.country;
+    }
+    
+    // Delete cityId if it's "NONE", undefined, null, or empty string
+    if (!transformedValues.cityId || transformedValues.cityId === "NONE") {
+      delete transformedValues.cityId;
+    }
+    
     if (editTriplist) {
-      updateTriplist.mutate({ id: editTriplist.id, data: values });
+      updateTriplist.mutate({ id: editTriplist.id, data: transformedValues });
     } else {
-      createTriplist.mutate(values);
+      createTriplist.mutate(transformedValues);
     }
   };
 
@@ -179,8 +192,8 @@ export default function TriplistsManagement() {
     form.reset({
       title: triplist.title,
       slug: triplist.slug,
-      cityId: triplist.cityId,
-      country: triplist.country || "China",
+      cityId: triplist.cityId || "NONE",
+      country: triplist.country || "NONE",
       category: triplist.category || "",
       season: triplist.season || "",
       description: triplist.description,
@@ -266,12 +279,10 @@ export default function TriplistsManagement() {
               "Created Date": "",
             } as any}
             templateFilename="triplists-template.csv"
-            requiredColumns={["Title", "Country", "City", "Cover Image URL", "Description"]}
+            requiredColumns={["Title", "Cover Image URL", "Description"]}
             validateRow={(row) => {
               const errors: string[] = [];
               if (!row.Title || row.Title.trim() === "") errors.push("Title is required");
-              if (!row.Country || row.Country.trim() === "") errors.push("Country is required");
-              if (!row.City || row.City.trim() === "") errors.push("City is required");
               if (!row["Cover Image URL"] || row["Cover Image URL"].trim() === "") errors.push("Cover Image URL is required");
               if (!row.Description || row.Description.trim() === "") errors.push("Description is required");
               return { valid: errors.length === 0, errors };
@@ -290,7 +301,7 @@ export default function TriplistsManagement() {
                 imageUrl: row["Cover Image URL"],
                 videoUrl: row["Video URL"] || undefined,
                 cityId: city?.id || undefined,
-                country: row.Country || "China",
+                country: row.Country || undefined,
                 category: row.Type || undefined,
                 season: row["Best Season"] || undefined,
                 googleMapsEmbedUrl: row["Google Maps Embed URL"] || undefined,
@@ -375,7 +386,7 @@ export default function TriplistsManagement() {
                         <FormLabel>Country</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value || undefined}
+                          value={field.value || "NONE"}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-country">
@@ -383,6 +394,9 @@ export default function TriplistsManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="NONE" data-testid="select-country-multiple">
+                              Multiple Countries
+                            </SelectItem>
                             {countries
                               .filter((country) => country.isActive)
                               .map((country) => (
@@ -407,7 +421,7 @@ export default function TriplistsManagement() {
                         <FormLabel>City</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          value={field.value ?? undefined}
+                          value={field.value || "NONE"}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-city">
@@ -415,6 +429,9 @@ export default function TriplistsManagement() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
+                            <SelectItem value="NONE" data-testid="select-city-multiple">
+                              Multiple Cities
+                            </SelectItem>
                             {cities.map((city) => (
                               <SelectItem key={city.id} value={city.id}>
                                 {city.name}

@@ -182,7 +182,7 @@ export const triplists = pgTable("triplists", {
   title: varchar("title", { length: 200 }).notNull(),
   slug: varchar("slug", { length: 200 }).notNull(),
   cityId: varchar("city_id").references(() => cities.id),
-  country: varchar("country", { length: 50 }).default("China"),
+  country: varchar("country", { length: 50 }),
   category: varchar("category", { length: 50 }), // Hiking, Attractions, etc (Travel Type)
   season: varchar("season", { length: 50 }), // Spring & Autumn, All seasons, etc (Best Season to Travel)
   description: text("description").notNull(),
