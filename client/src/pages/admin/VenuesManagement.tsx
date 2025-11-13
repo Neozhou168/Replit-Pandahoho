@@ -521,6 +521,9 @@ export default function VenuesManagement() {
                             <SelectItem value="Food & Drink">Food & Drink</SelectItem>
                             <SelectItem value="Shopping">Shopping</SelectItem>
                             <SelectItem value="Entertainment">Entertainment</SelectItem>
+                            <SelectItem value="Nightlife">Nightlife</SelectItem>
+                            <SelectItem value="Museums & Galleries">Museums & Galleries</SelectItem>
+                            <SelectItem value="Temples & Shrines">Temples & Shrines</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
