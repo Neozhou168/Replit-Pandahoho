@@ -1,54 +1,7 @@
 # PandaHoHo - Travel Discovery Platform
 
 ## Overview
-PandaHoHo is a travel discovery platform replicating www.pandahoho.com, focused on Chinese cities. It offers a visual-first experience for exploring cities, triplists, venues, and survival guides. Key features include curated travel content, an admin dashboard for content management (CRUD, CSV uploads), and a responsive UI. The project aims to be the leading platform for Chinese city travel, with future plans for advanced search, social features, and integrated payments.
-
-## Recent Changes
-
-### November 13, 2025 - CSV Import & Dynamic Dropdowns Fix
-
-#### Issue 1: Type Field Empty in Edit Modal
-**Problem:** Type field appeared empty in Edit Venue modal after CSV import
-
-**Root Cause:** 
-1. CSV import was working correctly - data saved to database
-2. Edit Venue form had hardcoded Type dropdown missing "Nightlife" option
-3. Select component couldn't display values not in dropdown list
-
-**Solution:**
-1. ✅ Replaced hardcoded Type dropdown with dynamic query to `/api/content/travel-types`
-2. ✅ Added "Nightlife" and "Relaxing" to content_travel_types table
-3. ✅ Type dropdown now automatically shows all active Travel Types from Content Settings
-
-#### Issue 2: City Field Empty in Production
-**Problem:** City dropdown showed "No cities found for China" in production (worked fine in dev)
-
-**Root Cause:**
-- Production cities table had `NULL` values in `country_id` column
-- Dev cities had `country_id` properly assigned to China
-- Filtering logic: `cities.filter(c => c.countryId === selectedCountryObj.id)` excluded null values
-- Result: `null === 'china-uuid'` returned false, so zero cities matched
-
-**Solution:**
-1. ✅ Updated filtering logic to include cities with null country_id: `c.countryId === selectedCountryObj.id || c.countryId === null`
-2. ✅ Provided SQL to update production cities with correct country_id
-3. ✅ Added fallback protection so cities without country assignment still appear
-
-**Production Database Fix:**
-```sql
--- Step 1: Find China country ID
-SELECT id, name FROM content_countries WHERE name = 'China';
-
--- Step 2: Update cities (replace YOUR_CHINA_ID with actual ID)
-UPDATE cities SET country_id = 'YOUR_CHINA_ID' WHERE country_id IS NULL;
-```
-
-**Benefits:**
-- Admins can add new travel types in Content Settings without code changes
-- Type/City dropdowns stay in sync with Content Settings vocabulary
-- No more missing dropdown options for CSV-imported data
-- Fallback protection handles null country_id gracefully
-- Works consistently between dev and production environments
+PandaHoHo is a visual-first travel discovery platform for Chinese cities, replicating www.pandahoho.com. It provides curated content on cities, triplists, venues, and survival guides. The platform includes an admin dashboard for comprehensive content management (CRUD, CSV uploads) and aims to be the leading resource for Chinese city travel. Future ambitions include advanced search, social features, and integrated payments.
 
 ## User Preferences
 ### Design Philosophy
@@ -99,51 +52,6 @@ UPDATE cities SET country_id = 'YOUR_CHINA_ID' WHERE country_id IS NULL;
 - Never modify `vite.config.ts` or `server/vite.ts`
 - Don't change ID column types (breaks migrations)
 
-### Production Deployment Checklist
-When deploying to production or debugging production issues, always verify these **three critical factors**:
-
-#### 1. Code ✅
-- Latest code changes deployed via republish
-- Logic correctly implemented and tested in development
-- All feature flags and environment variables configured
-
-**Verification:** Does the feature work in development environment?
-
-#### 2. Data ✅
-- Database state matches code expectations
-- Nullable fields handled correctly (use `emptyToNull()` helper for CSV imports)
-- Foreign keys properly assigned (e.g., `country_id` for cities)
-- Production database schema synced with development
-
-**Verification:** Run SQL queries on production database to inspect data state
-```bash
-psql $DATABASE_URL -c "SELECT id, name, country_id FROM cities LIMIT 5;"
-```
-
-#### 3. Cache ✅
-- Browser cache cleared for latest JavaScript bundles
-- CDN serving fresh static assets
-- Service workers updated (if applicable)
-
-**Verification:** Hard refresh browser (Cmd/Ctrl + Shift + R) or wait 2-5 minutes after republish
-
-#### Common Production Issue Pattern:
-```
-✅ Code deployed → ✅ Data correct → ❌ Stale cache → Feature appears broken
-```
-
-**Lesson Learned (Nov 13, 2025):** The City dropdown appeared broken in production after multiple republishes. Investigation revealed:
-- Code was correctly deployed with fallback logic
-- Database already had correct `country_id` values (`UPDATE 0` confirmed no changes needed)
-- **Browser/CDN cache was serving old JavaScript bundle** - the hidden culprit!
-
-**Solution:** After republishing, either:
-1. Wait 2-5 minutes for CDN cache to invalidate
-2. Force hard refresh in browser
-3. Test in incognito/private browsing mode
-
-**Pro Tip:** When debugging production, check all three factors in order: Code → Data → Cache
-
 ## System Architecture
 PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 
@@ -168,23 +76,24 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, `seo_settings`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`. Note: `cities` table contains full city entities (not just dropdown options) managed via `/admin/cities`.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
+- **Performance Optimizations**:
+    - **Route-Based Code Splitting**: Using `React.lazy()` for admin and detail pages to reduce initial bundle size.
+    - **AuthContext Optimization**: Session tracking to prevent redundant `/api/auth/me` calls.
+    - **Image Lazy Loading**: `loading="lazy"` attribute on all card images.
+    - **Cloudinary Image Transformations**: `getOptimizedImageUrl()` helper for dynamic image optimization (width constraints, auto-quality, auto-format).
+    - **Express Caching Headers**: `Cache-Control` headers for read-only API endpoints to reduce server load and improve subsequent page loads.
 
 ### Authentication System
-- **Supabase Authentication**: Google OAuth and email/password login
-- **Eager User Sync**: `AuthContext` automatically syncs Supabase users to PostgreSQL database immediately after sign-in by calling `/api/auth/me` with JWT token
-  - Sync happens on initial session load and any auth state changes
-  - All React Query requests include Authorization header with Supabase JWT token
-- **Admin Access**: Determined by `isAdmin` field in database (source of truth)
-  - Admin status can be set via Supabase user metadata (`is_admin: true`) or directly in database
-  - Navigation component queries `/api/auth/me` to fetch database user and displays Admin button for users with `isAdmin: true`
-- **Avatar Uploads**: Cloudinary integration uploads to `pandahoho/Avatars` folder
-- **JWT Verification**: Backend middleware validates Supabase JWT tokens for protected routes
-- **User Sync Flow**: AuthContext → /api/auth/me (with Bearer token) → Upsert user to PostgreSQL → React Query fetches user for admin status check
+- **Supabase Authentication**: Google OAuth and email/password login.
+- **Eager User Sync**: `AuthContext` automatically syncs Supabase users to PostgreSQL database upon sign-in or auth state changes via `/api/auth/me`.
+- **Admin Access**: Determined by the `isAdmin` boolean field in the database, which is the source of truth for admin status.
+- **Avatar Uploads**: Cloudinary integration for user avatars.
+- **JWT Verification**: Backend middleware validates Supabase JWT tokens for protected routes.
 
 ## External Dependencies
-- **Supabase**: User authentication (Google OAuth, email/password)
-- **PostgreSQL**: Primary database (Neon-backed)
-- **Cloudinary**: Avatar and image uploads to `pandahoho/Avatars` folder
-- **Object Storage**: For additional image uploads
-- **Stripe**: (Planned) Membership payment processing
-- **Google Maps**: Embedding maps and location linking
+- **Supabase**: User authentication (Google OAuth, email/password).
+- **PostgreSQL**: Primary database (Neon-backed).
+- **Cloudinary**: Avatar and image uploads.
+- **Object Storage**: For additional image uploads.
+- **Stripe**: (Planned) Membership payment processing.
+- **Google Maps**: Embedding maps and location linking.
