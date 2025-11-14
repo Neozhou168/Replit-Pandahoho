@@ -102,26 +102,26 @@ export default function VenueDetailPage() {
   return (
     <div>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-        <Link href="/venues">
+        <div className="flex items-center justify-between gap-4">
+          <Link href="/venues">
+            <Button
+              variant="ghost"
+              data-testid="button-back-to-venues"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to all venues
+            </Button>
+          </Link>
+          
           <Button
-            variant="ghost"
-            className="mb-4"
-            data-testid="button-back-to-venues"
+            variant="default"
+            className="gap-2"
+            data-testid="button-group-up"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to all venues
+            <Users className="w-4 h-4" />
+            Group Up
           </Button>
-        </Link>
-        
-        <Button
-          variant="default"
-          size="lg"
-          className="w-full gap-2 mb-6"
-          data-testid="button-group-up"
-        >
-          <Users className="w-5 h-5" />
-          Group Up for This Venue
-        </Button>
+        </div>
       </div>
 
       <div className="relative h-[45vh]">
@@ -132,7 +132,7 @@ export default function VenueDetailPage() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         
-        <div className="absolute top-6 left-6">
+        <div className="absolute top-6 left-6 flex items-center gap-3">
           {venue.category && (
             <Badge
               variant="secondary"
@@ -144,16 +144,18 @@ export default function VenueDetailPage() {
           )}
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-6 right-6 bg-background/90 backdrop-blur hover:bg-background"
-          onClick={() => favoriteMutation.mutate()}
-          disabled={favoriteMutation.isPending}
-          data-testid="button-add-to-favorites"
-        >
-          <Heart className="w-5 h-5" />
-        </Button>
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-background/90 backdrop-blur hover:bg-background shadow-sm"
+            onClick={() => favoriteMutation.mutate()}
+            disabled={favoriteMutation.isPending}
+            data-testid="button-add-to-favorites"
+          >
+            <Heart className="w-5 h-5" />
+          </Button>
+        </div>
         
         <div className="absolute inset-0 flex items-end">
           <div className="max-w-7xl mx-auto w-full px-6 lg:px-8 pb-8">
