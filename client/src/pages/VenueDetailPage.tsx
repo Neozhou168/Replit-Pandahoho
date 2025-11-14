@@ -117,23 +117,6 @@ export default function VenueDetailPage() {
     ));
   };
 
-  const extractGoogleMapsEmbedUrl = (url: string) => {
-    if (!url) return null;
-    
-    const placeIdMatch = url.match(/place\/([^\/]+)/);
-    if (placeIdMatch && placeIdMatch[1]) {
-      const placeName = placeIdMatch[1];
-      return `https://maps.google.com/maps?q=${encodeURIComponent(placeName)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    }
-    
-    const coordsMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-    if (coordsMatch) {
-      return `https://maps.google.com/maps?q=${coordsMatch[1]},${coordsMatch[2]}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    }
-    
-    return null;
-  };
-
   return (
     <div>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
@@ -290,14 +273,14 @@ export default function VenueDetailPage() {
               </div>
             )}
 
-            {venue.googleMapsUrl && extractGoogleMapsEmbedUrl(venue.googleMapsUrl) && (
+            {venue.googleMapsEmbedUrl && (
               <div className="mb-12">
                 <h2 className="text-2xl font-semibold mb-6" data-testid="section-title-location">
                   Location Map
                 </h2>
                 <div className="relative w-full h-[450px] rounded-lg overflow-hidden border">
                   <iframe
-                    src={extractGoogleMapsEmbedUrl(venue.googleMapsUrl)!}
+                    src={venue.googleMapsEmbedUrl}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
@@ -318,16 +301,18 @@ export default function VenueDetailPage() {
                           {venue.location}
                         </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2 flex-shrink-0"
-                        onClick={() => window.open(venue.googleMapsUrl!, "_blank")}
-                        data-testid="button-open-maps"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        Directions
-                      </Button>
+                      {venue.googleMapsDirectUrl && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2 flex-shrink-0"
+                          onClick={() => window.open(venue.googleMapsDirectUrl!, "_blank")}
+                          data-testid="button-open-maps"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          Directions
+                        </Button>
+                      )}
                     </div>
                   </Card>
                 </div>
