@@ -310,7 +310,7 @@ export default function VenueDetailPage() {
                           data-testid="button-open-maps"
                         >
                           <ExternalLink className="w-4 h-4" />
-                          Directions
+                          View on Google Maps
                         </Button>
                       )}
                     </div>
