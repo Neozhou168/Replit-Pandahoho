@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, MapPin, ExternalLink, Heart, Users } from "lucide-react";
+import { ArrowLeft, MapPin, ExternalLink, Heart, Users, Share2 } from "lucide-react";
 import type { Venue } from "@shared/schema";
 import { trackPageView } from "@/lib/analytics";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function VenueDetailPage() {
   const [, params] = useRoute("/venues/:slug");
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
 
   const { data: venue, isLoading } = useQuery<Venue>({
@@ -22,7 +23,7 @@ export default function VenueDetailPage() {
   const favoriteMutation = useMutation({
     mutationFn: async () => {
       if (!venue) throw new Error("No venue selected");
-      return await apiRequest("/api/favorites", "POST", {
+      return await apiRequest("POST", "/api/favorites", {
         venueId: venue.id,
       });
     },
@@ -42,6 +43,40 @@ export default function VenueDetailPage() {
       });
     },
   });
+
+  const handleShare = async () => {
+    if (!venue) return;
+    
+    const shareData = {
+      title: venue.name,
+      text: `Check out ${venue.name} - ${venue.location}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied!",
+          description: "Venue link copied to clipboard",
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== "AbortError") {
+        toast({
+          title: "Error",
+          description: "Failed to share. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleGroupUp = () => {
+    setLocation("/group-ups");
+  };
 
   useEffect(() => {
     if (venue) {
@@ -102,26 +137,15 @@ export default function VenueDetailPage() {
   return (
     <div>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/venues">
-            <Button
-              variant="ghost"
-              data-testid="button-back-to-venues"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to all venues
-            </Button>
-          </Link>
-          
+        <Link href="/venues">
           <Button
-            variant="default"
-            className="gap-2"
-            data-testid="button-group-up"
+            variant="ghost"
+            data-testid="button-back-to-venues"
           >
-            <Users className="w-4 h-4" />
-            Group Up
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to all venues
           </Button>
-        </div>
+        </Link>
       </div>
 
       <div className="relative h-[45vh]">
@@ -144,17 +168,45 @@ export default function VenueDetailPage() {
           )}
         </div>
 
-        <div className="absolute top-6 right-6 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-background/90 backdrop-blur hover:bg-background shadow-sm"
-            onClick={() => favoriteMutation.mutate()}
-            disabled={favoriteMutation.isPending}
-            data-testid="button-add-to-favorites"
-          >
-            <Heart className="w-5 h-5" />
-          </Button>
+        <div className="absolute top-6 right-6 hidden md:block">
+          <Card className="bg-background/95 backdrop-blur shadow-lg">
+            <div className="flex items-center gap-2 p-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-transparent hover:bg-background/50"
+                onClick={handleShare}
+                data-testid="button-share-venue"
+                aria-label="Share this venue"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-transparent hover:bg-background/50"
+                onClick={() => favoriteMutation.mutate()}
+                disabled={favoriteMutation.isPending}
+                data-testid="button-add-to-favorites"
+                aria-label="Save to favorites"
+              >
+                <Heart className="w-4 h-4" />
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 bg-transparent hover:bg-background/50"
+                onClick={handleGroupUp}
+                data-testid="button-group-up"
+                aria-label="Group up for this venue"
+              >
+                <Users className="w-4 h-4" />
+                Group Up
+              </Button>
+            </div>
+          </Card>
         </div>
         
         <div className="absolute inset-0 flex items-end">
@@ -167,6 +219,45 @@ export default function VenueDetailPage() {
               <span className="text-lg" data-testid="venue-location">{venue.location}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="md:hidden px-6 py-4 border-b">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 flex-1 min-w-[100px]"
+            onClick={handleShare}
+            data-testid="button-share-venue-mobile"
+            aria-label="Share this venue"
+          >
+            <Share2 className="w-4 h-4" />
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 flex-1 min-w-[100px]"
+            onClick={() => favoriteMutation.mutate()}
+            disabled={favoriteMutation.isPending}
+            data-testid="button-add-to-favorites-mobile"
+            aria-label="Save to favorites"
+          >
+            <Heart className="w-4 h-4" />
+            Save
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 flex-1 min-w-[100px]"
+            onClick={handleGroupUp}
+            data-testid="button-group-up-mobile"
+            aria-label="Group up for this venue"
+          >
+            <Users className="w-4 h-4" />
+            Group Up
+          </Button>
         </div>
       </div>
 
@@ -246,17 +337,6 @@ export default function VenueDetailPage() {
 
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              <Card className="p-6">
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 mb-4"
-                  data-testid="button-share-venue"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Share this venue
-                </Button>
-              </Card>
-
               {venue.proTips && (
                 <Card className="p-6">
                   <div className="flex items-center gap-2 mb-4">
