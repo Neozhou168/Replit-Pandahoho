@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -19,6 +19,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const syncedSessionIdRef = useRef<string | null>(null);
+
+  const syncUserToBackend = async (session: Session) => {
+    if (syncedSessionIdRef.current === session.user.id) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      if (response.ok) {
+        syncedSessionIdRef.current = session.user.id;
+      } else {
+        console.error('[AuthContext] Failed to sync user - HTTP', response.status);
+      }
+    } catch (error) {
+      console.error('[AuthContext] Failed to sync user:', error);
+    }
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,14 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      if (session?.access_token) {
-        fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }).catch(error => {
-          console.error('[AuthContext] Failed to sync user:', error);
-        });
+      if (session) {
+        syncUserToBackend(session);
       }
     });
 
@@ -43,14 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.access_token) {
-        fetch('/api/auth/me', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        }).catch(error => {
-          console.error('[AuthContext] Failed to sync user:', error);
-        });
+      if (session && syncedSessionIdRef.current !== session.user.id) {
+        syncUserToBackend(session);
+      } else if (!session) {
+        syncedSessionIdRef.current = null;
       }
     });
 

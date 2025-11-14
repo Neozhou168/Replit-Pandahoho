@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
 import type { Triplist } from "@shared/schema";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 interface TriplistCardProps {
   triplist: Triplist;
@@ -13,8 +14,9 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
       <div className="group cursor-pointer" data-testid={`card-triplist-${triplist.id}`}>
         <div className="relative aspect-[4/3] overflow-hidden rounded-xl mb-3">
           <img
-            src={triplist.imageUrl}
+            src={getOptimizedImageUrl(triplist.imageUrl, 400)}
             alt={triplist.title}
+            loading="lazy"
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-102"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />

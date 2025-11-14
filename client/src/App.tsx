@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -5,22 +6,32 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navigation from "@/components/Navigation";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import HomePage from "@/pages/HomePage";
 import CitiesPage from "@/pages/CitiesPage";
-import CityDetailPage from "@/pages/CityDetailPage";
 import TriplistsPage from "@/pages/TriplstsPage";
-import TriplistDetailPage from "@/pages/TriplistDetailPage";
-import VenueDetailPage from "@/pages/VenueDetailPage";
-import GroupUpsPage from "@/pages/GroupUpsPage";
 import GuidesPage from "@/pages/GuidesPage";
-import GuideDetailPage from "@/pages/GuideDetailPage";
-import MembershipPage from "@/pages/MembershipPage";
-import ProfilePage from "@/pages/ProfilePage";
-import ChatAssistantComingSoon from "@/pages/ChatAssistantComingSoon";
-import AdminLayout from "@/pages/admin/AdminLayout";
-import AuthPage from "@/pages/AuthPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import NotFound from "@/pages/not-found";
+
+const CityDetailPage = lazy(() => import("@/pages/CityDetailPage"));
+const TriplistDetailPage = lazy(() => import("@/pages/TriplistDetailPage"));
+const VenueDetailPage = lazy(() => import("@/pages/VenueDetailPage"));
+const GuideDetailPage = lazy(() => import("@/pages/GuideDetailPage"));
+const GroupUpsPage = lazy(() => import("@/pages/GroupUpsPage"));
+const MembershipPage = lazy(() => import("@/pages/MembershipPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const ChatAssistantComingSoon = lazy(() => import("@/pages/ChatAssistantComingSoon"));
+const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
+const AuthPage = lazy(() => import("@/pages/AuthPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+
+const PageLoader = () => (
+  <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+    <Skeleton className="h-12 w-64 mb-6" />
+    <Skeleton className="h-96 w-full" />
+  </div>
+);
 
 function Router() {
   return (
@@ -53,7 +64,9 @@ export default function App() {
         <TooltipProvider>
           <div className="min-h-screen bg-background">
             <Navigation />
-            <Router />
+            <Suspense fallback={<PageLoader />}>
+              <Router />
+            </Suspense>
           </div>
           <Toaster />
         </TooltipProvider>

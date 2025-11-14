@@ -24,6 +24,29 @@ import { v2 as cloudinary } from "cloudinary";
 import { getAnalyticsStats } from "./analytics";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Cache middleware for read-only API endpoints
+  app.use((req, res, next) => {
+    const isGetRequest = req.method === "GET";
+    const cacheableRoutes = [
+      "/api/cities",
+      "/api/venues",
+      "/api/triplists",
+      "/api/guides",
+      "/api/carousel",
+      "/api/content/countries",
+      "/api/content/travel-types",
+      "/api/content/seasons",
+      "/api/branding",
+      "/api/seo/",
+    ];
+    
+    if (isGetRequest && cacheableRoutes.some(route => req.path.startsWith(route))) {
+      res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
+    }
+    
+    next();
+  });
+
   // Configure Cloudinary
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
