@@ -79,15 +79,20 @@ export function CSVImport<T extends Record<string, any>>({
           const gb18030Decoder = new TextDecoder('gb18030', { fatal: false });
           const gb18030Text = gb18030Decoder.decode(arrayBuffer);
           
+          // Always prefer GB18030 text when corruption is detected, even if it still has issues
+          // It's likely better than the corrupted UTF-8 text
+          text = gb18030Text;
+          
           if (/[\u4e00-\u9fa5]/.test(gb18030Text) && !gb18030Text.includes('�')) {
-            text = gb18030Text;
+            // GB18030 conversion successful - clean Chinese characters
             encoding = 'GB18030';
             infoMessages.push(`Auto-detected ${encoding} encoding and converted successfully.`);
             infoMessages.push("Tip: Use Google Sheets for best UTF-8 compatibility in the future.");
             infoMessages.push("");
           } else {
-            encoding = 'GB18030 (conversion failed)';
-            infoMessages.push(`Warning: Encoding issues detected. Import will proceed with current encoding.`);
+            // GB18030 text still has issues, but use it anyway (better than corrupted UTF-8)
+            encoding = 'GB18030 (partial recovery)';
+            infoMessages.push(`Warning: Encoding issues detected. Using GB18030 fallback encoding.`);
             infoMessages.push("");
             infoMessages.push("The file was likely saved with incorrect encoding from Excel or Mac Numbers.");
             infoMessages.push("Some text may appear garbled in the preview below.");
@@ -95,8 +100,10 @@ export function CSVImport<T extends Record<string, any>>({
             infoMessages.push("For best results: Use Google Sheets or LibreOffice to re-export as UTF-8.");
             infoMessages.push("");
           }
-        } catch {
-          infoMessages.push("Warning: Critical encoding error during conversion. Proceeding with original text.");
+        } catch (conversionError) {
+          // GB18030 decoder failed completely - stick with original UTF-8 text
+          infoMessages.push("Warning: GB18030 conversion failed. Using original encoding.");
+          infoMessages.push("Some text may appear corrupted in the preview below.");
           infoMessages.push("");
         }
       }
