@@ -140,6 +140,80 @@ export function CSVImport<T extends Record<string, any>>({
     return { text, encoding, infoMessages, errorWarnings };
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setFile(selectedFile);
+    setErrors([]);
+    setInfoMessages([]);
+    setParsedData([]);
+
+    // Try ArrayBuffer approach first
+    const arrayBufferReader = new FileReader();
+    
+    arrayBufferReader.onload = (event) => {
+      const arrayBuffer = event.target?.result as ArrayBuffer;
+      
+      if (!arrayBuffer) {
+        setErrors(["Failed to read file content."]);
+        return;
+      }
+
+      const { text, encoding, infoMessages, errorWarnings } = detectAndDecodeCSV(arrayBuffer);
+      
+      // If text is empty or severely corrupted, try text reading as fallback
+      if (!text || text.trim() === "" || text.length < 10) {
+        console.warn('ArrayBuffer approach failed, trying text reader fallback...');
+        
+        // Fallback to text reader
+        const textReader = new FileReader();
+        textReader.onload = (e) => {
+          const fallbackText = e.target?.result as string;
+          if (!fallbackText || fallbackText.trim() === "") {
+            setErrors([
+              "CSV file is empty or has severe encoding issues.",
+              "",
+              "Note: Your spreadsheet app likely corrupted the file encoding.",
+              "",
+              "Solution - Use UTF-8 safe editors:",
+              "   • Google Sheets (recommended for Chinese characters)",
+              "   • LibreOffice Calc",
+              "   • Notepad++ (Windows) or TextEdit (Mac)",
+              "",
+              "Steps:",
+              "   1. Download the template again",
+              "   2. Open in Google Sheets or LibreOffice",
+              "   3. Paste your data",
+              "   4. Export as CSV (UTF-8)",
+              "   5. Upload here",
+              "",
+              "Important: Excel and Mac Numbers often corrupt UTF-8 encoding"
+            ]);
+            return;
+          }
+          
+          // Process the fallback text
+          processCSVText(fallbackText, [...errorWarnings, "Used text fallback due to encoding detection issues."]);
+        };
+        textReader.onerror = () => {
+          setErrors(["Failed to read file with both methods. File may be corrupted."]);
+        };
+        textReader.readAsText(selectedFile, 'UTF-8');
+        return;
+      }
+      
+      setInfoMessages(infoMessages);
+      processCSVText(text, errorWarnings);
+    };
+    
+    arrayBufferReader.onerror = () => {
+      setErrors(["Failed to read file. Please ensure the file is a valid CSV."]);
+    };
+    
+    arrayBufferReader.readAsArrayBuffer(selectedFile);
+  };
+
   const processCSVText = (text: string, initialErrors: string[]) => {
     Papa.parse(text, {
       header: true,
@@ -215,80 +289,6 @@ export function CSVImport<T extends Record<string, any>>({
         setErrors([`Failed to parse CSV: ${error.message}`]);
       },
     });
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
-
-    setFile(selectedFile);
-    setErrors([]);
-    setInfoMessages([]);
-    setParsedData([]);
-
-    // Try ArrayBuffer approach first
-    const arrayBufferReader = new FileReader();
-    
-    arrayBufferReader.onload = (event) => {
-      const arrayBuffer = event.target?.result as ArrayBuffer;
-      
-      if (!arrayBuffer) {
-        setErrors(["Failed to read file content."]);
-        return;
-      }
-
-      const { text, encoding, infoMessages, errorWarnings } = detectAndDecodeCSV(arrayBuffer);
-      
-      // If text is empty or severely corrupted, try text reading as fallback
-      if (!text || text.trim() === "" || text.length < 10) {
-        console.warn('ArrayBuffer approach failed, trying text reader fallback...');
-        
-        // Fallback to text reader
-        const textReader = new FileReader();
-        textReader.onload = (e) => {
-          const fallbackText = e.target?.result as string;
-          if (!fallbackText || fallbackText.trim() === "") {
-            setErrors([
-              "CSV file is empty or has severe encoding issues.",
-              "",
-              "Note: Your spreadsheet app likely corrupted the file encoding.",
-              "",
-              "Solution - Use UTF-8 safe editors:",
-              "   • Google Sheets (recommended for Chinese characters)",
-              "   • LibreOffice Calc",
-              "   • Notepad++ (Windows) or TextEdit (Mac)",
-              "",
-              "Steps:",
-              "   1. Download the template again",
-              "   2. Open in Google Sheets or LibreOffice",
-              "   3. Paste your data",
-              "   4. Export as CSV (UTF-8)",
-              "   5. Upload here",
-              "",
-              "Important: Excel and Mac Numbers often corrupt UTF-8 encoding"
-            ]);
-            return;
-          }
-          
-          // Process the fallback text
-          processCSVText(fallbackText, [...errorWarnings, "Used text fallback due to encoding detection issues."]);
-        };
-        textReader.onerror = () => {
-          setErrors(["Failed to read file with both methods. File may be corrupted."]);
-        };
-        textReader.readAsText(selectedFile, 'UTF-8');
-        return;
-      }
-      
-      setInfoMessages(infoMessages);
-      processCSVText(text, errorWarnings);
-    };
-    
-    arrayBufferReader.onerror = () => {
-      setErrors(["Failed to read file. Please ensure the file is a valid CSV."]);
-    };
-    
-    arrayBufferReader.readAsArrayBuffer(selectedFile);
   };
 
   const handleImport = async () => {
