@@ -52,6 +52,7 @@ export default function VenuesManagement() {
   const [deleteVenue, setDeleteVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -256,8 +257,8 @@ export default function VenuesManagement() {
         "Created Date",
       ];
 
-      // Convert venues to CSV rows
-      const rows = venues.map((venue) => {
+      // Convert filtered venues to CSV rows
+      const rows = filteredVenues.map((venue) => {
         const city = cities.find((c) => c.id === venue.cityId);
         
         return [
@@ -315,12 +316,13 @@ export default function VenuesManagement() {
     }
   };
 
-  // Filter venues by search query and city
+  // Filter venues by search query, city, and type
   const filteredVenues = venues.filter((venue) => {
     const matchesSearch = searchQuery === "" || 
       venue.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = cityFilter === "all" || venue.cityId === cityFilter;
-    return matchesSearch && matchesCity;
+    const matchesType = typeFilter === "all" || venue.category === typeFilter;
+    return matchesSearch && matchesCity && matchesType;
   });
 
   // Get unique cities for filter dropdown
@@ -753,6 +755,25 @@ export default function VenuesManagement() {
                     {city.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-muted-foreground">Filter by Type:</span>
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[200px]" data-testid="select-type-filter">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {travelTypes
+                  .filter(type => type.isActive)
+                  .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0))
+                  .map((type) => (
+                    <SelectItem key={type.id} value={type.name}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             <div className="relative flex-1 max-w-md">
