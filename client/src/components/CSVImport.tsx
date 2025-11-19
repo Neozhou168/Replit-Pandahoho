@@ -48,7 +48,9 @@ export function CSVImport<T extends Record<string, any>>({
 
   const downloadTemplate = () => {
     const csv = Papa.unparse([templateData]);
-    const blob = new Blob([csv], { type: "text/csv" });
+    // Add UTF-8 BOM to ensure proper encoding for Chinese characters
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -68,13 +70,16 @@ export function CSVImport<T extends Record<string, any>>({
     Papa.parse(selectedFile, {
       header: true,
       skipEmptyLines: true,
-      encoding: "UTF-8",
       complete: (results) => {
         const validationErrors: string[] = [];
         const data = results.data as any[];
 
         if (data.length === 0) {
-          validationErrors.push("CSV file is empty");
+          validationErrors.push("CSV file is empty or has encoding issues.");
+          validationErrors.push("💡 If your CSV contains Chinese characters, please:");
+          validationErrors.push("   1. Open the CSV in a text editor (e.g., Notepad++)");
+          validationErrors.push("   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')");
+          validationErrors.push("   3. Try uploading the re-saved file");
           setErrors(validationErrors);
           return;
         }
