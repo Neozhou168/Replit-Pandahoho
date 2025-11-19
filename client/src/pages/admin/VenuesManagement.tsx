@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Link } from "wouter";
 import { insertVenueSchema } from "@shared/schema";
 import type { InsertVenue, Venue, City, ContentCountry, ContentTravelType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search, Filter, Download, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Download, Copy, Check, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -811,6 +812,16 @@ export default function VenuesManagement() {
                   <p className="text-sm text-muted-foreground">{venue.location}</p>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    data-testid={`button-view-venue-${venue.id}`}
+                  >
+                    <Link href={`/venues/${venue.slug}`}>
+                      <ExternalLink className="w-4 h-4" />
+                    </Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
