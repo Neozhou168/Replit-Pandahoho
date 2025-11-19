@@ -296,6 +296,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteVenue(id: string): Promise<void> {
+    // Delete related records first to avoid foreign key constraint errors
+    await db.delete(favorites).where(eq(favorites.venueId, id));
+    await db.delete(triplistVenues).where(eq(triplistVenues.venueId, id));
+    await db.delete(groupUps).where(eq(groupUps.venueId, id));
+    
+    // Now delete the venue itself
     await db.delete(venues).where(eq(venues.id, id));
   }
 
