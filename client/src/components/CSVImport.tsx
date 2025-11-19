@@ -68,6 +68,7 @@ export function CSVImport<T extends Record<string, any>>({
     Papa.parse(selectedFile, {
       header: true,
       skipEmptyLines: true,
+      encoding: "UTF-8",
       complete: (results) => {
         const validationErrors: string[] = [];
         const data = results.data as any[];
