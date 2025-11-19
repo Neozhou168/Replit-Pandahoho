@@ -40,7 +40,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search, Filter, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Download, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -51,7 +51,26 @@ export default function VenuesManagement() {
   const [deleteVenue, setDeleteVenue] = useState<Venue | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleCopyId = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopiedId(id);
+      toast({
+        title: "Copied!",
+        description: "Venue ID copied to clipboard",
+      });
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy ID",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: venues = [], isLoading } = useQuery<Venue[]>({
     queryKey: ["/api/venues"],
@@ -773,6 +792,22 @@ export default function VenuesManagement() {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold mb-2">{venue.name}</h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-muted-foreground">ID: {venue.id}</p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleCopyId(venue.id)}
+                      data-testid={`button-copy-id-${venue.id}`}
+                    >
+                      {copiedId === venue.id ? (
+                        <Check className="w-3 h-3 text-green-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </Button>
+                  </div>
                   <p className="text-sm text-muted-foreground">{venue.location}</p>
                 </div>
                 <div className="flex gap-2">
