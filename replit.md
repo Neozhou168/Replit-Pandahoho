@@ -75,8 +75,9 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
   - **ArrayBuffer + TextDecoder Architecture**: Uses FileReader.readAsArrayBuffer() + TextDecoder for precise encoding detection (eliminates unreliable readAsText())
   - **UTF-8 Validation**: Detects replacement characters (�) and Mac Roman corruption patterns (≈, £, ◊, Ω) indicating Excel/Mac Numbers encoding corruption
   - **GB18030 Auto-Fallback**: Automatically attempts GB18030 decoding when UTF-8 corruption detected, validates Chinese characters ([\u4e00-\u9fa5]), and enables import if conversion succeeds
-  - **Separated Message Types**: Info messages (encoding auto-correction) shown separately from blocking validation errors - imports enabled when GB18030 recovery succeeds
-  - **User Guidance**: Clear, non-technical error messages recommending UTF-8-safe editors (Google Sheets, LibreOffice) when encoding cannot be auto-corrected
+  - **Separated Message Types**: Info messages (encoding auto-correction/warnings) shown separately from blocking validation errors - imports enabled when GB18030 recovery succeeds OR fails (user choice)
+  - **Non-Blocking Warnings**: When encoding auto-fix fails, shows warning but allows import to proceed with garbled data - user can see preview and decide whether to proceed or re-export
+  - **User Guidance**: Clear, non-technical warning messages recommending UTF-8-safe editors (Google Sheets, LibreOffice) when encoding issues detected
   - **Template BOM**: CSV templates download with UTF-8 BOM (`\uFEFF`) to signal proper encoding to spreadsheet applications
 - **Dynamic Content Options**: Dropdown options (e.g., Country, Travel Type, Season) are fetched from `content_settings` tables.
 - **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, `seo_settings`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`. Note: `cities` table contains full city entities (not just dropdown options) managed via `/admin/cities`.
