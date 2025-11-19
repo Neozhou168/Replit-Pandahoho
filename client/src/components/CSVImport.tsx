@@ -44,6 +44,7 @@ export function CSVImport<T extends Record<string, any>>({
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<T[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
+  const [infoMessages, setInfoMessages] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
 
   const downloadTemplate = () => {
@@ -59,26 +60,96 @@ export function CSVImport<T extends Record<string, any>>({
     window.URL.revokeObjectURL(url);
   };
 
+  const detectAndDecodeCSV = (arrayBuffer: ArrayBuffer): { text: string; encoding: string; infoMessages: string[]; errorWarnings: string[] } => {
+    let text = '';
+    let encoding = 'UTF-8';
+    const infoMessages: string[] = [];
+    const errorWarnings: string[] = [];
+
+    try {
+      const utf8Decoder = new TextDecoder('utf-8', { fatal: false });
+      text = utf8Decoder.decode(arrayBuffer);
+      
+      const hasReplacementChars = text.includes('�');
+      const hasValidChinese = /[\u4e00-\u9fa5]/.test(text);
+      const hasGarbledChars = /[≈£◊…Ω]/.test(text);
+      
+      if (hasReplacementChars || (hasGarbledChars && !hasValidChinese)) {
+        try {
+          const gb18030Decoder = new TextDecoder('gb18030', { fatal: false });
+          const gb18030Text = gb18030Decoder.decode(arrayBuffer);
+          
+          if (/[\u4e00-\u9fa5]/.test(gb18030Text) && !gb18030Text.includes('�')) {
+            text = gb18030Text;
+            encoding = 'GB18030';
+            infoMessages.push(`Auto-detected ${encoding} encoding and converted successfully.`);
+            infoMessages.push("Tip: Use Google Sheets for best UTF-8 compatibility in the future.");
+            infoMessages.push("");
+          } else {
+            encoding = 'GB18030 (conversion failed)';
+            errorWarnings.push(`Warning: File has encoding issues. Attempted ${encoding}.`);
+            errorWarnings.push("");
+            errorWarnings.push("The file was likely saved with incorrect encoding from Excel or Mac Numbers.");
+            errorWarnings.push("Please use a UTF-8 safe editor like Google Sheets or LibreOffice.");
+            errorWarnings.push("");
+            errorWarnings.push("Attempting to parse anyway...");
+            errorWarnings.push("");
+          }
+        } catch {
+          errorWarnings.push("Critical encoding error during conversion.");
+          errorWarnings.push("");
+        }
+      }
+    } catch (error) {
+      errorWarnings.push("Critical encoding error. File may be corrupted.");
+      errorWarnings.push("");
+    }
+
+    return { text, encoding, infoMessages, errorWarnings };
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
     setFile(selectedFile);
     setErrors([]);
+    setInfoMessages([]);
     setParsedData([]);
 
     const reader = new FileReader();
     
     reader.onload = (event) => {
-      const text = event.target?.result as string;
+      const arrayBuffer = event.target?.result as ArrayBuffer;
+      
+      if (!arrayBuffer) {
+        setErrors(["Failed to read file content."]);
+        return;
+      }
+
+      const { text, encoding, infoMessages, errorWarnings } = detectAndDecodeCSV(arrayBuffer);
+      
+      setInfoMessages(infoMessages);
       
       if (!text || text.trim() === "") {
         setErrors([
-          "CSV file is empty or has encoding issues.",
-          "💡 If your CSV contains Chinese characters, please:",
-          "   1. Open the CSV in a text editor (e.g., Notepad++)",
-          "   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')",
-          "   3. Try uploading the re-saved file"
+          "CSV file is empty or has severe encoding issues.",
+          "",
+          "Note: Your spreadsheet app likely corrupted the file encoding.",
+          "",
+          "Solution - Use UTF-8 safe editors:",
+          "   • Google Sheets (recommended for Chinese characters)",
+          "   • LibreOffice Calc",
+          "   • Notepad++ (Windows) or TextEdit (Mac)",
+          "",
+          "Steps:",
+          "   1. Download the template again",
+          "   2. Open in Google Sheets or LibreOffice",
+          "   3. Paste your data",
+          "   4. Export as CSV (UTF-8)",
+          "   5. Upload here",
+          "",
+          "Important: Excel and Mac Numbers often corrupt UTF-8 encoding"
         ]);
         return;
       }
@@ -87,15 +158,28 @@ export function CSVImport<T extends Record<string, any>>({
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          const validationErrors: string[] = [];
+          const validationErrors: string[] = [...errorWarnings];
           const data = results.data as any[];
 
           if (data.length === 0) {
-            validationErrors.push("CSV file is empty or could not be parsed.");
-            validationErrors.push("💡 If your CSV contains Chinese characters, please:");
-            validationErrors.push("   1. Open the CSV in a text editor (e.g., Notepad++)");
-            validationErrors.push("   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')");
-            validationErrors.push("   3. Try uploading the re-saved file");
+            validationErrors.push("");
+            validationErrors.push("Error: 0 rows found in CSV file.");
+            validationErrors.push("");
+            validationErrors.push("This usually means encoding corruption from Excel or Mac Numbers.");
+            validationErrors.push("");
+            validationErrors.push("Solution - Use UTF-8 safe editors:");
+            validationErrors.push("   • Google Sheets (recommended for Chinese characters)");
+            validationErrors.push("   • LibreOffice Calc");
+            validationErrors.push("   • Notepad++ (Windows) or TextEdit (Mac)");
+            validationErrors.push("");
+            validationErrors.push("Steps to fix:");
+            validationErrors.push("   1. Download the template again from this dialog");
+            validationErrors.push("   2. Open in Google Sheets: File → Import → Upload");
+            validationErrors.push("   3. Paste your data into the template");
+            validationErrors.push("   4. Download: File → Download → Comma Separated Values (.csv)");
+            validationErrors.push("   5. Upload the downloaded file here");
+            validationErrors.push("");
+            validationErrors.push("Important: Excel and Mac Numbers corrupt UTF-8 Chinese characters");
             setErrors(validationErrors);
             return;
           }
@@ -146,7 +230,7 @@ export function CSVImport<T extends Record<string, any>>({
       setErrors(["Failed to read file. Please ensure the file is a valid CSV."]);
     };
     
-    reader.readAsText(selectedFile, 'UTF-8');
+    reader.readAsArrayBuffer(selectedFile);
   };
 
   const handleImport = async () => {
@@ -171,6 +255,7 @@ export function CSVImport<T extends Record<string, any>>({
     setFile(null);
     setParsedData([]);
     setErrors([]);
+    setInfoMessages([]);
   };
 
   return (
@@ -249,6 +334,7 @@ export function CSVImport<T extends Record<string, any>>({
                     setFile(null);
                     setParsedData([]);
                     setErrors([]);
+                    setInfoMessages([]);
                   }}
                   data-testid="button-clear-file"
                 >
@@ -257,6 +343,24 @@ export function CSVImport<T extends Record<string, any>>({
                 </Button>
               )}
             </div>
+
+            {infoMessages.length > 0 && (
+              <Card className="p-4 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-blue-700 dark:text-blue-300 mb-2">
+                      Encoding Auto-Correction
+                    </h4>
+                    <ul className="space-y-1 text-sm text-blue-600 dark:text-blue-400">
+                      {infoMessages.map((msg, i) => (
+                        <li key={i}>{msg}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {errors.length > 0 && (
               <Card className="p-4 bg-destructive/10 border-destructive/20">
@@ -268,7 +372,7 @@ export function CSVImport<T extends Record<string, any>>({
                     </h4>
                     <ul className="space-y-1 text-sm">
                       {errors.slice(0, 10).map((error, i) => (
-                        <li key={i} className="text-destructive/90">• {error}</li>
+                        <li key={i} className="text-destructive/90">{error}</li>
                       ))}
                       {errors.length > 10 && (
                         <li className="text-destructive/70 italic">
