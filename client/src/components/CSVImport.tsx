@@ -67,22 +67,38 @@ export function CSVImport<T extends Record<string, any>>({
     setErrors([]);
     setParsedData([]);
 
-    Papa.parse(selectedFile, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const validationErrors: string[] = [];
-        const data = results.data as any[];
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      
+      if (!text || text.trim() === "") {
+        setErrors([
+          "CSV file is empty or has encoding issues.",
+          "💡 If your CSV contains Chinese characters, please:",
+          "   1. Open the CSV in a text editor (e.g., Notepad++)",
+          "   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')",
+          "   3. Try uploading the re-saved file"
+        ]);
+        return;
+      }
 
-        if (data.length === 0) {
-          validationErrors.push("CSV file is empty or has encoding issues.");
-          validationErrors.push("💡 If your CSV contains Chinese characters, please:");
-          validationErrors.push("   1. Open the CSV in a text editor (e.g., Notepad++)");
-          validationErrors.push("   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')");
-          validationErrors.push("   3. Try uploading the re-saved file");
-          setErrors(validationErrors);
-          return;
-        }
+      Papa.parse(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const validationErrors: string[] = [];
+          const data = results.data as any[];
+
+          if (data.length === 0) {
+            validationErrors.push("CSV file is empty or could not be parsed.");
+            validationErrors.push("💡 If your CSV contains Chinese characters, please:");
+            validationErrors.push("   1. Open the CSV in a text editor (e.g., Notepad++)");
+            validationErrors.push("   2. Save it with UTF-8 encoding (usually 'UTF-8 BOM' or 'UTF-8 without BOM')");
+            validationErrors.push("   3. Try uploading the re-saved file");
+            setErrors(validationErrors);
+            return;
+          }
 
         const headers = Object.keys(data[0]);
         const missingColumns = requiredColumns.filter(col => !headers.includes(col));
@@ -120,10 +136,17 @@ export function CSVImport<T extends Record<string, any>>({
         setErrors(validationErrors);
         setParsedData(transformedData);
       },
-      error: (error) => {
+      error: (error: any) => {
         setErrors([`Failed to parse CSV: ${error.message}`]);
       },
     });
+    };
+    
+    reader.onerror = () => {
+      setErrors(["Failed to read file. Please ensure the file is a valid CSV."]);
+    };
+    
+    reader.readAsText(selectedFile, 'UTF-8');
   };
 
   const handleImport = async () => {
