@@ -87,17 +87,17 @@ export function CSVImport<T extends Record<string, any>>({
             infoMessages.push("");
           } else {
             encoding = 'GB18030 (conversion failed)';
-            errorWarnings.push(`Warning: File has encoding issues. Attempted ${encoding}.`);
-            errorWarnings.push("");
-            errorWarnings.push("The file was likely saved with incorrect encoding from Excel or Mac Numbers.");
-            errorWarnings.push("Please use a UTF-8 safe editor like Google Sheets or LibreOffice.");
-            errorWarnings.push("");
-            errorWarnings.push("Attempting to parse anyway...");
-            errorWarnings.push("");
+            infoMessages.push(`Warning: Encoding issues detected. Import will proceed with current encoding.`);
+            infoMessages.push("");
+            infoMessages.push("The file was likely saved with incorrect encoding from Excel or Mac Numbers.");
+            infoMessages.push("Some text may appear garbled in the preview below.");
+            infoMessages.push("");
+            infoMessages.push("For best results: Use Google Sheets or LibreOffice to re-export as UTF-8.");
+            infoMessages.push("");
           }
         } catch {
-          errorWarnings.push("Critical encoding error during conversion.");
-          errorWarnings.push("");
+          infoMessages.push("Warning: Critical encoding error during conversion. Proceeding with original text.");
+          infoMessages.push("");
         }
       }
     } catch (error) {
