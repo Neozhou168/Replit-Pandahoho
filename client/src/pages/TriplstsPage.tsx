@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import type { TriplistWithHashtags, Hashtag } from "@shared/schema";
+import type { TriplistWithHashtags, Hashtag, City } from "@shared/schema";
 
 export default function TriplistsPage() {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
@@ -19,16 +19,27 @@ export default function TriplistsPage() {
     queryKey: ["/api/hashtags"],
   });
 
+  const { data: allCities = [] } = useQuery<City[]>({
+    queryKey: ["/api/cities"],
+  });
+
   const activeTriplists = triplists.filter((t) => t.isActive);
   
   const filteredTriplists = activeTriplists.filter((triplist) => {
-    const matchesCity = !cityFilter || triplist.location === cityFilter;
+    const matchesCity = !cityFilter || triplist.cityId === cityFilter;
     const matchesHashtag = !hashtagFilter || (triplist.hashtags && triplist.hashtags.some((h) => h.name === hashtagFilter));
     const matchesSeason = !seasonFilter || triplist.season === seasonFilter;
     return matchesCity && matchesHashtag && matchesSeason;
   });
 
-  const cities = Array.from(new Set(activeTriplists.map((t) => t.location).filter(Boolean)));
+  // Get unique cityIds from active triplists
+  const cityIdsWithTriplists = Array.from(new Set(activeTriplists.map((t) => t.cityId).filter(Boolean)));
+  
+  // Filter cities to only those that have triplists and are active
+  const cities = allCities
+    .filter((city) => city.isActive && cityIdsWithTriplists.includes(city.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+    
   const promotedHashtags = hashtags.filter((h) => h.isPromoted && h.isActive);
   
   // Define custom season order
@@ -48,12 +59,6 @@ export default function TriplistsPage() {
     return (a || "").localeCompare(b || "");
   });
 
-  // Helper function to display city name without country suffix
-  const getCityDisplayName = (location: string | null) => {
-    if (!location) return "";
-    // Remove ", China" or similar country suffixes
-    return location.split(",")[0].trim();
-  };
 
   return (
     <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
@@ -83,13 +88,13 @@ export default function TriplistsPage() {
               </Button>
               {cities.map((city) => (
                 <Button
-                  key={city}
-                  variant={cityFilter === city ? "default" : "outline"}
+                  key={city.id}
+                  variant={cityFilter === city.id ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setCityFilter(city!)}
-                  data-testid={`filter-city-${city}`}
+                  onClick={() => setCityFilter(city.id)}
+                  data-testid={`filter-city-${city.slug}`}
                 >
-                  {getCityDisplayName(city)}
+                  {city.name}
                 </Button>
               ))}
               <Link href="/cities" data-testid="link-view-all-cities">
