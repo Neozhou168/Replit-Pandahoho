@@ -71,9 +71,17 @@ export default function HashtagsManagement() {
 
   const deleteHashtagMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/hashtags/${id}`);
+      console.log(`[deleteHashtag] Attempting to delete hashtag ${id}`);
+      try {
+        await apiRequest("DELETE", `/api/hashtags/${id}`);
+        console.log(`[deleteHashtag] Successfully deleted hashtag ${id}`);
+      } catch (error) {
+        console.error(`[deleteHashtag] Error deleting hashtag ${id}:`, error);
+        throw error;
+      }
     },
     onMutate: async (id) => {
+      console.log(`[deleteHashtag onMutate] Optimistically removing ${id}`);
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["/api/hashtags"] });
 
@@ -90,18 +98,21 @@ export default function HashtagsManagement() {
 
       return { previousHashtags };
     },
-    onSuccess: () => {
+    onSuccess: (data, id) => {
+      console.log(`[deleteHashtag onSuccess] Deleted ${id}`);
       toast({ title: "Success", description: "Hashtag deleted!" });
       setDeleteHashtag(null);
     },
     onError: (error, id, context) => {
+      console.error(`[deleteHashtag onError]`, error);
       // Rollback on error
       if (context?.previousHashtags) {
         queryClient.setQueryData(["/api/hashtags"], context.previousHashtags);
       }
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete hashtag";
       toast({
         title: "Error",
-        description: "Failed to delete hashtag",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -279,7 +290,7 @@ export default function HashtagsManagement() {
                       </div>
                       <FormControl>
                         <Switch
-                          checked={field.value}
+                          checked={field.value ?? false}
                           onCheckedChange={field.onChange}
                           data-testid="switch-hashtag-promoted"
                         />
