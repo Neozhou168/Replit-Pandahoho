@@ -538,14 +538,29 @@ export default function TriplistsManagement() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[560px] p-4" align="start">
-                              <div className="max-h-96 overflow-auto">
+                            <PopoverContent 
+                              className="w-[680px] p-3" 
+                              align="start"
+                              side="bottom"
+                              sideOffset={5}
+                              collisionPadding={20}
+                            >
+                              <div className="max-h-[500px] overflow-y-auto pr-2">
                                 {allHashtags.length > 0 ? (
-                                  <div className="grid grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-3 gap-2">
                                     {allHashtags.map((hashtag) => (
                                       <div 
                                         key={hashtag.id} 
-                                        className="flex items-center space-x-3 hover-elevate p-2.5 rounded-md border"
+                                        className="flex items-center space-x-2 hover-elevate p-2 rounded-md border cursor-pointer"
+                                        onClick={() => {
+                                          const current = field.value || [];
+                                          const isChecked = current.includes(hashtag.id);
+                                          if (isChecked) {
+                                            field.onChange(current.filter((id) => id !== hashtag.id));
+                                          } else {
+                                            field.onChange([...current, hashtag.id]);
+                                          }
+                                        }}
                                       >
                                         <Checkbox
                                           checked={field.value?.includes(hashtag.id)}
@@ -557,24 +572,11 @@ export default function TriplistsManagement() {
                                               field.onChange(current.filter((id) => id !== hashtag.id));
                                             }
                                           }}
+                                          onClick={(e) => e.stopPropagation()}
                                           data-testid={`checkbox-hashtag-${hashtag.id}`}
                                         />
-                                        <label 
-                                          className="text-sm cursor-pointer flex-1 font-medium"
-                                          onClick={() => {
-                                            const current = field.value || [];
-                                            const isChecked = current.includes(hashtag.id);
-                                            if (isChecked) {
-                                              field.onChange(current.filter((id) => id !== hashtag.id));
-                                            } else {
-                                              field.onChange([...current, hashtag.id]);
-                                            }
-                                          }}
-                                        >
+                                        <label className="text-sm cursor-pointer flex-1 font-medium truncate">
                                           #{hashtag.name}
-                                          {hashtag.isPromoted && (
-                                            <span className="ml-1.5 text-xs text-muted-foreground">(promoted)</span>
-                                          )}
                                         </label>
                                       </div>
                                     ))}
@@ -584,6 +586,9 @@ export default function TriplistsManagement() {
                                     No hashtags available
                                   </div>
                                 )}
+                              </div>
+                              <div className="text-xs text-muted-foreground mt-3 pt-2 border-t">
+                                {allHashtags.length} hashtags available • Click any to toggle
                               </div>
                             </PopoverContent>
                           </Popover>
