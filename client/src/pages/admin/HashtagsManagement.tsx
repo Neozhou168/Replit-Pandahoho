@@ -72,10 +72,41 @@ export default function HashtagsManagement() {
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/hashtags/${id}`);
     },
+    onMutate: async (id) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["/api/hashtags"] });
+
+      // Snapshot the previous value
+      const previousHashtags = queryClient.getQueryData<Hashtag[]>(["/api/hashtags"]);
+
+      // Optimistically remove from cache
+      if (previousHashtags) {
+        queryClient.setQueryData<Hashtag[]>(
+          ["/api/hashtags"],
+          previousHashtags.filter((h) => h.id !== id)
+        );
+      }
+
+      return { previousHashtags };
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
       toast({ title: "Success", description: "Hashtag deleted!" });
       setDeleteHashtag(null);
+    },
+    onError: (error, id, context) => {
+      // Rollback on error
+      if (context?.previousHashtags) {
+        queryClient.setQueryData(["/api/hashtags"], context.previousHashtags);
+      }
+      toast({
+        title: "Error",
+        description: "Failed to delete hashtag",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Refetch to ensure we're in sync with server
+      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
     },
   });
 
@@ -88,17 +119,56 @@ export default function HashtagsManagement() {
     },
   });
 
-  const togglePromoted = async (hashtag: Hashtag) => {
-    try {
-      await updateHashtag.mutateAsync({
-        id: hashtag.id,
-        data: { isPromoted: !hashtag.isPromoted },
-      });
-      // Force an immediate refetch to ensure UI updates
-      await queryClient.refetchQueries({ queryKey: ["/api/hashtags"] });
-    } catch (error) {
+  const togglePromotedMutation = useMutation({
+    mutationFn: async ({ id, isPromoted }: { id: string; isPromoted: boolean }) => {
+      console.log(`[togglePromoted] Calling API for ${id}, isPromoted: ${isPromoted}`);
+      const response = await apiRequest("PUT", `/api/hashtags/${id}`, { isPromoted });
+      return response.json();
+    },
+    onMutate: async (variables) => {
+      console.log(`[togglePromoted onMutate] id: ${variables.id}, isPromoted: ${variables.isPromoted}`);
+      
+      // Cancel outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["/api/hashtags"] });
+
+      // Snapshot the previous value
+      const previousHashtags = queryClient.getQueryData<Hashtag[]>(["/api/hashtags"]);
+      console.log(`[togglePromoted onMutate] Previous hashtags count: ${previousHashtags?.length}`);
+
+      // Optimistically update the cache
+      if (previousHashtags) {
+        const updated = previousHashtags.map((h) =>
+          h.id === variables.id ? { ...h, isPromoted: variables.isPromoted } : h
+        );
+        console.log(`[togglePromoted onMutate] Setting query data, updated hashtag:`, updated.find(h => h.id === variables.id));
+        queryClient.setQueryData<Hashtag[]>(["/api/hashtags"], updated);
+      }
+
+      return { previousHashtags };
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousHashtags) {
+        queryClient.setQueryData(["/api/hashtags"], context.previousHashtags);
+      }
       console.error("Failed to toggle promoted status:", error);
-    }
+      toast({
+        title: "Error",
+        description: "Failed to toggle promoted status",
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      // Refetch to ensure we're in sync with server
+      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
+    },
+  });
+
+  const togglePromoted = (hashtag: Hashtag) => {
+    togglePromotedMutation.mutate({
+      id: hashtag.id,
+      isPromoted: !hashtag.isPromoted,
+    });
   };
 
   const moveItem = (index: number, direction: "up" | "down") => {
