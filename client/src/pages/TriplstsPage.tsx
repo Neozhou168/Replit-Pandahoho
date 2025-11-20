@@ -21,7 +21,7 @@ export default function TriplistsPage() {
   
   const filteredTriplists = activeTriplists.filter((triplist) => {
     const matchesCity = !cityFilter || triplist.location === cityFilter;
-    const matchesHashtag = !hashtagFilter || triplist.hashtags.some((h) => h.name === hashtagFilter);
+    const matchesHashtag = !hashtagFilter || (triplist.hashtags && triplist.hashtags.some((h) => h.name === hashtagFilter));
     const matchesSeason = !seasonFilter || triplist.season === seasonFilter;
     return matchesCity && matchesHashtag && matchesSeason;
   });

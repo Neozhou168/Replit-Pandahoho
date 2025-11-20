@@ -465,7 +465,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!triplist) {
         return res.status(404).json({ message: "Triplist not found" });
       }
-      res.json(triplist);
+      
+      // Fetch hashtags for this triplist
+      const triplistHashtags = await storage.getTriplistHashtags(triplist.id);
+      const triplistWithHashtags = {
+        ...triplist,
+        hashtags: triplistHashtags.map((th) => th.hashtag),
+      };
+      
+      res.json(triplistWithHashtags);
     } catch (error) {
       console.error("Error fetching triplist:", error);
       res.status(500).json({ message: "Failed to fetch triplist" });

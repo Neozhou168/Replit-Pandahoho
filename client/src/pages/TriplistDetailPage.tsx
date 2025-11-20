@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, MapPin, Users, ExternalLink, Eye, Heart, Check } from "lucide-react";
 import GroupUpModal from "@/components/GroupUpModal";
-import type { Triplist, Venue } from "@shared/schema";
+import type { TriplistWithHashtags, Venue } from "@shared/schema";
 import chatAssistantImage from "@assets/magic hoho assistant_1762324164581.jpg";
 import { trackPageView } from "@/lib/analytics";
 
@@ -14,7 +14,7 @@ export default function TriplistDetailPage() {
   const [, params] = useRoute("/triplists/:slug");
   const [showGroupUpModal, setShowGroupUpModal] = useState(false);
 
-  const { data: triplist, isLoading } = useQuery<Triplist>({
+  const { data: triplist, isLoading } = useQuery<TriplistWithHashtags>({
     queryKey: [`/api/triplists/${params?.slug}`],
     enabled: !!params?.slug,
   });
@@ -84,14 +84,23 @@ export default function TriplistDetailPage() {
                 <h2 className="text-3xl font-bold mb-3" data-testid="triplist-title">
                   {triplist.title}
                 </h2>
+                
+                {triplist.hashtags && triplist.hashtags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3" data-testid="triplist-hashtags">
+                    {triplist.hashtags.map((hashtag) => (
+                      <span
+                        key={hashtag.id}
+                        className="inline-block px-2.5 py-1 text-sm font-medium bg-secondary text-secondary-foreground rounded-md"
+                        data-testid={`hashtag-${hashtag.id}`}
+                      >
+                        #{hashtag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
                 <div className="flex flex-wrap items-center gap-2 text-muted-foreground mb-4">
                   <span data-testid="triplist-location">{triplist.location}</span>
-                  {triplist.category && (
-                    <>
-                      <span>•</span>
-                      <span data-testid="triplist-category">{triplist.category}</span>
-                    </>
-                  )}
                   {triplist.season && (
                     <>
                       <span>•</span>
