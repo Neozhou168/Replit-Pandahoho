@@ -147,6 +147,17 @@ export default function HashtagsManagement() {
 
       return { previousHashtags };
     },
+    onSuccess: (updatedHashtag) => {
+      // Update cache with server response
+      const previousHashtags = queryClient.getQueryData<Hashtag[]>(["/api/hashtags"]);
+      if (previousHashtags) {
+        const updated = previousHashtags.map((h) =>
+          h.id === updatedHashtag.id ? updatedHashtag : h
+        );
+        queryClient.setQueryData<Hashtag[]>(["/api/hashtags"], updated);
+      }
+      console.log(`[togglePromoted onSuccess] Updated cache with server response:`, updatedHashtag);
+    },
     onError: (error, variables, context) => {
       // Rollback on error
       if (context?.previousHashtags) {
@@ -158,10 +169,6 @@ export default function HashtagsManagement() {
         description: "Failed to toggle promoted status",
         variant: "destructive",
       });
-    },
-    onSettled: () => {
-      // Refetch to ensure we're in sync with server
-      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
     },
   });
 
