@@ -245,10 +245,10 @@ export const triplistVenues = pgTable("triplist_venues", {
 export const triplistHashtags = pgTable("triplist_hashtags", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   triplistId: varchar("triplist_id")
-    .references(() => triplists.id)
+    .references(() => triplists.id, { onDelete: "cascade" })
     .notNull(),
   hashtagId: varchar("hashtag_id")
-    .references(() => hashtags.id)
+    .references(() => hashtags.id, { onDelete: "cascade" })
     .notNull(),
   order: integer("order").default(0), // Display order for this triplist's hashtags
   createdAt: timestamp("created_at").defaultNow(),

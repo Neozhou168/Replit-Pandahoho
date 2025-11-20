@@ -956,10 +956,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteHashtag(id: string): Promise<void> {
-    // First delete all triplist-hashtag associations
-    await db.delete(triplistHashtags).where(eq(triplistHashtags.hashtagId, id));
-    // Then delete the hashtag
-    await db.delete(hashtags).where(eq(hashtags.id, id));
+    try {
+      // First delete all triplist-hashtag associations
+      const deletedAssociations = await db
+        .delete(triplistHashtags)
+        .where(eq(triplistHashtags.hashtagId, id))
+        .returning();
+      console.log(`[deleteHashtag] Deleted ${deletedAssociations.length} associations for hashtag ${id}`);
+      
+      // Then delete the hashtag
+      const deletedHashtag = await db
+        .delete(hashtags)
+        .where(eq(hashtags.id, id))
+        .returning();
+      console.log(`[deleteHashtag] Deleted hashtag:`, deletedHashtag.length > 0 ? deletedHashtag[0] : 'Not found');
+      
+      if (deletedHashtag.length === 0) {
+        throw new Error(`Hashtag ${id} not found`);
+      }
+    } catch (error) {
+      console.error(`[deleteHashtag] Error deleting hashtag ${id}:`, error);
+      throw error;
+    }
   }
 
   async updateHashtagOrder(id: string, newOrder: number): Promise<void> {
@@ -1110,7 +1128,7 @@ export class DatabaseStorage implements IStorage {
     // Check if settings already exist for this page type and identifier
     const existing = await this.getSeoSettings(
       normalizedData.pageType, 
-      normalizedData.pageIdentifier || undefined
+      normalizedData.pageIdentifier ?? undefined
     );
     
     if (existing) {
