@@ -125,6 +125,23 @@ export const insertContentSeasonSchema = createInsertSchema(content_seasons).omi
 export type InsertContentSeason = z.infer<typeof insertContentSeasonSchema>;
 export type ContentSeason = typeof content_seasons.$inferSelect;
 
+// Hashtags - User-created and admin-promoted tags for triplists
+export const hashtags = pgTable("hashtags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  isPromoted: boolean("is_promoted").default(false), // If true, shows in filter bar
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertHashtagSchema = createInsertSchema(hashtags).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertHashtag = z.infer<typeof insertHashtagSchema>;
+export type Hashtag = typeof hashtags.$inferSelect;
+
 // Cities - Main destinations (also used in Content Settings)
 export const cities = pgTable("cities", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -200,6 +217,7 @@ export const insertTriplistSchema = createInsertSchema(triplists).omit({
   createdAt: true,
 }).extend({
   id: z.string().optional(),
+  hashtagIds: z.array(z.string()).optional(),
 });
 export type InsertTriplist = z.infer<typeof insertTriplistSchema>;
 export type Triplist = typeof triplists.$inferSelect;
@@ -216,6 +234,26 @@ export const triplistVenues = pgTable("triplist_venues", {
   order: integer("order").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+// Junction table for triplists and hashtags (many-to-many)
+export const triplistHashtags = pgTable("triplist_hashtags", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  triplistId: varchar("triplist_id")
+    .references(() => triplists.id)
+    .notNull(),
+  hashtagId: varchar("hashtag_id")
+    .references(() => hashtags.id)
+    .notNull(),
+  order: integer("order").default(0), // Display order for this triplist's hashtags
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTriplistHashtagSchema = createInsertSchema(triplistHashtags).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertTriplistHashtag = z.infer<typeof insertTriplistHashtagSchema>;
+export type TriplistHashtag = typeof triplistHashtags.$inferSelect;
 
 // Survival Guides
 export const survivalGuides = pgTable("survival_guides", {
@@ -316,7 +354,12 @@ export const triplistsRelations = relations(triplists, ({ one, many }) => ({
     references: [cities.id],
   }),
   triplistVenues: many(triplistVenues),
+  triplistHashtags: many(triplistHashtags),
   groupUps: many(groupUps),
+}));
+
+export const hashtagsRelations = relations(hashtags, ({ many }) => ({
+  triplistHashtags: many(triplistHashtags),
 }));
 
 export const triplistVenuesRelations = relations(triplistVenues, ({ one }) => ({
@@ -327,6 +370,17 @@ export const triplistVenuesRelations = relations(triplistVenues, ({ one }) => ({
   venue: one(venues, {
     fields: [triplistVenues.venueId],
     references: [venues.id],
+  }),
+}));
+
+export const triplistHashtagsRelations = relations(triplistHashtags, ({ one }) => ({
+  triplist: one(triplists, {
+    fields: [triplistHashtags.triplistId],
+    references: [triplists.id],
+  }),
+  hashtag: one(hashtags, {
+    fields: [triplistHashtags.hashtagId],
+    references: [hashtags.id],
   }),
 }));
 

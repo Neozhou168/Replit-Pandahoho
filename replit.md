@@ -13,9 +13,16 @@ PandaHoHo is a visual-first travel discovery platform for Chinese cities, replic
 
 ### Content Management
 - Admin dashboard accessible only to users with `isAdmin: true`
-- CMS for cities, triplists, venues, survival guides, carousel, content settings, **user management**, **SEO management**
+- CMS for cities, triplists, venues, survival guides, carousel, content settings, **hashtags**, **user management**, **SEO management**
 - CSV bulk upload functionality for efficient data management
-- **Content Settings** manages simple dropdown vocabularies (Countries, Travel Types, Seasons) - excludes cities
+- **Content Settings** manages simple dropdown vocabularies (Countries, Seasons) - excludes cities and hashtags
+- **Hashtag System** (Nov 2025): Flexible tagging system replacing single travel type categories
+  - **Two-Level System**: Per-triplist hashtags + promoted hashtags for global filters
+  - **Hashtag Management** (`/admin/hashtags`): Create/edit hashtags, toggle `isPromoted` to show in filter bar
+  - **Promoted Hashtags**: Only hashtags marked as promoted appear in the Category filter row (prevents filter clutter)
+  - **Per-Triplist Hashtags**: Each triplist can have multiple hashtags, displayed below title as small pills
+  - **Migration**: Existing `content_travel_types` automatically migrated to promoted hashtags; all triplists linked to their category hashtags
+  - **Database**: `hashtags` table with `isPromoted` field, `triplist_hashtags` junction table for many-to-many relationships
 - **Cities Management** (`/admin/cities`): Full CRUD for cities with slug, tagline, imageUrl, and **optional country assignment**
   - Country dropdown populated from Content Settings
   - Country name displayed on each city card when assigned
@@ -80,7 +87,7 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
   - **User Guidance**: Clear, non-technical warning messages recommending UTF-8-safe editors (Google Sheets, LibreOffice) when encoding issues detected
   - **Template BOM**: CSV templates download with UTF-8 BOM (`\uFEFF`) to signal proper encoding to spreadsheet applications
 - **Dynamic Content Options**: Dropdown options (e.g., Country, Travel Type, Season) are fetched from `content_settings` tables.
-- **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, `seo_settings`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`. Note: `cities` table contains full city entities (not just dropdown options) managed via `/admin/cities`.
+- **Database Schema**: Tables for `sessions`, `users`, `cities`, `venues`, `triplists`, `triplist_venues` (many-to-many), `hashtags`, `triplist_hashtags` (many-to-many), `survival_guides`, `group_ups`, `favorites`, `carousel_items`, `seo_settings`, and content settings (`content_countries`, `content_travel_types`, `content_seasons`) with `isActive` flags and `displayOrder`. Note: `cities` table contains full city entities (not just dropdown options) managed via `/admin/cities`.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
 - **Performance Optimizations**:

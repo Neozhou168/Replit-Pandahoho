@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTriplistSchema } from "@shared/schema";
-import type { InsertTriplist, Triplist, City, ContentCountry, ContentTravelType, ContentSeason } from "@shared/schema";
+import type { InsertTriplist, Triplist, City, ContentCountry, ContentTravelType, ContentSeason, Hashtag } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -40,7 +40,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Search, Filter } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Pencil, Trash2, Search, Filter, ChevronsUpDown, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { CSVImport } from "@/components/CSVImport";
@@ -73,6 +75,10 @@ export default function TriplistsManagement() {
     queryKey: ["/api/content/seasons"],
   });
 
+  const { data: hashtags = [] } = useQuery<Hashtag[]>({
+    queryKey: ["/api/hashtags"],
+  });
+
   const form = useForm<InsertTriplist>({
     resolver: zodResolver(insertTriplistSchema),
     defaultValues: {
@@ -89,6 +95,7 @@ export default function TriplistsManagement() {
       googleMapsEmbedUrl: "",
       googleMapsDirectUrl: "",
       relatedVenueIds: "",
+      hashtagIds: [],
       isActive: true,
     },
   });
@@ -187,8 +194,21 @@ export default function TriplistsManagement() {
       .replace(/[^\w-]+/g, "");
   };
 
-  const handleEdit = (triplist: Triplist) => {
+  const handleEdit = async (triplist: Triplist) => {
     setEditTriplist(triplist);
+    
+    // Fetch hashtags for this triplist
+    let triplistHashtagIds: string[] = [];
+    try {
+      const response = await fetch(`/api/triplists/${triplist.id}/hashtags`);
+      if (response.ok) {
+        const hashtagsData = await response.json();
+        triplistHashtagIds = hashtagsData.map((h: Hashtag) => h.id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch triplist hashtags:", error);
+    }
+    
     form.reset({
       title: triplist.title,
       slug: triplist.slug,
@@ -203,6 +223,7 @@ export default function TriplistsManagement() {
       googleMapsEmbedUrl: triplist.googleMapsEmbedUrl || "",
       googleMapsDirectUrl: triplist.googleMapsDirectUrl || "",
       relatedVenueIds: triplist.relatedVenueIds || "",
+      hashtagIds: triplistHashtagIds,
       isActive: triplist.isActive,
     });
   };
@@ -446,29 +467,79 @@ export default function TriplistsManagement() {
 
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="hashtagIds"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Travel Type</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value ?? undefined}
-                        >
-                          <FormControl>
-                            <SelectTrigger data-testid="select-travel-type">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {travelTypes
-                              .filter((type) => type.isActive)
-                              .map((type) => (
-                                <SelectItem key={type.id} value={type.name}>
-                                  {type.name}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <FormLabel>Hashtags</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                className="w-full justify-between"
+                                data-testid="button-select-hashtags"
+                              >
+                                {field.value && field.value.length > 0
+                                  ? `${field.value.length} selected`
+                                  : "Select hashtags"}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-full p-0">
+                            <div className="max-h-64 overflow-auto p-4 space-y-2">
+                              {hashtags
+                                .filter((h) => h.isActive)
+                                .map((hashtag) => (
+                                  <div key={hashtag.id} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={field.value?.includes(hashtag.id)}
+                                      onCheckedChange={(checked) => {
+                                        const current = field.value || [];
+                                        if (checked) {
+                                          field.onChange([...current, hashtag.id]);
+                                        } else {
+                                          field.onChange(current.filter((id) => id !== hashtag.id));
+                                        }
+                                      }}
+                                      data-testid={`checkbox-hashtag-${hashtag.id}`}
+                                    />
+                                    <label className="text-sm cursor-pointer flex-1">
+                                      {hashtag.name}
+                                      {hashtag.isPromoted && (
+                                        <span className="ml-2 text-xs text-muted-foreground">(Promoted)</span>
+                                      )}
+                                    </label>
+                                  </div>
+                                ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        {field.value && field.value.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {field.value.map((hashtagId) => {
+                              const hashtag = hashtags.find((h) => h.id === hashtagId);
+                              return hashtag ? (
+                                <span
+                                  key={hashtagId}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
+                                >
+                                  #{hashtag.name}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(field.value?.filter((id) => id !== hashtagId));
+                                    }}
+                                    className="hover-elevate rounded-sm"
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </button>
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}

@@ -13,6 +13,7 @@ import {
   insertContentCountrySchema,
   insertContentTravelTypeSchema,
   insertContentSeasonSchema,
+  insertHashtagSchema,
   updateUserSchema,
   insertPageViewSchema,
   insertSeoSettingsSchema,
@@ -36,6 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       "/api/content/countries",
       "/api/content/travel-types",
       "/api/content/seasons",
+      "/api/hashtags",
       "/api/branding",
       "/api/seo/",
     ];
@@ -936,6 +938,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating season order:", error);
       res.status(500).json({ message: "Failed to update season order" });
+    }
+  });
+
+  // ========== Hashtag Routes ==========
+  app.get("/api/hashtags", async (req, res) => {
+    try {
+      const promotedOnly = req.query.promoted === "true";
+      const hashtags = await storage.getHashtags(promotedOnly);
+      res.json(hashtags);
+    } catch (error) {
+      console.error("Error fetching hashtags:", error);
+      res.status(500).json({ message: "Failed to fetch hashtags" });
+    }
+  });
+
+  app.post("/api/hashtags", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertHashtagSchema.safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const hashtag = await storage.createHashtag(validation.data);
+      res.status(201).json(hashtag);
+    } catch (error: any) {
+      console.error("Error creating hashtag:", error);
+      if (error.code === '23505') {
+        return res.status(409).json({ message: `Hashtag "${req.body.name}" already exists` });
+      }
+      res.status(500).json({ message: "Failed to create hashtag" });
+    }
+  });
+
+  app.put("/api/hashtags/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const validation = insertHashtagSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        const error = fromError(validation.error);
+        return res.status(400).json({ message: error.toString() });
+      }
+
+      const hashtag = await storage.updateHashtag(req.params.id, validation.data);
+      if (!hashtag) {
+        return res.status(404).json({ message: "Hashtag not found" });
+      }
+      res.json(hashtag);
+    } catch (error) {
+      console.error("Error updating hashtag:", error);
+      res.status(500).json({ message: "Failed to update hashtag" });
+    }
+  });
+
+  app.delete("/api/hashtags/:id", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      await storage.deleteHashtag(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting hashtag:", error);
+      res.status(500).json({ message: "Failed to delete hashtag" });
+    }
+  });
+
+  app.put("/api/hashtags/:id/order", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { displayOrder } = req.body;
+      if (typeof displayOrder !== "number") {
+        return res.status(400).json({ message: "displayOrder must be a number" });
+      }
+
+      await storage.updateHashtagOrder(req.params.id, displayOrder);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error updating hashtag order:", error);
+      res.status(500).json({ message: "Failed to update hashtag order" });
+    }
+  });
+
+  // Triplist hashtag management
+  app.get("/api/triplists/:id/hashtags", async (req, res) => {
+    try {
+      const triplistHashtags = await storage.getTriplistHashtags(req.params.id);
+      res.json(triplistHashtags);
+    } catch (error) {
+      console.error("Error fetching triplist hashtags:", error);
+      res.status(500).json({ message: "Failed to fetch triplist hashtags" });
+    }
+  });
+
+  app.put("/api/triplists/:id/hashtags", isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { hashtagIds } = req.body;
+      if (!Array.isArray(hashtagIds)) {
+        return res.status(400).json({ message: "hashtagIds must be an array" });
+      }
+
+      await storage.setTriplistHashtags(req.params.id, hashtagIds);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error updating triplist hashtags:", error);
+      res.status(500).json({ message: "Failed to update triplist hashtags" });
     }
   });
 

@@ -14,6 +14,8 @@ import {
   content_countries,
   content_travel_types,
   content_seasons,
+  hashtags,
+  triplistHashtags,
   pageViews,
   seoSettings,
   type User,
@@ -37,6 +39,10 @@ import {
   type InsertContentTravelType,
   type ContentSeason,
   type InsertContentSeason,
+  type Hashtag,
+  type InsertHashtag,
+  type TriplistHashtag,
+  type InsertTriplistHashtag,
   type PageView,
   type InsertPageView,
   type SeoSettings,
@@ -118,6 +124,16 @@ export interface IStorage {
   updateContentSeason(id: string, season: Partial<InsertContentSeason>): Promise<ContentSeason | undefined>;
   deleteContentSeason(id: string): Promise<void>;
   updateContentSeasonOrder(id: string, newOrder: number): Promise<void>;
+
+  // Hashtag operations
+  getHashtags(promotedOnly?: boolean): Promise<Hashtag[]>;
+  getHashtag(id: string): Promise<Hashtag | undefined>;
+  createHashtag(hashtag: InsertHashtag): Promise<Hashtag>;
+  updateHashtag(id: string, hashtag: Partial<InsertHashtag>): Promise<Hashtag | undefined>;
+  deleteHashtag(id: string): Promise<void>;
+  updateHashtagOrder(id: string, newOrder: number): Promise<void>;
+  getTriplistHashtags(triplistId: string): Promise<(TriplistHashtag & { hashtag: Hashtag })[]>;
+  setTriplistHashtags(triplistId: string, hashtagIds: string[]): Promise<void>;
 
   // Branding operations
   getBranding(): Promise<Branding>;
@@ -399,7 +415,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTriplist(triplistData: InsertTriplist): Promise<Triplist> {
-    const [triplist] = await db.insert(triplists).values(triplistData).returning();
+    // Extract hashtagIds before inserting (it's not a real column)
+    const { hashtagIds, ...dataToInsert } = triplistData;
+    
+    const [triplist] = await db.insert(triplists).values(dataToInsert).returning();
+    
+    // If hashtagIds is provided, populate the junction table
+    if (hashtagIds && Array.isArray(hashtagIds) && hashtagIds.length > 0) {
+      await this.setTriplistHashtags(triplist.id, hashtagIds);
+    }
     
     // If relatedVenueIds is provided, populate the junction table
     if (triplistData.relatedVenueIds && triplistData.relatedVenueIds.trim()) {
@@ -422,11 +446,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTriplist(id: string, triplistData: Partial<InsertTriplist>): Promise<Triplist | undefined> {
+    // Extract hashtagIds before updating (it's not a real column)
+    const { hashtagIds, ...dataToUpdate } = triplistData;
+    
     const [triplist] = await db
       .update(triplists)
-      .set(triplistData)
+      .set(dataToUpdate)
       .where(eq(triplists.id, id))
       .returning();
+    
+    // If hashtagIds is being updated, re-sync the junction table
+    if (hashtagIds !== undefined) {
+      if (Array.isArray(hashtagIds) && hashtagIds.length > 0) {
+        await this.setTriplistHashtags(id, hashtagIds);
+      } else {
+        // Clear hashtags if empty array provided
+        await this.setTriplistHashtags(id, []);
+      }
+    }
     
     // If relatedVenueIds is being updated, re-sync the junction table
     if (triplistData.relatedVenueIds !== undefined) {
@@ -872,6 +909,91 @@ export class DatabaseStorage implements IStorage {
       .update(content_seasons)
       .set({ displayOrder: newOrder })
       .where(eq(content_seasons.id, id));
+  }
+
+  // ========== Hashtag Operations ==========
+  async getHashtags(promotedOnly?: boolean): Promise<Hashtag[]> {
+    const query = db.select().from(hashtags);
+    
+    if (promotedOnly) {
+      return query.where(
+        and(
+          eq(hashtags.isPromoted, true),
+          eq(hashtags.isActive, true)
+        )
+      ).orderBy(hashtags.displayOrder, hashtags.name);
+    }
+    
+    return query
+      .where(eq(hashtags.isActive, true))
+      .orderBy(hashtags.displayOrder, hashtags.name);
+  }
+
+  async getHashtag(id: string): Promise<Hashtag | undefined> {
+    const [hashtag] = await db.select().from(hashtags).where(eq(hashtags.id, id));
+    return hashtag;
+  }
+
+  async createHashtag(hashtagData: InsertHashtag): Promise<Hashtag> {
+    const [hashtag] = await db.insert(hashtags).values(hashtagData).returning();
+    return hashtag;
+  }
+
+  async updateHashtag(id: string, hashtagData: Partial<InsertHashtag>): Promise<Hashtag | undefined> {
+    const [hashtag] = await db
+      .update(hashtags)
+      .set(hashtagData)
+      .where(eq(hashtags.id, id))
+      .returning();
+    return hashtag;
+  }
+
+  async deleteHashtag(id: string): Promise<void> {
+    // First delete all triplist-hashtag associations
+    await db.delete(triplistHashtags).where(eq(triplistHashtags.hashtagId, id));
+    // Then delete the hashtag
+    await db.delete(hashtags).where(eq(hashtags.id, id));
+  }
+
+  async updateHashtagOrder(id: string, newOrder: number): Promise<void> {
+    await db
+      .update(hashtags)
+      .set({ displayOrder: newOrder })
+      .where(eq(hashtags.id, id));
+  }
+
+  async getTriplistHashtags(triplistId: string): Promise<(TriplistHashtag & { hashtag: Hashtag })[]> {
+    const results = await db
+      .select({
+        id: triplistHashtags.id,
+        triplistId: triplistHashtags.triplistId,
+        hashtagId: triplistHashtags.hashtagId,
+        order: triplistHashtags.order,
+        createdAt: triplistHashtags.createdAt,
+        hashtag: hashtags,
+      })
+      .from(triplistHashtags)
+      .innerJoin(hashtags, eq(triplistHashtags.hashtagId, hashtags.id))
+      .where(eq(triplistHashtags.triplistId, triplistId))
+      .orderBy(triplistHashtags.order, hashtags.name);
+    
+    return results;
+  }
+
+  async setTriplistHashtags(triplistId: string, hashtagIds: string[]): Promise<void> {
+    // Delete existing hashtag associations
+    await db.delete(triplistHashtags).where(eq(triplistHashtags.triplistId, triplistId));
+    
+    // Insert new associations
+    if (hashtagIds.length > 0) {
+      await db.insert(triplistHashtags).values(
+        hashtagIds.map((hashtagId, index) => ({
+          triplistId,
+          hashtagId,
+          order: index,
+        }))
+      );
+    }
   }
 
   // ========== Branding Operations ==========

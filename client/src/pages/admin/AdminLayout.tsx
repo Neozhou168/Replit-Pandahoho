@@ -23,6 +23,7 @@ import {
   Palette,
   BarChart,
   Search,
+  Hash,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import AdminDashboard from "./AdminDashboard";
@@ -34,6 +35,7 @@ import GuidesManagement from "./GuidesManagement";
 import GroupUpsManagement from "./GroupUpsManagement";
 import UsersManagement from "./UsersManagement";
 import ContentSettings from "./ContentSettings";
+import HashtagsManagement from "./HashtagsManagement";
 import BrandingSettings from "./BrandingSettings";
 import Analytics from "./Analytics";
 import SEOManagement from "./SEOManagement";
@@ -97,6 +99,11 @@ function AdminSidebar() {
       title: "SEO",
       url: "/admin/seo",
       icon: Search,
+    },
+    {
+      title: "Hashtags",
+      url: "/admin/hashtags",
+      icon: Hash,
     },
     {
       title: "Content Settings",
@@ -181,6 +188,7 @@ export default function AdminLayout() {
               <Route path="/admin/group-ups" component={GroupUpsManagement} />
               <Route path="/admin/branding" component={BrandingSettings} />
               <Route path="/admin/seo" component={SEOManagement} />
+              <Route path="/admin/hashtags" component={HashtagsManagement} />
               <Route path="/admin/content-settings" component={ContentSettings} />
             </Switch>
           </main>
