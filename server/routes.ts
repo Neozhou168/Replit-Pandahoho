@@ -18,6 +18,7 @@ import {
   insertPageViewSchema,
   insertSeoSettingsSchema,
   type Venue,
+  type City,
 } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 import multer from "multer";
@@ -446,10 +447,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const triplistIds = triplists.map((t) => t.id);
       const hashtagsMap = await storage.getTriplistsHashtagsBatch(triplistIds);
       
-      // Combine triplists with their hashtags
+      // Fetch cities for all triplists in a single batched query
+      const uniqueCityIds = new Set(triplists.map((t) => t.cityId).filter(Boolean));
+      const cityIds = Array.from(uniqueCityIds) as string[];
+      const cities = await storage.getCitiesByIds(cityIds);
+      const citiesMap = new Map<string, City>(cities.map((c) => [c.id, c]));
+      
+      // Combine triplists with their hashtags and city
       const triplistsWithHashtags = triplists.map((triplist) => ({
         ...triplist,
         hashtags: hashtagsMap.get(triplist.id) || [],
+        city: triplist.cityId ? citiesMap.get(triplist.cityId) || null : null,
       }));
       
       res.json(triplistsWithHashtags);

@@ -22,14 +22,14 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           
           <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
-            {triplist.location && (
+            {(triplist.city?.name || triplist.location) && (
               <Badge
                 variant="secondary"
                 className="bg-white/90 backdrop-blur text-gray-900 border-0"
                 data-testid={`badge-location-${triplist.id}`}
               >
                 <MapPin className="w-3 h-3 mr-1" />
-                {triplist.location.split(',')[0]}
+                {triplist.city?.name || triplist.location?.split(',')[0] || ''}
               </Badge>
             )}
             {triplist.season && (

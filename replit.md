@@ -77,6 +77,11 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Backend**: Express.js for RESTful APIs.
 - **Database**: PostgreSQL with Drizzle ORM for type-safe interactions.
 - **Validation**: Zod schemas derived from `drizzle-zod` for API input validation.
+- **Triplist-City Relationship** (Nov 2025): Triplists display city badges using `cityId` foreign key relationship
+  - API endpoint `/api/triplists` includes city data via batch query for efficiency
+  - `TriplistWithHashtags` type extended to include optional `city` field
+  - TriplistCard prioritizes `city.name` over legacy `location` text field for badge display
+  - Falls back to `location` field for backward compatibility with older data
 - **Content Management System (CMS)**: Admin dashboard for CRUD operations across all content types (Cities, Triplists, Venues, Survival Guides, Carousel, Content Settings).
 - **Bulk Data Management**: CSV bulk upload for Triplists, Venues, and Survival Guides, supporting ID-based updates and slug auto-generation. Survival Guides CSV uses capitalized column headers (Title, Description, Country, Cover Image URL, Related Video URL, Created Date) with DD/MM/YYYY date format parsing. **CSV Encoding Detection**: Multi-layered intelligent encoding system with automatic fallback for robust Chinese character handling:
   - **ArrayBuffer + TextDecoder Architecture**: Uses FileReader.readAsArrayBuffer() + TextDecoder for precise encoding detection (eliminates unreliable readAsText())

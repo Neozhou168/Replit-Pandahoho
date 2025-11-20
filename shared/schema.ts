@@ -225,6 +225,7 @@ export type Triplist = typeof triplists.$inferSelect;
 // Extended type for triplists with hashtags (used in API responses)
 export type TriplistWithHashtags = Triplist & {
   hashtags: Hashtag[];
+  city?: City | null;
 };
 
 // Junction table for triplists and venues (many-to-many)

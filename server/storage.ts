@@ -62,6 +62,7 @@ export interface IStorage {
   // City operations
   getCities(): Promise<City[]>;
   getCity(slug: string): Promise<City | undefined>;
+  getCitiesByIds(cityIds: string[]): Promise<City[]>;
   createCity(city: InsertCity): Promise<City>;
   updateCity(id: string, city: Partial<InsertCity>): Promise<City | undefined>;
   deleteCity(id: string): Promise<void>;
@@ -242,6 +243,11 @@ export class DatabaseStorage implements IStorage {
   async bulkCreateCities(citiesData: InsertCity[]): Promise<City[]> {
     if (citiesData.length === 0) return [];
     return db.insert(cities).values(citiesData).returning();
+  }
+
+  async getCitiesByIds(cityIds: string[]): Promise<City[]> {
+    if (cityIds.length === 0) return [];
+    return db.select().from(cities).where(inArray(cities.id, cityIds));
   }
 
   // ========== Venue Operations ==========
