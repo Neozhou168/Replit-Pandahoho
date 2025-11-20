@@ -116,10 +116,6 @@ export default function HashtagsManagement() {
         variant: "destructive",
       });
     },
-    onSettled: () => {
-      // Refetch to ensure we're in sync with server
-      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
-    },
   });
 
   const updateOrderMutation = useMutation({
@@ -432,12 +428,18 @@ export default function HashtagsManagement() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogCancel 
+              data-testid="button-cancel-delete"
+              disabled={deleteHashtagMutation.isPending}
+            >
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteHashtag && deleteHashtagMutation.mutate(deleteHashtag.id)}
               data-testid="button-confirm-delete"
+              disabled={deleteHashtagMutation.isPending}
             >
-              Delete
+              {deleteHashtagMutation.isPending ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
