@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 import { insertHashtagSchema, type Hashtag, type InsertHashtag } from "@shared/schema";
 import { Plus, Edit, Trash2, ChevronUp, ChevronDown, Hash } from "lucide-react";
 
@@ -20,6 +20,7 @@ export default function HashtagsManagement() {
   const [editHashtag, setEditHashtag] = useState<Hashtag | null>(null);
   const [deleteHashtag, setDeleteHashtag] = useState<Hashtag | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: hashtags = [], isLoading } = useQuery<Hashtag[]>({
     queryKey: ["/api/hashtags"],
