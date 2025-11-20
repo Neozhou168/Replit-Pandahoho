@@ -441,7 +441,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/triplists", async (_req, res) => {
     try {
       const triplists = await storage.getTriplists();
-      res.json(triplists);
+      
+      // Fetch hashtags for all triplists in a single batched query
+      const triplistIds = triplists.map((t) => t.id);
+      const hashtagsMap = await storage.getTriplistsHashtagsBatch(triplistIds);
+      
+      // Combine triplists with their hashtags
+      const triplistsWithHashtags = triplists.map((triplist) => ({
+        ...triplist,
+        hashtags: hashtagsMap.get(triplist.id) || [],
+      }));
+      
+      res.json(triplistsWithHashtags);
     } catch (error) {
       console.error("Error fetching triplists:", error);
       res.status(500).json({ message: "Failed to fetch triplists" });

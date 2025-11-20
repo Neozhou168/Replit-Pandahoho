@@ -134,6 +134,7 @@ export interface IStorage {
   updateHashtagOrder(id: string, newOrder: number): Promise<void>;
   getTriplistHashtags(triplistId: string): Promise<(TriplistHashtag & { hashtag: Hashtag })[]>;
   setTriplistHashtags(triplistId: string, hashtagIds: string[]): Promise<void>;
+  getTriplistsHashtagsBatch(triplistIds: string[]): Promise<Map<string, Hashtag[]>>;
 
   // Branding operations
   getBranding(): Promise<Branding>;
@@ -994,6 +995,34 @@ export class DatabaseStorage implements IStorage {
         }))
       );
     }
+  }
+
+  async getTriplistsHashtagsBatch(triplistIds: string[]): Promise<Map<string, Hashtag[]>> {
+    if (triplistIds.length === 0) {
+      return new Map();
+    }
+
+    // Fetch all hashtags for all triplists in a single query
+    const results = await db
+      .select({
+        triplistId: triplistHashtags.triplistId,
+        hashtag: hashtags,
+        order: triplistHashtags.order,
+      })
+      .from(triplistHashtags)
+      .innerJoin(hashtags, eq(triplistHashtags.hashtagId, hashtags.id))
+      .where(inArray(triplistHashtags.triplistId, triplistIds))
+      .orderBy(triplistHashtags.order, hashtags.name);
+    
+    // Group hashtags by triplistId
+    const hashtagsMap = new Map<string, Hashtag[]>();
+    for (const result of results) {
+      const existing = hashtagsMap.get(result.triplistId) || [];
+      existing.push(result.hashtag);
+      hashtagsMap.set(result.triplistId, existing);
+    }
+    
+    return hashtagsMap;
   }
 
   // ========== Branding Operations ==========

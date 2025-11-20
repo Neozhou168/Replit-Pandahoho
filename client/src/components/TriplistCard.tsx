@@ -1,23 +1,14 @@
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
-import type { Triplist, Hashtag } from "@shared/schema";
+import type { TriplistWithHashtags } from "@shared/schema";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 interface TriplistCardProps {
-  triplist: Triplist;
+  triplist: TriplistWithHashtags;
 }
 
 export default function TriplistCard({ triplist }: TriplistCardProps) {
-  const { data: triplistHashtags = [] } = useQuery<Array<{ hashtag: Hashtag }>>({
-    queryKey: ["/api/triplists", triplist.id, "hashtags"],
-    queryFn: async () => {
-      const response = await fetch(`/api/triplists/${triplist.id}/hashtags`);
-      if (!response.ok) return [];
-      return response.json();
-    },
-  });
   return (
     <Link href={`/triplists/${triplist.slug}`} data-testid={`link-triplist-${triplist.id}`}>
       <div className="group cursor-pointer" data-testid={`card-triplist-${triplist.id}`}>
@@ -58,9 +49,9 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
             {triplist.title}
           </h3>
           
-          {triplistHashtags.length > 0 && (
+          {triplist.hashtags && triplist.hashtags.length > 0 && (
             <div className="flex flex-wrap gap-1.5" data-testid={`hashtags-${triplist.id}`}>
-              {triplistHashtags.map(({ hashtag }) => (
+              {triplist.hashtags.map((hashtag) => (
                 <span
                   key={hashtag.id}
                   className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded-md"

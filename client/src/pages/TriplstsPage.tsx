@@ -2,14 +2,14 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
-import type { Triplist, Hashtag } from "@shared/schema";
+import type { TriplistWithHashtags, Hashtag } from "@shared/schema";
 
 export default function TriplistsPage() {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
   const [hashtagFilter, setHashtagFilter] = useState<string | null>(null);
   const [seasonFilter, setSeasonFilter] = useState<string | null>(null);
 
-  const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
+  const { data: triplists = [], isLoading } = useQuery<TriplistWithHashtags[]>({
     queryKey: ["/api/triplists"],
   });
 
@@ -21,7 +21,7 @@ export default function TriplistsPage() {
   
   const filteredTriplists = activeTriplists.filter((triplist) => {
     const matchesCity = !cityFilter || triplist.location === cityFilter;
-    const matchesHashtag = !hashtagFilter || triplist.category === hashtagFilter;
+    const matchesHashtag = !hashtagFilter || triplist.hashtags.some((h) => h.name === hashtagFilter);
     const matchesSeason = !seasonFilter || triplist.season === seasonFilter;
     return matchesCity && matchesHashtag && matchesSeason;
   });
@@ -64,7 +64,7 @@ export default function TriplistsPage() {
         </p>
       </div>
 
-      {(cities.length > 0 || categories.length > 0 || seasons.length > 0) && (
+      {(cities.length > 0 || promotedHashtags.length > 0 || seasons.length > 0) && (
         <div className="mb-8 space-y-4">
           {cities.length > 0 && (
             <div className="flex flex-wrap gap-2">

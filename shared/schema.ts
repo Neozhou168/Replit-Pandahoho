@@ -222,6 +222,11 @@ export const insertTriplistSchema = createInsertSchema(triplists).omit({
 export type InsertTriplist = z.infer<typeof insertTriplistSchema>;
 export type Triplist = typeof triplists.$inferSelect;
 
+// Extended type for triplists with hashtags (used in API responses)
+export type TriplistWithHashtags = Triplist & {
+  hashtags: Hashtag[];
+};
+
 // Junction table for triplists and venues (many-to-many)
 export const triplistVenues = pgTable("triplist_venues", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
