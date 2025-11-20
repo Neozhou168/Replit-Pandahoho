@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import type { TriplistWithHashtags, Hashtag } from "@shared/schema";
 
 export default function TriplistsPage() {
@@ -67,7 +69,7 @@ export default function TriplistsPage() {
       {(cities.length > 0 || promotedHashtags.length > 0 || seasons.length > 0) && (
         <div className="mb-8 space-y-4">
           {cities.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 items-center">
               <span className="text-sm font-medium text-muted-foreground self-center">
                 City:
               </span>
@@ -90,6 +92,12 @@ export default function TriplistsPage() {
                   {getCityDisplayName(city)}
                 </Button>
               ))}
+              <Link href="/cities" data-testid="link-view-all-cities">
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  View All Cities
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              </Link>
             </div>
           )}
 
