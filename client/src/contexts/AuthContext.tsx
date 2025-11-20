@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import type { User, Session } from '@supabase/supabase-js';
+import { queryClient, getQueryFn } from '@/lib/queryClient';
 
 interface AuthContextType {
   user: User | null;
@@ -35,6 +36,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (response.ok) {
         syncedSessionIdRef.current = session.user.id;
+        
+        // Prefetch homepage data for faster navigation
+        // Use the default query fetcher to ensure consistent auth and error handling
+        const defaultFetcher = getQueryFn({ on401: 'throw' });
+        
+        // Prefetch with proper error handling - only cache on success
+        const safePrefetch = async (queryKey: string[]) => {
+          try {
+            const data = await defaultFetcher({ queryKey } as any);
+            queryClient.setQueryData(queryKey, data);
+          } catch (err) {
+            // Don't cache errors - let the component query fetch normally
+            console.warn(`[AuthContext] Prefetch ${queryKey.join('/')} failed, component will fetch:`, err);
+          }
+        };
+        
+        // Prefetch all homepage data
+        safePrefetch(['/api/cities']);
+        safePrefetch(['/api/carousel']);
+        safePrefetch(['/api/branding']);
       } else {
         console.error('[AuthContext] Failed to sync user - HTTP', response.status);
       }

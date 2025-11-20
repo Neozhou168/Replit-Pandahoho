@@ -84,8 +84,9 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Survival Guides**: Support manual creation date setting and country selection from Content Settings. The `country` field (formerly `category`) allows admins to organize guides by destination country.
 - **Triplist-Venue Linking**: Automated parsing of `relatedVenueIds` to populate the `triplist_venues` junction table during creation, updates, and bulk imports, with a manual sync option in the admin panel.
 - **Performance Optimizations**:
-    - **Route-Based Code Splitting**: Using `React.lazy()` for admin and detail pages to reduce initial bundle size.
+    - **Route-Based Code Splitting**: Using `React.lazy()` for admin and detail pages to reduce initial bundle size. Critical pages (HomePage, AuthPage, ResetPasswordPage) are NOT lazy-loaded.
     - **AuthContext Optimization**: Session tracking to prevent redundant `/api/auth/me` calls.
+    - **Login Flow Optimization**: Prefetches homepage data (cities, carousel, branding) immediately after user sync for instant homepage rendering.
     - **Image Lazy Loading**: `loading="lazy"` attribute on all card images.
     - **Cloudinary Image Transformations**: `getOptimizedImageUrl()` helper for dynamic image optimization (width constraints, auto-quality, auto-format).
     - **Express Caching Headers**: `Cache-Control` headers for read-only API endpoints to reduce server load and improve subsequent page loads.
@@ -96,6 +97,22 @@ PandaHoHo uses a full-stack architecture with React, Express.js, and PostgreSQL.
 - **Admin Access**: Determined by the `isAdmin` boolean field in the database, which is the source of truth for admin status.
 - **Avatar Uploads**: Cloudinary integration for user avatars.
 - **JWT Verification**: Backend middleware validates Supabase JWT tokens for protected routes.
+- **Login Performance Optimizations** (Nov 2025):
+  - AuthPage no longer lazy-loaded for instant redirect
+  - Prefetching of homepage data (cities, carousel, branding) immediately after successful login
+  - Loading state displayed during authentication check for better UX
+
+#### Customizing OAuth Display URL
+The Google OAuth consent screen shows "You're signing back in to [supabase-url]". To customize this with your own domain:
+1. **Set up Custom Domain in Supabase** (recommended):
+   - Go to Supabase Dashboard → Project Settings → Custom Domains
+   - Add your custom domain (e.g., `auth.pandahoho.com`)
+   - Configure DNS records as instructed by Supabase
+   - Enable the custom domain for authentication
+   - Update Google OAuth configuration to use your custom domain
+2. **Alternative**: Update redirect URLs only (doesn't change OAuth consent screen text):
+   - OAuth consent screen URL is controlled by Supabase project URL, not redirect URLs
+   - Redirect URLs are already configured to use `window.location.origin`
 
 ## External Dependencies
 - **Supabase**: User authentication (Google OAuth, email/password).

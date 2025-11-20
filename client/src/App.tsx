@@ -13,6 +13,8 @@ import CitiesPage from "@/pages/CitiesPage";
 import TriplistsPage from "@/pages/TriplstsPage";
 import GuidesPage from "@/pages/GuidesPage";
 import NotFound from "@/pages/not-found";
+import AuthPage from "@/pages/AuthPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 
 const CityDetailPage = lazy(() => import("@/pages/CityDetailPage"));
 const TriplistDetailPage = lazy(() => import("@/pages/TriplistDetailPage"));
@@ -23,8 +25,6 @@ const MembershipPage = lazy(() => import("@/pages/MembershipPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const ChatAssistantComingSoon = lazy(() => import("@/pages/ChatAssistantComingSoon"));
 const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
-const AuthPage = lazy(() => import("@/pages/AuthPage"));
-const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 
 const PageLoader = () => (
   <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">

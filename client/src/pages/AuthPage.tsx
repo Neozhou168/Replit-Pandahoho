@@ -13,15 +13,18 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, user } = useAuth();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (user) {
       setLocation('/');
+    } else if (!authLoading) {
+      setIsCheckingAuth(false);
     }
-  }, [user, setLocation]);
+  }, [user, authLoading, setLocation]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -113,6 +116,17 @@ export default function AuthPage() {
       setLoading(false);
     }
   };
+
+  if (isCheckingAuth || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-muted-foreground">Redirecting to homepage...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
