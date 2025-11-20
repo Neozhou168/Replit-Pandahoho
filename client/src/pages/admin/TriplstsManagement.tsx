@@ -53,6 +53,8 @@ export default function TriplistsManagement() {
   const [deleteTriplist, setDeleteTriplist] = useState<Triplist | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [cityFilter, setCityFilter] = useState<string>("all");
+  const [quickHashtagOpen, setQuickHashtagOpen] = useState(false);
+  const [newHashtagName, setNewHashtagName] = useState("");
   const { toast } = useToast();
 
   const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
@@ -165,6 +167,37 @@ export default function TriplistsManagement() {
     },
   });
 
+  const quickCreateHashtag = useMutation({
+    mutationFn: async (name: string) => {
+      const response = await apiRequest("POST", "/api/hashtags", {
+        name,
+        isPromoted: false,
+        isActive: true,
+        displayOrder: 0,
+      });
+      return response.json();
+    },
+    onSuccess: (newHashtag) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
+      toast({
+        title: "Success",
+        description: `Hashtag "${newHashtag.name}" created!`,
+      });
+      setQuickHashtagOpen(false);
+      setNewHashtagName("");
+      
+      // Auto-add the new hashtag to the form
+      const currentHashtags = form.getValues("hashtagIds") || [];
+      form.setValue("hashtagIds", [...currentHashtags, newHashtag.id]);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create hashtag.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const onSubmit = (values: InsertTriplist) => {
     // Convert "NONE" sentinel value to undefined (omit field) for country and cityId
@@ -468,81 +501,139 @@ export default function TriplistsManagement() {
                   <FormField
                     control={form.control}
                     name="hashtagIds"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Hashtags</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-full justify-between"
-                                data-testid="button-select-hashtags"
-                              >
-                                {field.value && field.value.length > 0
-                                  ? `${field.value.length} selected`
-                                  : "Select hashtags"}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-full p-0">
-                            <div className="max-h-64 overflow-auto p-4 space-y-2">
-                              {hashtags
-                                .filter((h) => h.isActive)
-                                .map((hashtag) => (
-                                  <div key={hashtag.id} className="flex items-center space-x-2">
-                                    <Checkbox
-                                      checked={field.value?.includes(hashtag.id)}
-                                      onCheckedChange={(checked) => {
-                                        const current = field.value || [];
-                                        if (checked) {
-                                          field.onChange([...current, hashtag.id]);
-                                        } else {
-                                          field.onChange(current.filter((id) => id !== hashtag.id));
-                                        }
-                                      }}
-                                      data-testid={`checkbox-hashtag-${hashtag.id}`}
-                                    />
-                                    <label className="text-sm cursor-pointer flex-1">
-                                      {hashtag.name}
-                                      {hashtag.isPromoted && (
-                                        <span className="ml-2 text-xs text-muted-foreground">(Promoted)</span>
-                                      )}
-                                    </label>
-                                  </div>
-                                ))}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        {field.value && field.value.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {field.value.map((hashtagId) => {
-                              const hashtag = hashtags.find((h) => h.id === hashtagId);
-                              return hashtag ? (
-                                <span
-                                  key={hashtagId}
-                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
-                                >
-                                  #{hashtag.name}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      field.onChange(field.value?.filter((id) => id !== hashtagId));
-                                    }}
-                                    className="hover-elevate rounded-sm"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                </span>
-                              ) : null;
-                            })}
+                    render={({ field }) => {
+                      const promotedHashtags = hashtags.filter((h) => h.isActive && h.isPromoted);
+                      const regularHashtags = hashtags.filter((h) => h.isActive && !h.isPromoted);
+                      
+                      return (
+                        <FormItem>
+                          <div className="flex items-center justify-between">
+                            <FormLabel>Hashtags</FormLabel>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setQuickHashtagOpen(true)}
+                              className="h-auto py-1 text-xs"
+                              data-testid="button-quick-add-hashtag"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add Hashtag
+                            </Button>
                           </div>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  role="combobox"
+                                  className="w-full justify-between"
+                                  data-testid="button-select-hashtags"
+                                >
+                                  {field.value && field.value.length > 0
+                                    ? `${field.value.length} selected`
+                                    : "Select hashtags"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[400px] p-0" align="start">
+                              <div className="max-h-80 overflow-auto">
+                                {promotedHashtags.length > 0 && (
+                                  <div className="p-3 border-b">
+                                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                                      Promoted Hashtags
+                                    </h4>
+                                    <div className="space-y-2.5">
+                                      {promotedHashtags.map((hashtag) => (
+                                        <div key={hashtag.id} className="flex items-center space-x-3 hover-elevate p-2 rounded-md">
+                                          <Checkbox
+                                            checked={field.value?.includes(hashtag.id)}
+                                            onCheckedChange={(checked) => {
+                                              const current = field.value || [];
+                                              if (checked) {
+                                                field.onChange([...current, hashtag.id]);
+                                              } else {
+                                                field.onChange(current.filter((id) => id !== hashtag.id));
+                                              }
+                                            }}
+                                            data-testid={`checkbox-hashtag-${hashtag.id}`}
+                                          />
+                                          <label className="text-sm cursor-pointer flex-1 font-medium">
+                                            {hashtag.name}
+                                          </label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {regularHashtags.length > 0 && (
+                                  <div className="p-3">
+                                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                                      Other Hashtags
+                                    </h4>
+                                    <div className="space-y-2.5">
+                                      {regularHashtags.map((hashtag) => (
+                                        <div key={hashtag.id} className="flex items-center space-x-3 hover-elevate p-2 rounded-md">
+                                          <Checkbox
+                                            checked={field.value?.includes(hashtag.id)}
+                                            onCheckedChange={(checked) => {
+                                              const current = field.value || [];
+                                              if (checked) {
+                                                field.onChange([...current, hashtag.id]);
+                                              } else {
+                                                field.onChange(current.filter((id) => id !== hashtag.id));
+                                              }
+                                            }}
+                                            data-testid={`checkbox-hashtag-${hashtag.id}`}
+                                          />
+                                          <label className="text-sm cursor-pointer flex-1">
+                                            {hashtag.name}
+                                          </label>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {hashtags.filter((h) => h.isActive).length === 0 && (
+                                  <div className="p-4 text-center text-sm text-muted-foreground">
+                                    No hashtags available
+                                  </div>
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          {field.value && field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {field.value.map((hashtagId) => {
+                                const hashtag = hashtags.find((h) => h.id === hashtagId);
+                                return hashtag ? (
+                                  <span
+                                    key={hashtagId}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-secondary text-secondary-foreground text-xs font-medium"
+                                  >
+                                    #{hashtag.name}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        field.onChange(field.value?.filter((id) => id !== hashtagId));
+                                      }}
+                                      className="hover-elevate rounded-sm"
+                                      data-testid={`remove-hashtag-${hashtag.id}`}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </button>
+                                  </span>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 
@@ -852,6 +943,55 @@ export default function TriplistsManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={quickHashtagOpen} onOpenChange={setQuickHashtagOpen}>
+        <DialogContent data-testid="dialog-quick-add-hashtag">
+          <DialogHeader>
+            <DialogTitle>Quick Add Hashtag</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="hashtag-name" className="text-sm font-medium">
+                Hashtag Name
+              </label>
+              <Input
+                id="hashtag-name"
+                placeholder="Enter hashtag name"
+                value={newHashtagName}
+                onChange={(e) => setNewHashtagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newHashtagName.trim()) {
+                    quickCreateHashtag.mutate(newHashtagName.trim());
+                  }
+                }}
+                data-testid="input-quick-hashtag-name"
+              />
+              <p className="text-xs text-muted-foreground">
+                This hashtag will be created as non-promoted and automatically added to this triplist.
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setQuickHashtagOpen(false);
+                  setNewHashtagName("");
+                }}
+                data-testid="button-cancel-quick-hashtag"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => newHashtagName.trim() && quickCreateHashtag.mutate(newHashtagName.trim())}
+                disabled={!newHashtagName.trim() || quickCreateHashtag.isPending}
+                data-testid="button-save-quick-hashtag"
+              >
+                {quickCreateHashtag.isPending ? "Creating..." : "Create Hashtag"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
