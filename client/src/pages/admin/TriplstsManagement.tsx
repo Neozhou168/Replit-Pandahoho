@@ -502,8 +502,9 @@ export default function TriplistsManagement() {
                     control={form.control}
                     name="hashtagIds"
                     render={({ field }) => {
-                      const promotedHashtags = hashtags.filter((h) => h.isActive && h.isPromoted);
-                      const regularHashtags = hashtags.filter((h) => h.isActive && !h.isPromoted);
+                      const allHashtags = hashtags
+                        .filter((h) => h.isActive)
+                        .sort((a, b) => a.name.localeCompare(b.name));
                       
                       return (
                         <FormItem>
@@ -537,67 +538,48 @@ export default function TriplistsManagement() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[400px] p-0" align="start">
-                              <div className="max-h-80 overflow-auto">
-                                {promotedHashtags.length > 0 && (
-                                  <div className="p-3 border-b">
-                                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                                      Promoted Hashtags
-                                    </h4>
-                                    <div className="space-y-2.5">
-                                      {promotedHashtags.map((hashtag) => (
-                                        <div key={hashtag.id} className="flex items-center space-x-3 hover-elevate p-2 rounded-md">
-                                          <Checkbox
-                                            checked={field.value?.includes(hashtag.id)}
-                                            onCheckedChange={(checked) => {
-                                              const current = field.value || [];
-                                              if (checked) {
-                                                field.onChange([...current, hashtag.id]);
-                                              } else {
-                                                field.onChange(current.filter((id) => id !== hashtag.id));
-                                              }
-                                            }}
-                                            data-testid={`checkbox-hashtag-${hashtag.id}`}
-                                          />
-                                          <label className="text-sm cursor-pointer flex-1 font-medium">
-                                            {hashtag.name}
-                                          </label>
-                                        </div>
-                                      ))}
-                                    </div>
+                            <PopoverContent className="w-[560px] p-4" align="start">
+                              <div className="max-h-96 overflow-auto">
+                                {allHashtags.length > 0 ? (
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {allHashtags.map((hashtag) => (
+                                      <div 
+                                        key={hashtag.id} 
+                                        className="flex items-center space-x-3 hover-elevate p-2.5 rounded-md border"
+                                      >
+                                        <Checkbox
+                                          checked={field.value?.includes(hashtag.id)}
+                                          onCheckedChange={(checked) => {
+                                            const current = field.value || [];
+                                            if (checked) {
+                                              field.onChange([...current, hashtag.id]);
+                                            } else {
+                                              field.onChange(current.filter((id) => id !== hashtag.id));
+                                            }
+                                          }}
+                                          data-testid={`checkbox-hashtag-${hashtag.id}`}
+                                        />
+                                        <label 
+                                          className="text-sm cursor-pointer flex-1 font-medium"
+                                          onClick={() => {
+                                            const current = field.value || [];
+                                            const isChecked = current.includes(hashtag.id);
+                                            if (isChecked) {
+                                              field.onChange(current.filter((id) => id !== hashtag.id));
+                                            } else {
+                                              field.onChange([...current, hashtag.id]);
+                                            }
+                                          }}
+                                        >
+                                          #{hashtag.name}
+                                          {hashtag.isPromoted && (
+                                            <span className="ml-1.5 text-xs text-muted-foreground">(promoted)</span>
+                                          )}
+                                        </label>
+                                      </div>
+                                    ))}
                                   </div>
-                                )}
-                                
-                                {regularHashtags.length > 0 && (
-                                  <div className="p-3">
-                                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
-                                      Other Hashtags
-                                    </h4>
-                                    <div className="space-y-2.5">
-                                      {regularHashtags.map((hashtag) => (
-                                        <div key={hashtag.id} className="flex items-center space-x-3 hover-elevate p-2 rounded-md">
-                                          <Checkbox
-                                            checked={field.value?.includes(hashtag.id)}
-                                            onCheckedChange={(checked) => {
-                                              const current = field.value || [];
-                                              if (checked) {
-                                                field.onChange([...current, hashtag.id]);
-                                              } else {
-                                                field.onChange(current.filter((id) => id !== hashtag.id));
-                                              }
-                                            }}
-                                            data-testid={`checkbox-hashtag-${hashtag.id}`}
-                                          />
-                                          <label className="text-sm cursor-pointer flex-1">
-                                            {hashtag.name}
-                                          </label>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                                
-                                {hashtags.filter((h) => h.isActive).length === 0 && (
+                                ) : (
                                   <div className="p-4 text-center text-sm text-muted-foreground">
                                     No hashtags available
                                   </div>
