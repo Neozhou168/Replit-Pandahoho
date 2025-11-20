@@ -89,10 +89,16 @@ export default function HashtagsManagement() {
   });
 
   const togglePromoted = async (hashtag: Hashtag) => {
-    await updateHashtag.mutateAsync({
-      id: hashtag.id,
-      data: { isPromoted: !hashtag.isPromoted },
-    });
+    try {
+      await updateHashtag.mutateAsync({
+        id: hashtag.id,
+        data: { isPromoted: !hashtag.isPromoted },
+      });
+      // Force an immediate refetch to ensure UI updates
+      await queryClient.refetchQueries({ queryKey: ["/api/hashtags"] });
+    } catch (error) {
+      console.error("Failed to toggle promoted status:", error);
+    }
   };
 
   const moveItem = (index: number, direction: "up" | "down") => {
@@ -140,6 +146,8 @@ export default function HashtagsManagement() {
             setCreateOpen(false);
             setEditHashtag(null);
             form.reset();
+          } else if (!editHashtag) {
+            setCreateOpen(true);
           }
         }}>
           <DialogTrigger asChild>
@@ -289,7 +297,6 @@ export default function HashtagsManagement() {
                       onCheckedChange={() => togglePromoted(hashtag)}
                       data-testid={`switch-promoted-${hashtag.id}`}
                     />
-                    <Label className="text-xs text-muted-foreground">Promoted</Label>
 
                     <Button
                       variant="ghost"
