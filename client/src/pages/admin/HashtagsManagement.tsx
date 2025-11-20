@@ -164,10 +164,22 @@ export default function HashtagsManagement() {
     },
   });
 
-  const togglePromoted = (hashtag: Hashtag) => {
+  const togglePromoted = (hashtagId: string) => {
+    // Get the current value from cache to avoid stale closures
+    const currentHashtags = queryClient.getQueryData<Hashtag[]>(["/api/hashtags"]);
+    const currentHashtag = currentHashtags?.find(h => h.id === hashtagId);
+    
+    if (!currentHashtag) {
+      console.error(`[togglePromoted] Hashtag ${hashtagId} not found in cache`);
+      return;
+    }
+    
+    const newValue = !currentHashtag.isPromoted;
+    console.log(`[togglePromoted] Toggling ${currentHashtag.name} from ${currentHashtag.isPromoted} to ${newValue}`);
+    
     togglePromotedMutation.mutate({
-      id: hashtag.id,
-      isPromoted: !hashtag.isPromoted,
+      id: hashtagId,
+      isPromoted: newValue,
     });
   };
 
@@ -364,7 +376,7 @@ export default function HashtagsManagement() {
 
                     <Switch
                       checked={hashtag.isPromoted ?? false}
-                      onCheckedChange={() => togglePromoted(hashtag)}
+                      onCheckedChange={() => togglePromoted(hashtag.id)}
                       data-testid={`switch-promoted-${hashtag.id}`}
                     />
 
