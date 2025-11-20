@@ -1,7 +1,8 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { MapPin } from "lucide-react";
-import type { Triplist } from "@shared/schema";
+import type { Triplist, Hashtag } from "@shared/schema";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 
 interface TriplistCardProps {
@@ -9,6 +10,14 @@ interface TriplistCardProps {
 }
 
 export default function TriplistCard({ triplist }: TriplistCardProps) {
+  const { data: triplistHashtags = [] } = useQuery<Array<{ hashtag: Hashtag }>>({
+    queryKey: ["/api/triplists", triplist.id, "hashtags"],
+    queryFn: async () => {
+      const response = await fetch(`/api/triplists/${triplist.id}/hashtags`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+  });
   return (
     <Link href={`/triplists/${triplist.slug}`} data-testid={`link-triplist-${triplist.id}`}>
       <div className="group cursor-pointer" data-testid={`card-triplist-${triplist.id}`}>
@@ -32,15 +41,6 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
                 {triplist.location.split(',')[0]}
               </Badge>
             )}
-            {triplist.category && (
-              <Badge
-                variant="secondary"
-                className="bg-amber-500/90 backdrop-blur text-white border-0"
-                data-testid={`badge-category-${triplist.id}`}
-              >
-                {triplist.category}
-              </Badge>
-            )}
             {triplist.season && (
               <Badge
                 variant="secondary"
@@ -57,6 +57,21 @@ export default function TriplistCard({ triplist }: TriplistCardProps) {
           <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors" data-testid={`text-triplist-title-${triplist.id}`}>
             {triplist.title}
           </h3>
+          
+          {triplistHashtags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5" data-testid={`hashtags-${triplist.id}`}>
+              {triplistHashtags.map(({ hashtag }) => (
+                <span
+                  key={hashtag.id}
+                  className="inline-block px-2 py-0.5 text-xs font-medium bg-secondary text-secondary-foreground rounded-md"
+                  data-testid={`hashtag-pill-${hashtag.id}`}
+                >
+                  #{hashtag.name}
+                </span>
+              ))}
+            </div>
+          )}
+          
           <p className="text-sm text-muted-foreground" data-testid={`text-triplist-location-below-${triplist.id}`}>
             {triplist.location}
           </p>

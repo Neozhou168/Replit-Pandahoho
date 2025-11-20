@@ -2,28 +2,32 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TriplistCard from "@/components/TriplistCard";
 import { Button } from "@/components/ui/button";
-import type { Triplist } from "@shared/schema";
+import type { Triplist, Hashtag } from "@shared/schema";
 
 export default function TriplistsPage() {
   const [cityFilter, setCityFilter] = useState<string | null>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [hashtagFilter, setHashtagFilter] = useState<string | null>(null);
   const [seasonFilter, setSeasonFilter] = useState<string | null>(null);
 
   const { data: triplists = [], isLoading } = useQuery<Triplist[]>({
     queryKey: ["/api/triplists"],
   });
 
+  const { data: hashtags = [] } = useQuery<Hashtag[]>({
+    queryKey: ["/api/hashtags"],
+  });
+
   const activeTriplists = triplists.filter((t) => t.isActive);
   
   const filteredTriplists = activeTriplists.filter((triplist) => {
     const matchesCity = !cityFilter || triplist.location === cityFilter;
-    const matchesCategory = !categoryFilter || triplist.category === categoryFilter;
+    const matchesHashtag = !hashtagFilter || triplist.category === hashtagFilter;
     const matchesSeason = !seasonFilter || triplist.season === seasonFilter;
-    return matchesCity && matchesCategory && matchesSeason;
+    return matchesCity && matchesHashtag && matchesSeason;
   });
 
   const cities = Array.from(new Set(activeTriplists.map((t) => t.location).filter(Boolean)));
-  const categories = Array.from(new Set(activeTriplists.map((t) => t.category).filter(Boolean)));
+  const promotedHashtags = hashtags.filter((h) => h.isPromoted && h.isActive);
   
   // Define custom season order
   const seasonOrder = ["All seasons", "Spring", "Summer", "Autumn", "Winter", "Spring & Autumn"];
@@ -89,28 +93,28 @@ export default function TriplistsPage() {
             </div>
           )}
 
-          {categories.length > 0 && (
+          {promotedHashtags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <span className="text-sm font-medium text-muted-foreground self-center">
-                Category:
+                Hashtag:
               </span>
               <Button
-                variant={categoryFilter === null ? "default" : "outline"}
+                variant={hashtagFilter === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => setCategoryFilter(null)}
-                data-testid="filter-category-all"
+                onClick={() => setHashtagFilter(null)}
+                data-testid="filter-hashtag-all"
               >
                 All
               </Button>
-              {categories.map((category) => (
+              {promotedHashtags.map((hashtag) => (
                 <Button
-                  key={category}
-                  variant={categoryFilter === category ? "default" : "outline"}
+                  key={hashtag.id}
+                  variant={hashtagFilter === hashtag.name ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setCategoryFilter(category!)}
-                  data-testid={`filter-category-${category}`}
+                  onClick={() => setHashtagFilter(hashtag.name)}
+                  data-testid={`filter-hashtag-${hashtag.name}`}
                 >
-                  {category}
+                  {hashtag.name}
                 </Button>
               ))}
             </div>
@@ -154,7 +158,7 @@ export default function TriplistsPage() {
       ) : filteredTriplists.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-muted-foreground" data-testid="text-no-triplists">
-            {cityFilter || categoryFilter || seasonFilter
+            {cityFilter || hashtagFilter || seasonFilter
               ? "No triplists match your filters. Try adjusting your selection."
               : "No triplists available yet. Check back soon!"}
           </p>
