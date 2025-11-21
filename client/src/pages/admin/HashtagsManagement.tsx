@@ -102,6 +102,10 @@ export default function HashtagsManagement() {
       console.log(`[deleteHashtag onSuccess] Deleted ${id}`);
       toast({ title: "Success", description: "Hashtag deleted!" });
       setDeleteHashtag(null);
+      // Refetch after a small delay to ensure database delete is complete
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/hashtags"] });
+      }, 100);
     },
     onError: (error, id, context) => {
       console.error(`[deleteHashtag onError]`, error);
